@@ -35,11 +35,12 @@ jobs:
         run: dotnet build cohabit.slnx --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test test/verification.api.unit.tests/verification.api.unit.tests.csproj \
-          --no-restore \
-          --configuration Release \
-          --logger trx \
-          --results-directory ./TestResults \
+        run: >-
+          dotnet test test/verification.api.unit.tests/verification.api.unit.tests.csproj
+          --no-restore
+          --configuration Release
+          --logger trx
+          --results-directory ./TestResults
           --verbosity normal
 
       - name: Upload test results
