@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../cohabit.application/cohabit.application.csproj" />
+  <Project Path="cohabit.verification.api.csproj" />
+</Solution>
