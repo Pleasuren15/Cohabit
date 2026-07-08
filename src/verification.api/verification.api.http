@@ -1,6 +1,22 @@
 @verification.api_HostAddress = http://localhost:5025
 
-GET {{verification.api_HostAddress}}/weatherforecast/
+### Get all messages
+GET {{verification.api_HostAddress}}/messages
 Accept: application/json
 
-###
+### Get message by ID
+GET {{verification.api_HostAddress}}/messages/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Send an SMS
+POST {{verification.api_HostAddress}}/send
+Content-Type: application/json
+
+{
+  "to": "+1234567890",
+  "body": "Hello from Cohabit!"
+}
+
+### Existing weather forecast endpoint
+GET {{verification.api_HostAddress}}/weatherforecast/
+Accept: application/json

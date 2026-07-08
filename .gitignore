@@ -4,3 +4,8 @@
 /.vs/verification.api.slnx/FileContentIndex
 /src/verification.api/.vs/verification.api.slnx
 /src/verification.api/obj
+/src/cohabit.application/bin/Debug/net10.0
+/src/cohabit.application/obj/Debug/net10.0/ref
+/src/cohabit.application/obj/Debug/net10.0/refint
+/src/verification.api/bin/Debug/net10.0
+/src/cohabit.application/obj/Debug/net10.0

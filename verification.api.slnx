@@ -1,3 +1,4 @@
 <Solution>
-  <Project Path="src/verification.api.csproj" />
+  <Project Path="src/verification.api/cohabit.verification.api.csproj" />
+  <Project Path="src/cohabit.application/cohabit.application.csproj" />
 </Solution>
