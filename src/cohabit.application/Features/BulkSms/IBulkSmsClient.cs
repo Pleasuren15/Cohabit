@@ -2,15 +2,27 @@ namespace cohabit.application.Features.BulkSms;
 
 // ── DTOs shared across the BulkSms feature ──────────────────────────
 
-public sealed record SendSmsRequest(string To, string Body);
+public sealed record SendSmsRequest(string To);
 
 public sealed record BulkSmsMessageDto(
     string Id,
+    string Type,
+    string? From,
     string To,
-    string Body,
-    string Status,
-    DateTime CreatedAt,
-    DateTime? SentAt);
+    string? Body,
+    string? Encoding,
+    int? ProtocolId,
+    int? MessageClass,
+    int? NumberOfParts,
+    decimal? CreditCost,
+    BulkSmsSubmissionDto? Submission,
+    BulkSmsStatusDto? Status,
+    string? RelatedSentMessageId,
+    string? UserSuppliedId);
+
+public sealed record BulkSmsSubmissionDto(string Id, DateTime Date);
+
+public sealed record BulkSmsStatusDto(string Id, string Type, string? Subtype);
 
 public interface IBulkSmsClient
 {

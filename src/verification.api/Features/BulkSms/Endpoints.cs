@@ -36,8 +36,7 @@ public static class BulkSmsEndpoints
             }
         })
         .WithName("GetMessages")
-        .WithTags(Tag)
-        .WithOpenApi();
+        .WithTags(Tag);
 
         // GET /messages/{id} — get a single message from BulkSMS by its ID
         app.MapGet("/messages/{id}", async (
@@ -66,8 +65,7 @@ public static class BulkSmsEndpoints
             }
         })
         .WithName("GetMessageById")
-        .WithTags(Tag)
-        .WithOpenApi();
+        .WithTags(Tag);
 
         // POST /send — send an SMS via BulkSMS
         app.MapPost("/send", async (
@@ -96,7 +94,6 @@ public static class BulkSmsEndpoints
             }
         })
         .WithName("SendSms")
-        .WithTags(Tag)
-        .WithOpenApi();
+        .WithTags(Tag);
     }
 }

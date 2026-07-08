@@ -17,3 +17,4 @@
 /src/cohabit.application/obj
 /test/verification.api.unit.tests/bin/Debug/net10.0
 /test/verification.api.unit.tests/obj
+/.vs/cohabit.slnx/config
