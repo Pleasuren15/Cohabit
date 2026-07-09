@@ -1,0 +1,51 @@
+name: Cohabit API Continuous Integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/cohabit.api/**'
+      - 'src/cohabit.application/**'
+      - 'test/cohabit.api.unit.tests/**'
+      - 'cohabit.slnx'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/cohabit.api/**'
+      - 'src/cohabit.application/**'
+      - 'test/cohabit.api.unit.tests/**'
+      - 'cohabit.slnx'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore cohabit.slnx
+
+      - name: Build
+        run: dotnet build cohabit.slnx --no-restore --configuration Release
+
+      - name: Run tests
+        run: >-
+          dotnet test test/cohabit.api.unit.tests/cohabit.api.unit.tests.csproj
+          --no-restore
+          --configuration Release
+          --logger trx
+          --results-directory ./TestResults
+          --verbosity normal
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: ./TestResults

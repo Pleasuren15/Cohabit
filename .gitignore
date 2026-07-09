@@ -18,3 +18,8 @@
 /test/verification.api.unit.tests/bin/Debug/net10.0
 /test/verification.api.unit.tests/obj
 /.vs/cohabit.slnx/config
+
+/src/cohabit.api/obj
+/src/cohabit.api/bin/Debug/net10.0
+/test/cohabit.api.unit.tests/bin/Debug/net10.0
+/test/cohabit.api.unit.tests/obj
