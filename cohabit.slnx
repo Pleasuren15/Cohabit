@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/cohabit.api/cohabit.api.csproj" />
     <Project Path="src/cohabit.application/cohabit.application.csproj" />
     <Project Path="src/verification.api/cohabit.verification.api.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="test/cohabit.api.unit.tests/cohabit.api.unit.tests.csproj" Id="bf0726f7-7b2c-4d99-bf61-7e0165b34b13" />
     <Project Path="test/verification.api.unit.tests/verification.api.unit.tests.csproj" Id="07f429bc-5aff-460e-8f92-a2924c0295e7" />
   </Folder>
 </Solution>
