@@ -1,0 +1,21 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>0bfa4da9-395d-4bc9-828c-01a1d4997f81</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" Version="13.*" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\cohabit.api\cohabit.api.csproj" />
+    <ProjectReference Include="..\..\verification.api\cohabit.verification.api.csproj" />
+  </ItemGroup>
+
+</Project>
