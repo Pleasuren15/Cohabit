@@ -2,6 +2,8 @@
   <Folder Name="/src/">
     <Project Path="src/cohabit.api/cohabit.api.csproj" />
     <Project Path="src/cohabit.application/cohabit.application.csproj" />
+    <Project Path="src/cohabit.aspire/cohabit.aspire.AppHost/cohabit.aspire.AppHost.csproj" Id="291478cb-c3ca-478c-8d4c-0755e43eca49" />
+    <Project Path="src/cohabit.aspire/cohabit.aspire.ServiceDefaults/cohabit.aspire.ServiceDefaults.csproj" />
     <Project Path="src/verification.api/cohabit.verification.api.csproj" />
   </Folder>
   <Folder Name="/test/">

@@ -1,0 +1,9 @@
+{
+  "appHost": {
+    "path": "cohabit.aspire.AppHost/cohabit.aspire.AppHost.csproj"
+  },
+  "packages": {
+    "Aspire.Hosting.Azure.Storage": "13.3.0",
+    "Aspire.Hosting.PostgreSQL": "13.3.0"
+  }
+}
