@@ -33,6 +33,7 @@ import {
   TabsContent,
 } from "@/components/base-ui/tabs"
 import { Faq6, type FaqItem } from "@/components/ui/faq-06"
+import { PinItemComponent, type PlaceItem } from "@/components/ui/pin-item"
 
 const COHABIT_PHRASES = [
   "Find Your Match",
@@ -107,6 +108,65 @@ const HOUSING_FAQS: FaqItem[] = [
   },
 ]
 
+const MESSAGE_THREADS: PlaceItem[] = [
+  {
+    id: 1,
+    name: "Welcome to Cohabit",
+    type: "Today",
+    status: "Your account has been created successfully. Start exploring shared living spaces near you!",
+    pinned: false,
+  },
+  {
+    id: 2,
+    name: "New Property Alert",
+    type: "Today",
+    status: "A new shared home in Sea Point has been listed that matches your preferences.",
+    pinned: false,
+  },
+  {
+    id: 3,
+    name: "Listing Liked",
+    type: "Yesterday",
+    status: "Sarah liked your property \"Cozy flat in Observatory\". View their profile to connect.",
+    pinned: true,
+  },
+  {
+    id: 4,
+    name: "Price Drop",
+    type: "Yesterday",
+    status: "Great news! \"Spacious room in Gardens\" has dropped in price by R1,500/month.",
+    pinned: false,
+  },
+  {
+    id: 5,
+    name: "Profile Views",
+    type: "Jul 20",
+    status: "Your listing was viewed 24 times this week. Keep your profile updated to attract more interest.",
+    pinned: false,
+  },
+  {
+    id: 6,
+    name: "Verification Approved",
+    type: "Jul 18",
+    status: "Your phone number has been verified. Complete ID verification to unlock more features.",
+    pinned: false,
+  },
+  {
+    id: 7,
+    name: "New Matches",
+    type: "Jul 16",
+    status: "We found 3 potential roommates based on your preferences. Check them out!",
+    pinned: true,
+  },
+  {
+    id: 8,
+    name: "Weekly Digest",
+    type: "Jul 14",
+    status: "5 new listings this week in your area. Don't miss out on your perfect shared home.",
+    pinned: false,
+  },
+]
+
 /** Inline SVG of the South African flag (emoji flags don't render on Windows). */
 function SouthAfricaFlag({ className }: { className?: string }) {
   return (
@@ -151,11 +211,19 @@ function LandingShell({ children }: { children: ReactNode }) {
 
       <div className="relative z-10 flex min-h-svh flex-col">
         {/* Brand bar */}
-        <header className="flex items-center justify-between px-6 pt-6">
-          <span className="text-lg font-bold tracking-tight lowercase">
-            cohabit
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+        <header className="flex items-center justify-between px-6 pt-5 sm:pt-6">
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold tracking-tight text-accent lowercase">
+              cohabit
+            </span>
+            <span className="hidden text-xs text-muted-foreground/50 sm:inline">
+              —
+            </span>
+            <span className="hidden text-xs text-muted-foreground/60 sm:inline">
+              shared living, made simple
+            </span>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-background/40 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
             <SouthAfricaFlag className="h-3 w-auto rounded-[1px] ring-1 ring-black/10" />
             South Africa
           </span>
@@ -163,8 +231,8 @@ function LandingShell({ children }: { children: ReactNode }) {
 
         {children}
 
-        <footer className="px-6 pb-6 text-center text-xs text-muted-foreground">
-          © 2026 Cohabit · Shared living, made simple
+        <footer className="px-6 pb-6 text-center text-xs text-muted-foreground/50">
+          © 2026 Cohabit
         </footer>
       </div>
     </div>
@@ -188,22 +256,24 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
     return (
       <LandingShell>
         <main className="flex flex-1 flex-col items-center justify-center px-6">
-          <FamilyReceiveComponent
-            defaultOpen
-            title={PROVINCES[selectedProvince]}
-            description={`Start browsing shared living spaces in ${PROVINCES[selectedProvince]}?`}
-            confirmLabel="Let's Go"
-            cancelLabel="Change"
-            icon={
-              <img
-                src={PROVINCE_SHAPES[selectedProvince]}
-                alt={PROVINCES[selectedProvince]}
-                className="h-9 w-9 object-contain"
-              />
-            }
-            onConfirm={() => onEnter(selectedProvince)}
-            onCancel={() => setSelectedProvince(null)}
-          />
+          <div className="w-full max-w-sm rounded-3xl border border-border/40 bg-background/40 p-6 shadow-sm backdrop-blur-xl sm:p-8">
+            <FamilyReceiveComponent
+              defaultOpen
+              title={PROVINCES[selectedProvince]}
+              description={`Start browsing shared living spaces in ${PROVINCES[selectedProvince]}?`}
+              confirmLabel="Let's Go"
+              cancelLabel="Change"
+              icon={
+                <img
+                  src={PROVINCE_SHAPES[selectedProvince]}
+                  alt={PROVINCES[selectedProvince]}
+                  className="h-10 w-10 object-contain"
+                />
+              }
+              onConfirm={() => onEnter(selectedProvince)}
+              onCancel={() => setSelectedProvince(null)}
+            />
+          </div>
         </main>
       </LandingShell>
     )
@@ -213,33 +283,70 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
   return (
     <LandingShell>
       <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <FlipText
-          key={phraseIndex}
-          className="text-4xl font-bold tracking-tight sm:text-5xl"
-          duration={1.8}
-          loop={false}
-        >
-          {COHABIT_PHRASES[phraseIndex]}
-        </FlipText>
-
-        <p className="mt-5 max-w-sm text-balance font-medium leading-relaxed text-foreground/85">
-          Find shared homes and compatible housemates across South Africa.
-        </p>
-
-        <div className="mt-10 w-full max-w-xs">
-          <Select33 onProvinceChange={setSelectedProvince} />
+        {/* Decorative province shapes */}
+        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden select-none">
+          {Object.values(PROVINCE_SHAPES).slice(0, 4).map((src, i) => (
+            <motion.img
+              key={i}
+              src={src}
+              alt=""
+              aria-hidden="true"
+              className="absolute h-48 w-48 object-contain opacity-[0.03] sm:h-64 sm:w-64"
+              style={{
+                left: i < 2 ? "-8%" : "auto",
+                right: i >= 2 ? "-8%" : "auto",
+                top: i % 2 === 0 ? "5%" : "auto",
+                bottom: i % 2 === 1 ? "10%" : "auto",
+              }}
+            />
+          ))}
         </div>
 
-        <div className="mt-12 flex items-center justify-center gap-2">
-          {LANDING_BADGES.map(({ label, icon: Icon }) => (
-            <span
-              key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/30 px-3 py-1 text-xs font-medium text-foreground/80 backdrop-blur-sm"
-            >
-              <Icon className="size-3.5 text-accent" aria-hidden="true" />
-              {label}
+        <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-8">
+          {/* Hero */}
+          <div className="space-y-3">
+            <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+              Find your space
             </span>
-          ))}
+            <FlipText
+              key={phraseIndex}
+              className="text-4xl font-bold tracking-tight sm:text-5xl"
+              duration={1.8}
+              loop={false}
+            >
+              {COHABIT_PHRASES[phraseIndex]}
+            </FlipText>
+            <p className="mx-auto max-w-xs text-balance text-sm leading-relaxed text-muted-foreground">
+              Browse shared homes and compatible housemates across South
+              Africa.
+            </p>
+          </div>
+
+          {/* Province picker card */}
+          <div className="w-full rounded-3xl border border-border/40 bg-background/40 p-6 shadow-sm backdrop-blur-xl sm:p-8">
+            <div className="mb-5 space-y-1 text-center">
+              <h2 className="text-sm font-semibold text-foreground">
+                Get Started
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Choose your province to browse listings
+              </p>
+            </div>
+            <Select33 onProvinceChange={setSelectedProvince} />
+          </div>
+
+          {/* Trust badges */}
+          <div className="flex items-center justify-center gap-3">
+            {LANDING_BADGES.map(({ label, icon: Icon }) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/30 bg-background/20 px-3 py-1.5 text-[11px] font-medium text-muted-foreground backdrop-blur-sm"
+              >
+                <Icon className="size-3.5 text-accent" aria-hidden="true" />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </main>
     </LandingShell>
@@ -279,7 +386,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
       title: "Account",
       icon: User,
       onClick: () => setShowAuth(true),
-      className: "bg-red-500 [&_svg]:!text-white [&_span]:!text-white rounded-xl",
+      className: "bg-red-500 [&_svg]:!text-white [&_span]:!text-white self-stretch -mr-4 -mt-3 -mb-3",
     },
   ]
 
@@ -369,12 +476,27 @@ function MainApp({ province: initialProvince }: { province: string }) {
           )}
 
           {activeTab === "Messages" && (
-            <>
-              <h1 className="mb-2 text-2xl font-bold">Messages</h1>
-              <p className="text-muted-foreground">
-                Your conversations with hosts and roommates.
-              </p>
-            </>
+            <div className="flex flex-col items-center">
+              <div className="mb-6 w-full">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      INBOX
+                    </span>
+                    <div className="mt-1 flex items-center gap-3">
+                      <div className="h-8 w-1 rounded-full bg-primary" />
+                      <h1 className="text-2xl font-semibold">Messages</h1>
+                    </div>
+                  </div>
+                  <MessageSquare className="size-6 text-muted-foreground" />
+                </div>
+              </div>
+              <PinItemComponent
+                items={MESSAGE_THREADS}
+                pinnedLabel="Pinned"
+                allLabel="All Messages"
+              />
+            </div>
           )}
 
           {activeTab === "Info" && (
