@@ -29,3 +29,36 @@
 /src/cohabit.aspire/cohabit.aspire.ServiceDefaults/obj/Debug/net10.0
 /src/cohabit.aspire/cohabit.aspire.ServiceDefaults/obj
 /.vs/cohabit.slnx
+
+# ---- Node / web (cohabit.web) ----
+node_modules
+dist
+dist-ssr
+build
+*.local
+.vite
+
+# Environment / secrets — never push these
+.env
+.env.*
+!.env.example
+
+# JS logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code local (keep shared settings.json, ignore local overrides)
+.claude/settings.local.json
