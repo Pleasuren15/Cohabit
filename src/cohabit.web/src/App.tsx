@@ -15,6 +15,7 @@ import {
   ScrollText,
   Handshake,
   Scale,
+  Mail,
   type LucideIcon,
 } from "lucide-react"
 import { FlipText } from "@/components/ui/flip-text"
@@ -199,8 +200,8 @@ function SouthAfricaFlag({ className }: { className?: string }) {
   )
 }
 
-/** Shared full-bleed backdrop: animated gradient + legibility scrim + chrome. */
-function LandingShell({ children }: { children: ReactNode }) {
+/** Shared full-bleed backdrop: MeshBackground + legibility scrim + decorative province shapes. */
+function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative w-full min-h-svh overflow-hidden">
       {/* Mesh-gradient background */}
@@ -209,33 +210,60 @@ function LandingShell({ children }: { children: ReactNode }) {
       {/* Scrim to keep text legible over the gradient */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/10 via-transparent to-background/20" />
 
+      {/* Decorative province shapes */}
+      <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden select-none">
+        {Object.values(PROVINCE_SHAPES).slice(0, 4).map((src, i) => (
+          <motion.img
+            key={i}
+            src={src}
+            alt=""
+            aria-hidden="true"
+            className="absolute h-48 w-48 object-contain opacity-[0.03] sm:h-64 sm:w-64"
+            style={{
+              left: i < 2 ? "-8%" : "auto",
+              right: i >= 2 ? "-8%" : "auto",
+              top: i % 2 === 0 ? "5%" : "auto",
+              bottom: i % 2 === 1 ? "10%" : "auto",
+            }}
+          />
+        ))}
+      </div>
+
       <div className="relative z-10 flex min-h-svh flex-col">
-        {/* Brand bar */}
-        <header className="flex items-center justify-between px-6 pt-5 sm:pt-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight text-accent lowercase">
-              cohabit
-            </span>
-            <span className="hidden text-xs text-muted-foreground/50 sm:inline">
-              —
-            </span>
-            <span className="hidden text-xs text-muted-foreground/60 sm:inline">
-              shared living, made simple
-            </span>
-          </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-background/40 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-            <SouthAfricaFlag className="h-3 w-auto rounded-[1px] ring-1 ring-black/10" />
-            South Africa
-          </span>
-        </header>
-
         {children}
-
-        <footer className="px-6 pb-6 text-center text-xs text-muted-foreground/50">
-          © 2026 Cohabit
-        </footer>
       </div>
     </div>
+  )
+}
+
+/** Landing page shell: AppShell backdrop + branding header/footer */
+function LandingShell({ children }: { children: ReactNode }) {
+  return (
+    <AppShell>
+      <header className="flex items-center justify-between px-6 pt-5 sm:pt-6">
+        <div className="flex items-center gap-2">
+          <span className="text-xl font-bold tracking-tight text-accent lowercase">
+            cohabit
+          </span>
+          <span className="hidden text-xs text-muted-foreground/50 sm:inline">
+            —
+          </span>
+          <span className="hidden text-xs text-muted-foreground/60 sm:inline">
+            shared living, made simple
+          </span>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-background/40 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+          <SouthAfricaFlag className="h-3 w-auto rounded-[1px] ring-1 ring-black/10" />
+          South Africa
+        </span>
+      </header>
+
+      {children}
+
+      <footer className="px-6 pb-6 text-center text-xs text-muted-foreground/50">
+        © 2026 Cohabit
+      </footer>
+    </AppShell>
   )
 }
 
@@ -283,25 +311,6 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
   return (
     <LandingShell>
       <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        {/* Decorative province shapes */}
-        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden select-none">
-          {Object.values(PROVINCE_SHAPES).slice(0, 4).map((src, i) => (
-            <motion.img
-              key={i}
-              src={src}
-              alt=""
-              aria-hidden="true"
-              className="absolute h-48 w-48 object-contain opacity-[0.03] sm:h-64 sm:w-64"
-              style={{
-                left: i < 2 ? "-8%" : "auto",
-                right: i >= 2 ? "-8%" : "auto",
-                top: i % 2 === 0 ? "5%" : "auto",
-                bottom: i % 2 === 1 ? "10%" : "auto",
-              }}
-            />
-          ))}
-        </div>
-
         <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-8">
           {/* Hero */}
           <div className="space-y-3">
@@ -423,207 +432,234 @@ function MainApp({ province: initialProvince }: { province: string }) {
         )}
       </AnimatePresence>
 
-      <div className="flex min-h-svh flex-col">
-      <main className="flex-1 p-6 pb-28">
-        <div className="mx-auto max-w-md">
-          {activeTab === "Home" && (
-            <>
-              {/* Top bar: filter + province */}
-              <div className="flex items-center justify-between">
-                <ListingFilter value={listingFilter} onChange={setListingFilter} />
-                <button
-                  type="button"
-                  onClick={() => setShowProvincePicker(true)}
-                  className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
-                  aria-label="Change province"
-                >
+      <AppShell>
+        <main className="flex-1 p-6 pb-28">
+          <div className="mx-auto max-w-md">
+            {activeTab === "Home" && (
+              <>
+                {/* Top bar: filter + province */}
+                <div className="flex items-center justify-between">
+                  <ListingFilter value={listingFilter} onChange={setListingFilter} />
+                  <button
+                    type="button"
+                    onClick={() => setShowProvincePicker(true)}
+                    className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
+                    aria-label="Change province"
+                  >
+                    <img
+                      src={PROVINCE_SHAPES[province]}
+                      alt=""
+                      className="h-5 w-5 object-contain drop-shadow-sm"
+                    />
+                    <span className="leading-tight">{PROVINCES[province]}</span>
+                  </button>
+                </div>
+
+                <div className="mt-16 flex flex-col items-center text-center">
                   <img
                     src={PROVINCE_SHAPES[province]}
-                    alt=""
-                    className="h-5 w-5 object-contain drop-shadow-sm"
+                    alt={PROVINCES[province]}
+                    className="mb-5 h-28 w-28 object-contain drop-shadow-sm"
                   />
-                  <span className="leading-tight">{PROVINCES[province]}</span>
-                </button>
-              </div>
-
-              <div className="mt-16 flex flex-col items-center text-center">
-                <img
-                  src={PROVINCE_SHAPES[province]}
-                  alt={PROVINCES[province]}
-                  className="mb-5 h-28 w-28 object-contain drop-shadow-sm"
-                />
-                <h2 className="text-2xl font-bold">
-                  Browse {PROVINCES[province]}
-                </h2>
-                <p className="mt-2 text-muted-foreground">
-                  Shared living spaces in{" "}
-                  <span className="font-medium text-accent">
-                    {PROVINCES[province]}
-                  </span>{" "}
-                  are on the way.
-                </p>
-              </div>
-            </>
-          )}
-
-          {activeTab === "WatchList" && (
-            <>
-              <h1 className="mb-2 text-2xl font-bold">WatchList</h1>
-              <p className="text-muted-foreground">
-                Your saved listings and favorites.
-              </p>
-            </>
-          )}
-
-          {activeTab === "Messages" && (
-            <div className="flex flex-col items-center">
-              <div className="mb-6 w-full">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                      INBOX
-                    </span>
-                    <div className="mt-1 flex items-center gap-3">
-                      <div className="h-8 w-1 rounded-full bg-primary" />
-                      <h1 className="text-2xl font-semibold">Messages</h1>
-                    </div>
-                  </div>
-                  <MessageSquare className="size-6 text-muted-foreground" />
-                </div>
-              </div>
-              <PinItemComponent
-                items={MESSAGE_THREADS}
-                pinnedLabel="Pinned"
-                allLabel="All Messages"
-              />
-            </div>
-          )}
-
-          {activeTab === "Info" && (
-            <>
-              <div className="mb-6 text-center">
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  LEGAL
-                </span>
-                <div className="mt-1 flex items-center justify-center gap-3">
-                  <div className="h-8 w-1 rounded-full bg-primary" />
-                  <h1 className="text-2xl font-bold">Terms &amp; Conditions</h1>
-                  <div className="h-8 w-1 rounded-full bg-primary" />
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Last updated 21 July 2026
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {TERMS.map((section, i) => {
-                  const icons = [ScrollText, Home, Wallet, Handshake, Scale]
-                  const IconComponent = icons[i] ?? ScrollText
-                  return (
-                    <div
-                      key={section.heading}
-                      className="rounded-2xl border border-border bg-muted/20 p-5"
-                    >
-                      <div className="mb-2 flex items-center gap-3">
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                          <IconComponent className="size-4" />
-                        </span>
-                        <h2 className="font-semibold text-foreground">
-                          {section.heading.replace(/^\d+\.\s*/, "")}
-                        </h2>
-                      </div>
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {section.body}
-                      </p>
-                    </div>
-                  )
-                })}
-                <div className="rounded-2xl border border-border bg-muted/20 p-5">
-                  <p className="text-xs text-muted-foreground">
-                    Questions? Contact us at{" "}
+                  <h2 className="text-2xl font-bold">
+                    Browse {PROVINCES[province]}
+                  </h2>
+                  <p className="mt-2 text-muted-foreground">
+                    Shared living spaces in{" "}
                     <span className="font-medium text-accent">
-                      hello@cohabit.co.za
-                    </span>
-                    .
+                      {PROVINCES[province]}
+                    </span>{" "}
+                    are on the way.
                   </p>
                 </div>
-              </div>
+              </>
+            )}
 
-              <div className="mt-12">
-                <Faq6
-                  badge="FAQ"
-                  title="Frequently Asked Questions"
-                  faqs={HOUSING_FAQS}
+            {activeTab === "WatchList" && (
+              <>
+                <h1 className="mb-2 text-2xl font-bold">WatchList</h1>
+                <p className="text-muted-foreground">
+                  Your saved listings and favorites.
+                </p>
+              </>
+            )}
+
+            {activeTab === "Messages" && (
+              <div className="flex flex-col items-center">
+                <div className="mb-6 w-full">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        INBOX
+                      </span>
+                      <div className="mt-1 flex items-center gap-3">
+                        <div className="h-8 w-1 rounded-full bg-primary" />
+                        <h1 className="text-2xl font-semibold">Messages</h1>
+                      </div>
+                    </div>
+                    <MessageSquare className="size-6 text-muted-foreground" />
+                  </div>
+                </div>
+                <PinItemComponent
+                  items={MESSAGE_THREADS}
+                  pinnedLabel="Pinned"
+                  allLabel="All Messages"
                 />
               </div>
+            )}
 
-              {/* Verification tabs */}
-              <div className="mt-16">
-                <div className="mb-6 text-center">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    TRUST & SAFETY
-                  </span>
-                  <h2 className="mt-1 text-2xl font-bold">Verification Badges</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
+            {activeTab === "Info" && (
+              <div className="flex flex-col items-center">
+                {/* Terms & Conditions — Messages-style header */}
+                <div className="mb-6 w-full">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        LEGAL
+                      </span>
+                      <div className="mt-1 flex items-center gap-3">
+                        <div className="h-8 w-1 rounded-full bg-primary" />
+                        <h1 className="text-2xl font-semibold">Terms &amp; Conditions</h1>
+                      </div>
+                    </div>
+                    <ScrollText className="size-6 text-muted-foreground" />
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Last updated 21 July 2026
+                  </p>
+                </div>
+
+                <div className="w-full space-y-3">
+                  {TERMS.map((section, i) => {
+                    const icons = [ScrollText, Home, Wallet, Handshake, Scale]
+                    const IconComponent = icons[i] ?? ScrollText
+                    return (
+                      <div
+                        key={section.heading}
+                        className="rounded-2xl border border-border bg-muted/20 p-5"
+                      >
+                        <div className="mb-2 flex items-center gap-3">
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <IconComponent className="size-4" />
+                          </span>
+                          <h2 className="font-semibold text-foreground">
+                            {section.heading.replace(/^\d+\.\s*/, "")}
+                          </h2>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {section.body}
+                        </p>
+                      </div>
+                    )
+                  })}
+                  <div className="rounded-2xl border border-border bg-muted/20 p-5">
+                    <p className="text-xs text-muted-foreground">
+                      Questions? Contact us at{" "}
+                      <span className="font-medium text-accent">
+                        hello@cohabit.co.za
+                      </span>
+                      .
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-12 w-full">
+                  <Faq6
+                    badge="FAQ"
+                    title="Frequently Asked Questions"
+                    faqs={HOUSING_FAQS}
+                  />
+                </div>
+
+                {/* Verification Badges — Messages-style header */}
+                <div className="mt-16 mb-6 w-full">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        TRUST & SAFETY
+                      </span>
+                      <div className="mt-1 flex items-center gap-3">
+                        <div className="h-8 w-1 rounded-full bg-primary" />
+                        <h2 className="text-2xl font-semibold">Verification Badges</h2>
+                      </div>
+                    </div>
+                    <Shield className="size-6 text-muted-foreground" />
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Build trust in the community.
                   </p>
                 </div>
 
-                <Tabs defaultValue="phone" className="gap-4">
-                  <TabsList className="rounded-2xl bg-transparent">
-                    <TabsTrigger value="phone" className="data-[state=active]:bg-blue-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
-                      <Smartphone className="mr-1 size-3.5" />
-                      Phone
-                    </TabsTrigger>
-                    <TabsTrigger value="id" className="data-[state=active]:bg-green-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
-                      <BadgeCheck className="mr-1 size-3.5" />
-                      ID
-                    </TabsTrigger>
-                    <TabsTrigger value="credit" className="data-[state=active]:bg-amber-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
-                      <Shield className="mr-1 size-3.5" />
-                      Credit
-                    </TabsTrigger>
-                  </TabsList>
+                <div className="w-full">
+                  <Tabs defaultValue="phone" className="gap-4">
+                    <TabsList className="rounded-2xl bg-transparent">
+                      <TabsTrigger value="phone" className="data-[state=active]:bg-blue-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                        <Smartphone className="mr-1 size-3.5" />
+                        Phone
+                      </TabsTrigger>
+                      <TabsTrigger value="email" className="data-[state=active]:bg-purple-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                        <Mail className="mr-1 size-3.5" />
+                        Email
+                      </TabsTrigger>
+                      <TabsTrigger value="id" className="data-[state=active]:bg-green-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                        <BadgeCheck className="mr-1 size-3.5" />
+                        ID
+                      </TabsTrigger>
+                      <TabsTrigger value="credit" className="data-[state=active]:bg-amber-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                        <Shield className="mr-1 size-3.5" />
+                        Credit
+                      </TabsTrigger>
+                    </TabsList>
 
-                  <TabsContent value="phone" className="bg-blue-50/50 mt-0 rounded-3xl border-2 border-dashed border-blue-200 p-6">
-                    <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">Phone</h5>
-                    <p className="text-blue-700/80 border-blue-500 border-l-2 pl-4 text-sm leading-6">
-                      Confirm your mobile via OTP to{' '}
-                      <span className="text-blue-900 font-semibold">verify your identity</span>.
-                      Fastest way to build trust.
-                    </p>
-                  </TabsContent>
+                    <TabsContent value="phone" className="bg-blue-50/50 mt-0 rounded-3xl border-2 border-dashed border-blue-200 p-6">
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">Phone</h5>
+                      <p className="text-blue-700/80 border-blue-500 border-l-2 pl-4 text-sm leading-6">
+                        Confirm your mobile via OTP to{' '}
+                        <span className="text-blue-900 font-semibold">verify your identity</span>.
+                        Fastest way to build trust.
+                      </p>
+                    </TabsContent>
 
-                  <TabsContent value="id" className="bg-green-50/50 mt-0 rounded-3xl border-2 border-dashed border-green-200 p-6">
-                    <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">ID</h5>
-                    <p className="text-green-700/80 border-green-500 border-l-2 pl-4 text-sm leading-6">
-                      Upload your SA ID or passport for{' '}
-                      <span className="text-green-900 font-semibold">official verification</span>.
-                      Encrypted and never shared publicly.
-                    </p>
-                  </TabsContent>
+                    <TabsContent value="email" className="bg-purple-50/50 mt-0 rounded-3xl border-2 border-dashed border-purple-200 p-6">
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-800">Email</h5>
+                      <p className="text-purple-700/80 border-purple-500 border-l-2 pl-4 text-sm leading-6">
+                        Verify your email address to{' '}
+                        <span className="text-purple-900 font-semibold">receive important updates</span>{' '}
+                        and confirm your account ownership.
+                      </p>
+                    </TabsContent>
 
-                  <TabsContent value="credit" className="bg-amber-50/50 mt-0 rounded-3xl border-2 border-dashed border-amber-200 p-6">
-                    <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">Credit</h5>
-                    <p className="text-amber-700/80 border-amber-500 border-l-2 pl-4 text-sm leading-6">
-                      Complete a{' '}
-                      <span className="text-amber-900 font-semibold">financial responsibility check</span>{' '}
-                      to unlock priority listings.
-                    </p>
-                  </TabsContent>
-                </Tabs>
+                    <TabsContent value="id" className="bg-green-50/50 mt-0 rounded-3xl border-2 border-dashed border-green-200 p-6">
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">ID</h5>
+                      <p className="text-green-700/80 border-green-500 border-l-2 pl-4 text-sm leading-6">
+                        Upload your SA ID or passport for{' '}
+                        <span className="text-green-900 font-semibold">official verification</span>.
+                        Encrypted and never shared publicly.
+                      </p>
+                    </TabsContent>
 
-                <p className="mt-4 text-center text-xs text-muted-foreground">
-                  More badges = more trust.
-                </p>
+                    <TabsContent value="credit" className="bg-amber-50/50 mt-0 rounded-3xl border-2 border-dashed border-amber-200 p-6">
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">Credit</h5>
+                      <p className="text-amber-700/80 border-amber-500 border-l-2 pl-4 text-sm leading-6">
+                        Complete a{' '}
+                        <span className="text-amber-900 font-semibold">financial responsibility check</span>{' '}
+                        to unlock priority listings.
+                      </p>
+                    </TabsContent>
+                  </Tabs>
+
+                  <p className="mt-4 text-center text-xs text-muted-foreground">
+                    More badges = more trust.
+                  </p>
+                </div>
               </div>
-            </>
-          )}
-        </div>
-      </main>
+            )}
+          </div>
+        </main>
+      </AppShell>
 
       {/* Fixed bottom dock — mobile-first */}
-      <div className="fixed bottom-0 left-0 right-0 flex justify-center">
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center">
         <div className="w-full max-w-md">
           <GlassDock
             items={dockItems}
@@ -633,7 +669,6 @@ function MainApp({ province: initialProvince }: { province: string }) {
             dockClassName="rounded-none bg-background/95 border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
           />
         </div>
-      </div>
       </div>
 
       {/* Province picker overlay */}
