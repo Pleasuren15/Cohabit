@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,7 @@ import {
   MdVisibilityOff,
   MdArrowForward,
 } from "react-icons/md"
-import { FaGithub, FaGoogle } from "react-icons/fa"
+import { TwinOrbit } from "@/components/loading-ui/twin-orbit"
 
 export interface Auth3SocialProvider {
   id: string
@@ -38,18 +38,7 @@ export interface Auth3Props {
   privacyHref?: string
 }
 
-const DEFAULT_SOCIAL_PROVIDERS: Auth3SocialProvider[] = [
-  {
-    id: "google",
-    label: "Google",
-    icon: <FaGoogle className="h-4 w-4" />,
-  },
-  {
-    id: "github",
-    label: "GitHub",
-    icon: <FaGithub className="h-4 w-4" />,
-  },
-]
+const DEFAULT_SOCIAL_PROVIDERS: Auth3SocialProvider[] = []
 
 function PasswordInput({
   id,
@@ -113,15 +102,34 @@ export function Auth3({
   const [suPassword, setSuPassword] = useState("")
   const [tab, setTab] = useState("signin")
 
-  const handleSignIn = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    onSignIn?.(siEmail, siPassword)
-  }
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [isSigningUp, setIsSigningUp] = useState(false)
 
-  const handleSignUp = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    onSignUp?.(suName, suEmail, suPassword)
-  }
+    setIsSigningIn(true)
+    try {
+      await Promise.all([
+        onSignIn?.(siEmail, siPassword),
+        new Promise<void>((r) => setTimeout(r, 1200)),
+      ])
+    } finally {
+      setIsSigningIn(false)
+    }
+  }, [siEmail, siPassword, onSignIn])
+
+  const handleSignUp = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSigningUp(true)
+    try {
+      await Promise.all([
+        onSignUp?.(suName, suEmail, suPassword),
+        new Promise<void>((r) => setTimeout(r, 1200)),
+      ])
+    } finally {
+      setIsSigningUp(false)
+    }
+  }, [suName, suEmail, suPassword, onSignUp])
 
   return (
     <div className="flex w-full items-center justify-center px-4 py-10">
@@ -166,27 +174,31 @@ export function Auth3({
                     transition={{ duration: 0.2, ease: "easeOut" }}
                   >
                     <form onSubmit={handleSignIn} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {socialProviders.map((provider) => (
-                          <Button
-                            key={provider.id}
-                            variant="outline"
-                            type="button"
-                            className="h-10 gap-2 text-xs font-medium"
-                            onClick={provider.onClick}
-                          >
-                            {provider.icon}
-                            {provider.label}
-                          </Button>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Separator className="flex-1" />
-                        <span className="text-muted-foreground shrink-0 text-[11px]">
-                          {dividerText}
-                        </span>
-                        <Separator className="flex-1" />
-                      </div>
+                      {socialProviders.length > 0 && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {socialProviders.map((provider) => (
+                              <Button
+                                key={provider.id}
+                                variant="outline"
+                                type="button"
+                                className="h-10 gap-2 text-xs font-medium"
+                                onClick={provider.onClick}
+                              >
+                                {provider.icon}
+                                {provider.label}
+                              </Button>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Separator className="flex-1" />
+                            <span className="text-muted-foreground shrink-0 text-[11px]">
+                              {dividerText}
+                            </span>
+                            <Separator className="flex-1" />
+                          </div>
+                        </>
+                      )}
                       <div className="space-y-1.5">
                         <Label
                           htmlFor="auth3-si-email"
@@ -236,10 +248,17 @@ export function Auth3({
 
                       <Button
                         type="submit"
-                        className="h-10 w-full gap-2 font-semibold"
+                        disabled={isSigningIn}
+                        className="h-10 w-full gap-2 font-semibold disabled:opacity-60 disabled:pointer-events-none"
                       >
+                        {isSigningIn ? (
+                          <span className="flex items-center justify-center">
+                            <TwinOrbit className="size-1.5 text-blue-400" />
+                          </span>
+                        ) : (
+                          <MdArrowForward className="h-4 w-4" />
+                        )}
                         {signInLabel}
-                        <MdArrowForward className="h-4 w-4" />
                       </Button>
                     </form>
                   </motion.div>
@@ -254,28 +273,32 @@ export function Auth3({
                     transition={{ duration: 0.2, ease: "easeOut" }}
                     className="space-y-4"
                   >
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {socialProviders.map((provider) => (
-                        <Button
-                          key={provider.id}
-                          variant="outline"
-                          type="button"
-                          className="h-10 gap-2 text-xs font-medium"
-                          onClick={provider.onClick}
-                        >
-                          {provider.icon}
-                          {provider.label}
-                        </Button>
-                      ))}
-                    </div>
+                    {socialProviders.length > 0 && (
+                      <>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {socialProviders.map((provider) => (
+                            <Button
+                              key={provider.id}
+                              variant="outline"
+                              type="button"
+                              className="h-10 gap-2 text-xs font-medium"
+                              onClick={provider.onClick}
+                            >
+                              {provider.icon}
+                              {provider.label}
+                            </Button>
+                          ))}
+                        </div>
 
-                    <div className="flex items-center gap-3">
-                      <Separator className="flex-1" />
-                      <span className="text-muted-foreground shrink-0 text-[11px]">
-                        {dividerText}
-                      </span>
-                      <Separator className="flex-1" />
-                    </div>
+                        <div className="flex items-center gap-3">
+                          <Separator className="flex-1" />
+                          <span className="text-muted-foreground shrink-0 text-[11px]">
+                            {dividerText}
+                          </span>
+                          <Separator className="flex-1" />
+                        </div>
+                      </>
+                    )}
 
                     <form onSubmit={handleSignUp} className="space-y-4">
                       <div className="space-y-1.5">
@@ -338,10 +361,17 @@ export function Auth3({
 
                       <Button
                         type="submit"
-                        className="mt-2 h-10 w-full gap-2 font-semibold"
+                        disabled={isSigningUp}
+                        className="mt-2 h-10 w-full gap-2 font-semibold disabled:opacity-60 disabled:pointer-events-none"
                       >
+                        {isSigningUp ? (
+                          <span className="flex items-center justify-center">
+                            <TwinOrbit className="size-1.5 text-blue-400" />
+                          </span>
+                        ) : (
+                          <MdArrowForward className="h-4 w-4" />
+                        )}
                         {signUpLabel}
-                        <MdArrowForward className="h-4 w-4" />
                       </Button>
 
                       <p className="text-muted-foreground text-center text-xs leading-relaxed">
