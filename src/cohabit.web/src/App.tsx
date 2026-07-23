@@ -16,6 +16,7 @@ import {
   Handshake,
   Scale,
   Mail,
+  Search,
   type LucideIcon,
 } from "lucide-react"
 import { FlipText } from "@/components/ui/flip-text"
@@ -35,6 +36,122 @@ import {
 } from "@/components/base-ui/tabs"
 import { Faq6, type FaqItem } from "@/components/ui/faq-06"
 import { PinItemComponent, type PlaceItem } from "@/components/ui/pin-item"
+import { ExpandableProfileCard } from "@/components/ui/expandable-profile-card"
+
+type VerificationType = "phone" | "email" | "id" | "credit"
+
+interface FeaturedProfile {
+  id: string
+  imageSrc: string
+  name: string
+  location: string
+  mapAddress: string
+  bio: string
+  photoCount: number
+  verified: VerificationType[]
+}
+
+const FEATURED_PROFILES: FeaturedProfile[] = [
+  {
+    id: "thabo-mokoena",
+    imageSrc:
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Thabo Mokoena",
+    location: "Sea Point, Cape Town",
+    mapAddress: "Sea Point, Cape Town, South Africa",
+    bio: "Creative graphic designer looking for a shared space with like-minded people. I love hosting braais on weekends and exploring hiking trails.",
+    photoCount: 6,
+    verified: ["phone", "email", "id"],
+  },
+  {
+    id: "priya-naidoo",
+    imageSrc:
+      "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Priya Naidoo",
+    location: "Umhlanga, Durban",
+    mapAddress: "Umhlanga, Durban, South Africa",
+    bio: "Remote software developer seeking a quiet, clean flatmate. I enjoy cooking, yoga, and beach walks. Non-smoker, pet-friendly.",
+    photoCount: 8,
+    verified: ["phone", "email", "id", "credit"],
+  },
+  {
+    id: "james-van-der-merwe",
+    imageSrc:
+      "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "James van der Merwe",
+    location: "Observatory, Cape Town",
+    mapAddress: "Observatory, Cape Town, South Africa",
+    bio: "Medical student at UCT. I keep irregular hours but I'm tidy and respectful. Love board games and morning runs.",
+    photoCount: 4,
+    verified: ["phone", "id"],
+  },
+  {
+    id: "lindiwe-dlamini",
+    imageSrc:
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Lindiwe Dlamini",
+    location: "Fourways, Johannesburg",
+    mapAddress: "Fourways, Johannesburg, South Africa",
+    bio: "Marketing manager at a tech startup. I work from home 3 days a week and enjoy wine tasting, live music, and meeting new people.",
+    photoCount: 10,
+    verified: ["phone", "email", "id", "credit"],
+  },
+  {
+    id: "sipho-zulu",
+    imageSrc:
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Sipho Zulu",
+    location: "Maboneng, Johannesburg",
+    mapAddress: "Maboneng, Johannesburg, South Africa",
+    bio: "Freelance photographer and content creator. I'm out most days shooting but enjoy cozy nights in. Looking for an artsy flatmate.",
+    photoCount: 7,
+    verified: ["phone", "email"],
+  },
+  {
+    id: "emma-coetzee",
+    imageSrc:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Emma Coetzee",
+    location: "Stellenbosch, Winelands",
+    mapAddress: "Stellenbosch, South Africa",
+    bio: "Postgraduate student in viticulture. Quiet and dedicated, but I unwind with hiking and dog parks on weekends. Non-smoker.",
+    photoCount: 5,
+    verified: ["phone", "id", "credit"],
+  },
+  {
+    id: "nomsa-mthembu",
+    imageSrc:
+      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Nomsa Mthembu",
+    location: "Morningside, Durban",
+    mapAddress: "Morningside, Durban, South Africa",
+    bio: "Registered nurse working night shifts at Addington Hospital. I need a calm, clean space during the day to rest. Respectful and drama-free.",
+    photoCount: 3,
+    verified: ["phone", "email", "id"],
+  },
+  {
+    id: "kyle-petersen",
+    imageSrc:
+      "https://images.unsplash.com/photo-1600585153490-76fb20a32601?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Kyle Petersen",
+    location: "Gardens, Cape Town",
+    mapAddress: "Gardens, Cape Town, South Africa",
+    bio: "Chef at a restaurant in town. I bring home leftovers and love sharing meals. Tidy in shared spaces, out most evenings. Looking for a relaxed flatmate.",
+    photoCount: 6,
+    verified: ["phone", "id", "credit"],
+  },
+  {
+    id: "zanele-khumalo",
+    imageSrc:
+      "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Zanele Khumalo",
+    location: "Waterkloof, Pretoria",
+    mapAddress: "Waterkloof, Pretoria, South Africa",
+    bio: "Civil engineer working on infrastructure projects. I'm outdoorsy and enjoy trail running, but also love quiet evenings with a good book. Pet-friendly.",
+    photoCount: 9,
+    verified: ["phone", "email", "id"],
+  },
+]
 
 const COHABIT_PHRASES = [
   "Find Your Match",
@@ -203,7 +320,7 @@ function SouthAfricaFlag({ className }: { className?: string }) {
 /** Shared full-bleed backdrop: MeshBackground + legibility scrim + decorative province shapes. */
 function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative w-full min-h-svh overflow-hidden">
+    <div className="relative w-full min-h-svh">
       {/* Mesh-gradient background */}
       <MeshBackground />
 
@@ -356,6 +473,7 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
               </span>
             ))}
           </div>
+
         </div>
       </main>
     </LandingShell>
@@ -369,6 +487,12 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [listingFilter, setListingFilter] = useState("all")
   const [showAuth, setShowAuth] = useState(false)
   const [showProvincePicker, setShowProvincePicker] = useState(false)
+  const [profilesLoading, setProfilesLoading] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setProfilesLoading(false), 600)
+    return () => clearTimeout(timer)
+  }, [])
 
   const dockItems: DockItem[] = [
     {
@@ -432,45 +556,91 @@ function MainApp({ province: initialProvince }: { province: string }) {
         )}
       </AnimatePresence>
 
+      {/* Fixed top bar: filter + search — never moves */}
+      <div className="fixed top-0 left-0 right-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="mx-auto max-w-md space-y-3 px-6 pb-3 pt-6">
+          {/* Filter + province at very top */}
+          <div className="flex items-center justify-between">
+            <ListingFilter value={listingFilter} onChange={setListingFilter} />
+            <button
+              type="button"
+              onClick={() => setShowProvincePicker(true)}
+              className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
+              aria-label="Change province"
+            >
+              <img
+                src={PROVINCE_SHAPES[province]}
+                alt=""
+                className="h-5 w-5 object-contain drop-shadow-sm"
+              />
+              <span className="leading-tight">{PROVINCES[province]}</span>
+            </button>
+          </div>
+
+          {/* Search bar below filter */}
+          <form>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
+                <Search className="size-3.5 text-muted-foreground" />
+              </div>
+              <input
+                type="search"
+                id="search"
+                className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
+                placeholder="Search apartments, areas..."
+                required
+              />
+              <button
+                type="button"
+                className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] font-medium leading-4 text-white shadow-sm transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/30"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <AppShell>
-        <main className="flex-1 p-6 pb-28">
+        <main className="flex-1 p-6 pb-28 pt-32">
+
           <div className="mx-auto max-w-md">
             {activeTab === "Home" && (
               <>
-                {/* Top bar: filter + province */}
-                <div className="flex items-center justify-between">
-                  <ListingFilter value={listingFilter} onChange={setListingFilter} />
-                  <button
-                    type="button"
-                    onClick={() => setShowProvincePicker(true)}
-                    className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
-                    aria-label="Change province"
-                  >
-                    <img
-                      src={PROVINCE_SHAPES[province]}
-                      alt=""
-                      className="h-5 w-5 object-contain drop-shadow-sm"
-                    />
-                    <span className="leading-tight">{PROVINCES[province]}</span>
-                  </button>
-                </div>
-
-                <div className="mt-16 flex flex-col items-center text-center">
-                  <img
-                    src={PROVINCE_SHAPES[province]}
-                    alt={PROVINCES[province]}
-                    className="mb-5 h-28 w-28 object-contain drop-shadow-sm"
-                  />
-                  <h2 className="text-2xl font-bold">
-                    Browse {PROVINCES[province]}
-                  </h2>
-                  <p className="mt-2 text-muted-foreground">
-                    Shared living spaces in{" "}
-                    <span className="font-medium text-accent">
-                      {PROVINCES[province]}
-                    </span>{" "}
-                    are on the way.
-                  </p>
+                {/* Featured profiles */}
+                <div className="w-full space-y-3 text-left">
+                  {(profilesLoading ? Array.from({ length: FEATURED_PROFILES.length }) : FEATURED_PROFILES).map(
+                    (item, i) =>
+                      profilesLoading ? (
+                        <div
+                          key={i}
+                          className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm"
+                        >
+                          {/* Image skeleton */}
+                          <div className="h-32 animate-pulse bg-muted sm:h-40" />
+                          {/* Content skeleton */}
+                          <div className="space-y-2.5 px-4 pb-4 pt-3">
+                            <div className="h-4 w-3/5 animate-pulse rounded bg-muted" />
+                            <div className="h-3 w-2/5 animate-pulse rounded bg-muted" />
+                            <div className="flex gap-2">
+                              <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
+                              <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <ExpandableProfileCard
+                          key={(item as FeaturedProfile).id}
+                          imageSrc={(item as FeaturedProfile).imageSrc}
+                          name={(item as FeaturedProfile).name}
+                          location={(item as FeaturedProfile).location}
+                          bio={(item as FeaturedProfile).bio}
+                          mapAddress={(item as FeaturedProfile).mapAddress}
+                          photoCount={(item as FeaturedProfile).photoCount}
+                          verified={(item as FeaturedProfile).verified}
+                        />
+                      ),
+                  )}
                 </div>
               </>
             )}
