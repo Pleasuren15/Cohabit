@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react"
+import { useState, useEffect, useMemo, type ReactNode } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { GlassDock, type DockItem } from "@/components/ui/glass-dock"
 import {
@@ -17,6 +17,8 @@ import {
   Scale,
   Mail,
   Search,
+  MapPin,
+  Camera,
   type LucideIcon,
 } from "lucide-react"
 import { FlipText } from "@/components/ui/flip-text"
@@ -37,6 +39,8 @@ import {
 import { Faq6, type FaqItem } from "@/components/ui/faq-06"
 import { PinItemComponent, type PlaceItem } from "@/components/ui/pin-item"
 import { ExpandableProfileCard } from "@/components/ui/expandable-profile-card"
+import { MinimalCarousel, type CarouselCard } from "@/components/ui/minimal-carousel"
+import { WigglingCards, type CardData } from "@/components/ui/wiggling-cards"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -488,6 +492,143 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [showAuth, setShowAuth] = useState(false)
   const [showProvincePicker, setShowProvincePicker] = useState(false)
   const [profilesLoading, setProfilesLoading] = useState(true)
+  const [favorites, setFavorites] = useState<Set<string>>(
+    () => new Set(["thabo-mokoena", "priya-naidoo", "lindiwe-dlamini"]),
+  )
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const WATCHLIST_GRADIENTS = [
+    "bg-gradient-to-br from-rose-500 to-pink-600",
+    "bg-gradient-to-br from-violet-500 to-purple-600",
+    "bg-gradient-to-br from-blue-500 to-cyan-600",
+    "bg-gradient-to-br from-emerald-500 to-teal-600",
+    "bg-gradient-to-br from-amber-500 to-orange-600",
+    "bg-gradient-to-br from-indigo-500 to-blue-600",
+    "bg-gradient-to-br from-teal-500 to-green-600",
+    "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+    "bg-gradient-to-br from-orange-500 to-red-600",
+  ]
+
+  const watchlistCards: CarouselCard[] = useMemo(
+    () =>
+      FEATURED_PROFILES.filter((p) => favorites.has(p.id)).map((p, i) => ({
+        id: p.id,
+        title: p.name,
+        value: p.location,
+        color: WATCHLIST_GRADIENTS[i % WATCHLIST_GRADIENTS.length],
+        imageSrc: p.imageSrc,
+      })),
+    [favorites],
+  )
+
+  const watchlistStats = useMemo(() => {
+    const savedProfiles = FEATURED_PROFILES.filter((p) => favorites.has(p.id))
+    const uniqueCities = new Set(
+      savedProfiles.map((p) => p.location.split(", ").pop() || p.location),
+    )
+    const verified = savedProfiles.filter((p) => p.verified.length > 0)
+    const fullyVerified = savedProfiles.filter((p) =>
+      p.verified.includes("credit"),
+    )
+    const totalPhotos = savedProfiles.reduce(
+      (sum, p) => sum + p.photoCount,
+      0,
+    )
+    return {
+      saved: savedProfiles.length,
+      locations: uniqueCities.size,
+      verified: verified.length,
+      fullyVerified: fullyVerified.length,
+      totalPhotos,
+      avgPhotos:
+        savedProfiles.length > 0
+          ? Math.round(totalPhotos / savedProfiles.length)
+          : 0,
+    }
+  }, [favorites])
+
+  const wigglingCardsData: CardData[] = useMemo(
+    () => [
+      {
+        id: 0,
+        icon: Heart,
+        percentage: `${
+          FEATURED_PROFILES.length > 0
+            ? Math.round(
+                (watchlistStats.saved / FEATURED_PROFILES.length) * 100,
+              )
+            : 0
+        }%`,
+        value: String(watchlistStats.saved),
+        label: "Saved",
+        gradient: "bg-gradient-to-br from-rose-500 to-pink-600",
+      },
+      {
+        id: 1,
+        icon: MapPin,
+        percentage: `${watchlistStats.locations} area${watchlistStats.locations !== 1 ? "s" : ""}`,
+        value: String(watchlistStats.locations),
+        label: "Cities",
+        gradient: "bg-gradient-to-br from-violet-500 to-purple-600",
+      },
+      {
+        id: 2,
+        icon: BadgeCheck,
+        percentage: `${
+          watchlistStats.saved > 0
+            ? Math.round(
+                (watchlistStats.verified / watchlistStats.saved) * 100,
+              )
+            : 0
+        }%`,
+        value: String(watchlistStats.verified),
+        label: "Verified",
+        gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
+      },
+      {
+        id: 3,
+        icon: Shield,
+        percentage: `${
+          watchlistStats.saved > 0
+            ? Math.round(
+                (watchlistStats.fullyVerified / watchlistStats.saved) * 100,
+              )
+            : 0
+        }%`,
+        value: String(watchlistStats.fullyVerified),
+        label: "Fully Verified",
+        gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
+      },
+      {
+        id: 4,
+        icon: Camera,
+        percentage: `avg ${watchlistStats.avgPhotos}`,
+        value: String(watchlistStats.totalPhotos),
+        label: "Photos",
+        gradient: "bg-gradient-to-br from-blue-500 to-cyan-600",
+      },
+      {
+        id: 5,
+        icon: ScrollText,
+        percentage: `${watchlistStats.saved > 0 ? `${watchlistStats.avgPhotos} ea` : "—"}`,
+        value: String(watchlistStats.avgPhotos),
+        label: "Avg / Profile",
+        gradient: "bg-gradient-to-br from-indigo-500 to-blue-600",
+      },
+    ],
+    [watchlistStats],
+  )
 
   useEffect(() => {
     const timer = setTimeout(() => setProfilesLoading(false), 600)
@@ -556,53 +697,55 @@ function MainApp({ province: initialProvince }: { province: string }) {
         )}
       </AnimatePresence>
 
-      {/* Fixed top bar: filter + search — never moves */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="mx-auto max-w-md space-y-3 px-6 pb-3 pt-6">
-          {/* Filter + province at very top */}
-          <div className="flex items-center justify-between">
-            <ListingFilter value={listingFilter} onChange={setListingFilter} />
-            <button
-              type="button"
-              onClick={() => setShowProvincePicker(true)}
-              className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
-              aria-label="Change province"
-            >
-              <img
-                src={PROVINCE_SHAPES[province]}
-                alt=""
-                className="h-5 w-5 object-contain drop-shadow-sm"
-              />
-              <span className="leading-tight">{PROVINCES[province]}</span>
-            </button>
-          </div>
-
-          {/* Search bar below filter */}
-          <form>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
-                <Search className="size-3.5 text-muted-foreground" />
-              </div>
-              <input
-                type="search"
-                id="search"
-                className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
-                placeholder="Search apartments, areas..."
-                required
-              />
+      {/* Fixed top bar: filter + search — home page only */}
+      {activeTab === "Home" && (
+        <div className="fixed top-0 left-0 right-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="mx-auto max-w-md space-y-3 px-6 pb-3 pt-6">
+            {/* Filter + province at very top */}
+            <div className="flex items-center justify-between">
+              <ListingFilter value={listingFilter} onChange={setListingFilter} />
               <button
                 type="button"
-                className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] font-medium leading-4 text-white shadow-sm transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/30"
+                onClick={() => setShowProvincePicker(true)}
+                className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
+                aria-label="Change province"
               >
-                Search
+                <img
+                  src={PROVINCE_SHAPES[province]}
+                  alt=""
+                  className="h-5 w-5 object-contain drop-shadow-sm"
+                />
+                <span className="leading-tight">{PROVINCES[province]}</span>
               </button>
             </div>
-          </form>
+
+            {/* Search bar below filter */}
+            <form>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
+                  <Search className="size-3.5 text-muted-foreground" />
+                </div>
+                <input
+                  type="search"
+                  id="search"
+                  className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
+                  placeholder="Search apartments, areas..."
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] font-medium leading-4 text-white shadow-sm transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/30"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
 
       <AppShell>
-        <main className="flex-1 p-6 pb-28 pt-32">
+        <main className={`flex-1 overflow-y-auto px-6 pb-28 ${activeTab === "Home" ? "pt-32" : "pt-6"}`}>
 
           <div className="mx-auto max-w-md">
             {activeTab === "Home" && (
@@ -631,6 +774,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                       ) : (
                         <ExpandableProfileCard
                           key={(item as FeaturedProfile).id}
+                          id={(item as FeaturedProfile).id}
                           imageSrc={(item as FeaturedProfile).imageSrc}
                           name={(item as FeaturedProfile).name}
                           location={(item as FeaturedProfile).location}
@@ -638,6 +782,8 @@ function MainApp({ province: initialProvince }: { province: string }) {
                           mapAddress={(item as FeaturedProfile).mapAddress}
                           photoCount={(item as FeaturedProfile).photoCount}
                           verified={(item as FeaturedProfile).verified}
+                          isFavorited={favorites.has((item as FeaturedProfile).id)}
+                          onToggleFavorite={toggleFavorite}
                         />
                       ),
                   )}
@@ -646,12 +792,20 @@ function MainApp({ province: initialProvince }: { province: string }) {
             )}
 
             {activeTab === "WatchList" && (
-              <>
-                <h1 className="mb-2 text-2xl font-bold">WatchList</h1>
-                <p className="text-muted-foreground">
-                  Your saved listings and favorites.
-                </p>
-              </>
+              <div className="mb-6 w-full">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      SAVED
+                    </span>
+                    <div className="mt-1 flex items-center gap-3">
+                      <div className="h-8 w-1 rounded-full bg-primary" />
+                      <h1 className="text-2xl font-semibold">WatchList</h1>
+                    </div>
+                  </div>
+                  <Heart className={`size-6 ${watchlistCards.length > 0 ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+                </div>
+              </div>
             )}
 
             {activeTab === "Messages" && (
@@ -825,6 +979,41 @@ function MainApp({ province: initialProvince }: { province: string }) {
               </div>
             )}
           </div>
+
+          {/* WatchList carousel — full width, outside max-w-md */}
+          {activeTab === "WatchList" && watchlistCards.length > 0 && (
+            <div className="flex w-full flex-col">
+              <MinimalCarousel
+                cards={watchlistCards}
+                onFavoriteToggle={(card) => {
+                  toggleFavorite(card.id)
+                }}
+              />
+              <WigglingCards cards={wigglingCardsData} />
+            </div>
+          )}
+
+          {/* WatchList empty state */}
+          {activeTab === "WatchList" && watchlistCards.length === 0 && (
+            <div className="mx-auto w-full max-w-md">
+              <div className="flex flex-col items-center justify-center gap-4 text-center min-h-[40vh]">
+                <div className="flex size-16 items-center justify-center rounded-full bg-muted/50">
+                  <Heart className="size-7 text-muted-foreground/40" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">
+                    Your WatchList is empty
+                  </h3>
+                  <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-muted-foreground">
+                    Browse profiles on the{" "}
+                    <span className="font-medium text-accent">Home</span> tab and tap the{" "}
+                    <Heart className="inline size-3.5 align-text-top text-muted-foreground" />{" "}
+                    icon to save your favorites here.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </AppShell>
 

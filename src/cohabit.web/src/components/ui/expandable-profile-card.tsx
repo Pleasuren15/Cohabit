@@ -12,12 +12,14 @@ import {
   Shield,
   Share2,
   Check,
+  Heart,
 } from "lucide-react"
 import { ViewOnMap } from "./view-on-map"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
 interface ExpandableProfileCardProps {
+  id?: string
   imageSrc?: string
   name: string
   location: string
@@ -25,6 +27,8 @@ interface ExpandableProfileCardProps {
   mapAddress?: string
   photoCount?: number
   verified?: VerificationType[]
+  isFavorited?: boolean
+  onToggleFavorite?: (id: string) => void
 }
 
 const VERIFICATION_CONFIG: Record<
@@ -38,6 +42,7 @@ const VERIFICATION_CONFIG: Record<
 }
 
 export function ExpandableProfileCard({
+  id,
   imageSrc = "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=1000",
   name,
   location,
@@ -45,6 +50,8 @@ export function ExpandableProfileCard({
   mapAddress,
   photoCount,
   verified = [],
+  isFavorited = false,
+  onToggleFavorite,
 }: ExpandableProfileCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -82,15 +89,39 @@ export function ExpandableProfileCard({
             </span>
           )}
 
-          {/* Share button — bottom-right */}
-          <button
-            type="button"
-            onClick={handleShare}
-            className="absolute bottom-2 right-2 z-10 flex size-7 items-center justify-center text-white/70 transition-colors hover:text-white"
-            aria-label="Share profile"
-          >
-            <Share2 className="size-3.5" />
-          </button>
+          {/* Bottom-right actions: heart + share */}
+          <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1">
+            {/* Favorite heart button */}
+            {onToggleFavorite && id && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleFavorite(id)
+                }}
+                className="flex size-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm transition-transform hover:scale-110"
+                aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Heart
+                  className={`size-3.5 transition-colors ${
+                    isFavorited
+                      ? "fill-red-500 text-red-500"
+                      : "text-white/80"
+                  }`}
+                />
+              </button>
+            )}
+
+            {/* Share button */}
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex size-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-white/70 transition-colors hover:text-white"
+              aria-label="Share profile"
+            >
+              <Share2 className="size-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Dark gradient bed + overlaid content at the bottom of the image */}
