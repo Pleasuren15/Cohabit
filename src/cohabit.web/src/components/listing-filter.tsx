@@ -27,7 +27,7 @@ export function ListingFilter({ value, onChange }: ListingFilterProps) {
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-zinc-200 shadow-xs dark:border-zinc-800 dark:bg-zinc-950 transition-all focus-within:ring-2 focus-within:ring-zinc-400/20 dark:focus-within:ring-zinc-500/20 dark:[&_select]:[color-scheme:dark] dark:[&_select]:bg-zinc-950"
+        className="w-full rounded-xl border border-zinc-200 shadow-xs transition-all focus-within:ring-2 focus-within:ring-zinc-400/20 dark:border-zinc-800 dark:bg-zinc-950 dark:focus-within:ring-zinc-500/20 dark:[&_select]:bg-zinc-950 dark:[&_select]:[color-scheme:dark]"
       >
         {OPTIONS.map((opt) => (
           <option

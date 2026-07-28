@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 function TwinOrbit({ className, ...props }: React.ComponentProps<"span">) {
   return (
@@ -14,7 +14,7 @@ function TwinOrbit({ className, ...props }: React.ComponentProps<"span">) {
         role="status"
         className={cn(
           "relative inline-block aspect-square rounded-full bg-current",
-          className,
+          className
         )}
         {...props}
       >
@@ -40,7 +40,7 @@ function TwinOrbit({ className, ...props }: React.ComponentProps<"span">) {
         <span className="sr-only">Loading</span>
       </span>
     </>
-  );
+  )
 }
 
-export { TwinOrbit };
+export { TwinOrbit }

@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react"
+import { useState, useEffect, useMemo, type ReactNode } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { GlassDock, type DockItem } from "@/components/ui/glass-dock"
 import {
@@ -37,6 +37,10 @@ import {
 import { Faq6, type FaqItem } from "@/components/ui/faq-06"
 import { PinItemComponent, type PlaceItem } from "@/components/ui/pin-item"
 import { ExpandableProfileCard } from "@/components/ui/expandable-profile-card"
+import {
+  MinimalCarousel,
+  type CarouselCard,
+} from "@/components/ui/minimal-carousel"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -153,11 +157,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
   },
 ]
 
-const COHABIT_PHRASES = [
-  "Find Your Match",
-  "Share Your Space",
-  "Live Together",
-]
+const COHABIT_PHRASES = ["Find Your Match", "Share Your Space", "Live Together"]
 
 const LANDING_BADGES: { label: string; icon: LucideIcon }[] = [
   { label: "Verified hosts", icon: BadgeCheck },
@@ -231,56 +231,64 @@ const MESSAGE_THREADS: PlaceItem[] = [
     id: 1,
     name: "Welcome to Cohabit",
     type: "Today",
-    status: "Your account has been created successfully. Start exploring shared living spaces near you!",
+    status:
+      "Your account has been created successfully. Start exploring shared living spaces near you!",
     pinned: false,
   },
   {
     id: 2,
     name: "New Property Alert",
     type: "Today",
-    status: "A new shared home in Sea Point has been listed that matches your preferences.",
+    status:
+      "A new shared home in Sea Point has been listed that matches your preferences.",
     pinned: false,
   },
   {
     id: 3,
     name: "Listing Liked",
     type: "Yesterday",
-    status: "Sarah liked your property \"Cozy flat in Observatory\". View their profile to connect.",
+    status:
+      'Sarah liked your property "Cozy flat in Observatory". View their profile to connect.',
     pinned: true,
   },
   {
     id: 4,
     name: "Price Drop",
     type: "Yesterday",
-    status: "Great news! \"Spacious room in Gardens\" has dropped in price by R1,500/month.",
+    status:
+      'Great news! "Spacious room in Gardens" has dropped in price by R1,500/month.',
     pinned: false,
   },
   {
     id: 5,
     name: "Profile Views",
     type: "Jul 20",
-    status: "Your listing was viewed 24 times this week. Keep your profile updated to attract more interest.",
+    status:
+      "Your listing was viewed 24 times this week. Keep your profile updated to attract more interest.",
     pinned: false,
   },
   {
     id: 6,
     name: "Verification Approved",
     type: "Jul 18",
-    status: "Your phone number has been verified. Complete ID verification to unlock more features.",
+    status:
+      "Your phone number has been verified. Complete ID verification to unlock more features.",
     pinned: false,
   },
   {
     id: 7,
     name: "New Matches",
     type: "Jul 16",
-    status: "We found 3 potential roommates based on your preferences. Check them out!",
+    status:
+      "We found 3 potential roommates based on your preferences. Check them out!",
     pinned: true,
   },
   {
     id: 8,
     name: "Weekly Digest",
     type: "Jul 14",
-    status: "5 new listings this week in your area. Don't miss out on your perfect shared home.",
+    status:
+      "5 new listings this week in your area. Don't miss out on your perfect shared home.",
     pinned: false,
   },
 ]
@@ -320,7 +328,7 @@ function SouthAfricaFlag({ className }: { className?: string }) {
 /** Shared full-bleed backdrop: MeshBackground + legibility scrim + decorative province shapes. */
 function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative w-full min-h-svh">
+    <div className="relative min-h-svh w-full">
       {/* Mesh-gradient background */}
       <MeshBackground />
 
@@ -329,26 +337,26 @@ function AppShell({ children }: { children: ReactNode }) {
 
       {/* Decorative province shapes */}
       <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden select-none">
-        {Object.values(PROVINCE_SHAPES).slice(0, 4).map((src, i) => (
-          <motion.img
-            key={i}
-            src={src}
-            alt=""
-            aria-hidden="true"
-            className="absolute h-48 w-48 object-contain opacity-[0.03] sm:h-64 sm:w-64"
-            style={{
-              left: i < 2 ? "-8%" : "auto",
-              right: i >= 2 ? "-8%" : "auto",
-              top: i % 2 === 0 ? "5%" : "auto",
-              bottom: i % 2 === 1 ? "10%" : "auto",
-            }}
-          />
-        ))}
+        {Object.values(PROVINCE_SHAPES)
+          .slice(0, 4)
+          .map((src, i) => (
+            <motion.img
+              key={i}
+              src={src}
+              alt=""
+              aria-hidden="true"
+              className="absolute h-48 w-48 object-contain opacity-[0.03] sm:h-64 sm:w-64"
+              style={{
+                left: i < 2 ? "-8%" : "auto",
+                right: i >= 2 ? "-8%" : "auto",
+                top: i % 2 === 0 ? "5%" : "auto",
+                bottom: i % 2 === 1 ? "10%" : "auto",
+              }}
+            />
+          ))}
       </div>
 
-      <div className="relative z-10 flex min-h-svh flex-col">
-        {children}
-      </div>
+      <div className="relative z-10 flex min-h-svh flex-col">{children}</div>
     </div>
   )
 }
@@ -431,7 +439,7 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
         <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-8">
           {/* Hero */}
           <div className="space-y-3">
-            <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+            <span className="inline-block text-xs font-semibold tracking-[0.2em] text-accent uppercase">
               Find your space
             </span>
             <FlipText
@@ -442,9 +450,8 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
             >
               {COHABIT_PHRASES[phraseIndex]}
             </FlipText>
-            <p className="mx-auto max-w-xs text-balance text-sm leading-relaxed text-muted-foreground">
-              Browse shared homes and compatible housemates across South
-              Africa.
+            <p className="mx-auto max-w-xs text-sm leading-relaxed text-balance text-muted-foreground">
+              Browse shared homes and compatible housemates across South Africa.
             </p>
           </div>
 
@@ -473,10 +480,42 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
               </span>
             ))}
           </div>
-
         </div>
       </main>
     </LandingShell>
+  )
+}
+
+/** Clean, professional page header — consistent across all tabs */
+function PageHeader({
+  icon: Icon,
+  title,
+  subtitle,
+  iconClassName,
+}: {
+  icon: LucideIcon
+  title: string
+  subtitle?: string
+  iconClassName?: string
+}) {
+  return (
+    <div className="mb-6 w-full">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-7 w-1 rounded-full bg-primary/80" />
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+            {subtitle && (
+              <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+            )}
+          </div>
+        </div>
+        <Icon
+          className={cn("size-5 shrink-0 text-muted-foreground", iconClassName)}
+          aria-hidden="true"
+        />
+      </div>
+    </div>
   )
 }
 
@@ -488,6 +527,45 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [showAuth, setShowAuth] = useState(false)
   const [showProvincePicker, setShowProvincePicker] = useState(false)
   const [profilesLoading, setProfilesLoading] = useState(true)
+  const [favorites, setFavorites] = useState<Set<string>>(
+    () => new Set(["thabo-mokoena", "priya-naidoo", "lindiwe-dlamini"])
+  )
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const WATCHLIST_GRADIENTS = [
+    "bg-gradient-to-br from-rose-500 to-pink-600",
+    "bg-gradient-to-br from-violet-500 to-purple-600",
+    "bg-gradient-to-br from-blue-500 to-cyan-600",
+    "bg-gradient-to-br from-emerald-500 to-teal-600",
+    "bg-gradient-to-br from-amber-500 to-orange-600",
+    "bg-gradient-to-br from-indigo-500 to-blue-600",
+    "bg-gradient-to-br from-teal-500 to-green-600",
+    "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+    "bg-gradient-to-br from-orange-500 to-red-600",
+  ]
+
+  const watchlistCards: CarouselCard[] = useMemo(
+    () =>
+      FEATURED_PROFILES.filter((p) => favorites.has(p.id)).map((p, i) => ({
+        id: p.id,
+        title: p.name,
+        value: p.location,
+        color: WATCHLIST_GRADIENTS[i % WATCHLIST_GRADIENTS.length],
+        imageSrc: p.imageSrc,
+      })),
+    [favorites]
+  )
 
   useEffect(() => {
     const timer = setTimeout(() => setProfilesLoading(false), 600)
@@ -519,7 +597,8 @@ function MainApp({ province: initialProvince }: { province: string }) {
       title: "Account",
       icon: User,
       onClick: () => setShowAuth(true),
-      className: "bg-red-500 [&_svg]:!text-white [&_span]:!text-white self-stretch -mr-4 -mt-3 -mb-3",
+      className:
+        "bg-red-500 [&_svg]:!text-white [&_span]:!text-white self-stretch -mr-4 -mt-3 -mb-3",
     },
   ]
 
@@ -556,120 +635,121 @@ function MainApp({ province: initialProvince }: { province: string }) {
         )}
       </AnimatePresence>
 
-      {/* Fixed top bar: filter + search — never moves */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="mx-auto max-w-md space-y-3 px-6 pb-3 pt-6">
-          {/* Filter + province at very top */}
-          <div className="flex items-center justify-between">
-            <ListingFilter value={listingFilter} onChange={setListingFilter} />
-            <button
-              type="button"
-              onClick={() => setShowProvincePicker(true)}
-              className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
-              aria-label="Change province"
-            >
-              <img
-                src={PROVINCE_SHAPES[province]}
-                alt=""
-                className="h-5 w-5 object-contain drop-shadow-sm"
-              />
-              <span className="leading-tight">{PROVINCES[province]}</span>
-            </button>
-          </div>
-
-          {/* Search bar below filter */}
-          <form>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
-                <Search className="size-3.5 text-muted-foreground" />
-              </div>
-              <input
-                type="search"
-                id="search"
-                className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
-                placeholder="Search apartments, areas..."
-                required
+      {/* Fixed top bar: filter + search — home page only */}
+      {activeTab === "Home" && (
+        <div className="fixed top-0 right-0 left-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="mx-auto max-w-md space-y-3 px-6 pt-6 pb-3">
+            {/* Filter + province at very top */}
+            <div className="flex items-center justify-between">
+              <ListingFilter
+                value={listingFilter}
+                onChange={setListingFilter}
               />
               <button
                 type="button"
-                className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] font-medium leading-4 text-white shadow-sm transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/30"
+                onClick={() => setShowProvincePicker(true)}
+                className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
+                aria-label="Change province"
               >
-                Search
+                <img
+                  src={PROVINCE_SHAPES[province]}
+                  alt=""
+                  className="h-5 w-5 object-contain drop-shadow-sm"
+                />
+                <span className="leading-tight">{PROVINCES[province]}</span>
               </button>
             </div>
-          </form>
+
+            {/* Search bar below filter */}
+            <form>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
+                  <Search className="size-3.5 text-muted-foreground" />
+                </div>
+                <input
+                  type="search"
+                  id="search"
+                  className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
+                  placeholder="Search apartments, areas..."
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] leading-4 font-medium text-white shadow-sm transition-colors hover:bg-accent/90 focus:ring-2 focus:ring-accent/30 focus:outline-none"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
 
       <AppShell>
-        <main className="flex-1 p-6 pb-28 pt-32">
-
+        <main
+          className={`flex-1 overflow-y-auto px-6 pb-28 ${activeTab === "Home" ? "pt-32" : "pt-6"}`}
+        >
           <div className="mx-auto max-w-md">
             {activeTab === "Home" && (
               <>
                 {/* Featured profiles */}
                 <div className="w-full space-y-3 text-left">
-                  {(profilesLoading ? Array.from({ length: FEATURED_PROFILES.length }) : FEATURED_PROFILES).map(
-                    (item, i) =>
-                      profilesLoading ? (
-                        <div
-                          key={i}
-                          className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm"
-                        >
-                          {/* Image skeleton */}
-                          <div className="h-32 animate-pulse bg-muted sm:h-40" />
-                          {/* Content skeleton */}
-                          <div className="space-y-2.5 px-4 pb-4 pt-3">
-                            <div className="h-4 w-3/5 animate-pulse rounded bg-muted" />
-                            <div className="h-3 w-2/5 animate-pulse rounded bg-muted" />
-                            <div className="flex gap-2">
-                              <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
-                              <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
-                            </div>
+                  {(profilesLoading
+                    ? Array.from({ length: FEATURED_PROFILES.length })
+                    : FEATURED_PROFILES
+                  ).map((item, i) =>
+                    profilesLoading ? (
+                      <div
+                        key={i}
+                        className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm"
+                      >
+                        {/* Image skeleton */}
+                        <div className="h-32 animate-pulse bg-muted sm:h-40" />
+                        {/* Content skeleton */}
+                        <div className="space-y-2.5 px-4 pt-3 pb-4">
+                          <div className="h-4 w-3/5 animate-pulse rounded bg-muted" />
+                          <div className="h-3 w-2/5 animate-pulse rounded bg-muted" />
+                          <div className="flex gap-2">
+                            <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
+                            <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
                           </div>
                         </div>
-                      ) : (
-                        <ExpandableProfileCard
-                          key={(item as FeaturedProfile).id}
-                          imageSrc={(item as FeaturedProfile).imageSrc}
-                          name={(item as FeaturedProfile).name}
-                          location={(item as FeaturedProfile).location}
-                          bio={(item as FeaturedProfile).bio}
-                          mapAddress={(item as FeaturedProfile).mapAddress}
-                          photoCount={(item as FeaturedProfile).photoCount}
-                          verified={(item as FeaturedProfile).verified}
-                        />
-                      ),
+                      </div>
+                    ) : (
+                      <ExpandableProfileCard
+                        key={(item as FeaturedProfile).id}
+                        id={(item as FeaturedProfile).id}
+                        imageSrc={(item as FeaturedProfile).imageSrc}
+                        name={(item as FeaturedProfile).name}
+                        location={(item as FeaturedProfile).location}
+                        bio={(item as FeaturedProfile).bio}
+                        mapAddress={(item as FeaturedProfile).mapAddress}
+                        photoCount={(item as FeaturedProfile).photoCount}
+                        verified={(item as FeaturedProfile).verified}
+                        isFavorited={favorites.has(
+                          (item as FeaturedProfile).id
+                        )}
+                        onToggleFavorite={toggleFavorite}
+                      />
+                    )
                   )}
                 </div>
               </>
             )}
 
             {activeTab === "WatchList" && (
-              <>
-                <h1 className="mb-2 text-2xl font-bold">WatchList</h1>
-                <p className="text-muted-foreground">
-                  Your saved listings and favorites.
-                </p>
-              </>
+              <PageHeader
+                icon={Heart}
+                title="WatchList"
+                iconClassName={
+                  watchlistCards.length > 0 ? "fill-red-500 text-red-500" : ""
+                }
+              />
             )}
 
             {activeTab === "Messages" && (
               <div className="flex flex-col items-center">
-                <div className="mb-6 w-full">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                        INBOX
-                      </span>
-                      <div className="mt-1 flex items-center gap-3">
-                        <div className="h-8 w-1 rounded-full bg-primary" />
-                        <h1 className="text-2xl font-semibold">Messages</h1>
-                      </div>
-                    </div>
-                    <MessageSquare className="size-6 text-muted-foreground" />
-                  </div>
-                </div>
+                <PageHeader icon={MessageSquare} title="Messages" />
                 <PinItemComponent
                   items={MESSAGE_THREADS}
                   pinnedLabel="Pinned"
@@ -680,24 +760,11 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
             {activeTab === "Info" && (
               <div className="flex flex-col items-center">
-                {/* Terms & Conditions — Messages-style header */}
-                <div className="mb-6 w-full">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                        LEGAL
-                      </span>
-                      <div className="mt-1 flex items-center gap-3">
-                        <div className="h-8 w-1 rounded-full bg-primary" />
-                        <h1 className="text-2xl font-semibold">Terms &amp; Conditions</h1>
-                      </div>
-                    </div>
-                    <ScrollText className="size-6 text-muted-foreground" />
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Last updated 21 July 2026
-                  </p>
-                </div>
+                <PageHeader
+                  icon={ScrollText}
+                  title="Terms &amp; Conditions"
+                  subtitle="Last updated 21 July 2026"
+                />
 
                 <div className="w-full space-y-3">
                   {TERMS.map((section, i) => {
@@ -741,78 +808,107 @@ function MainApp({ province: initialProvince }: { province: string }) {
                   />
                 </div>
 
-                {/* Verification Badges — Messages-style header */}
-                <div className="mt-16 mb-6 w-full">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                        TRUST & SAFETY
-                      </span>
-                      <div className="mt-1 flex items-center gap-3">
-                        <div className="h-8 w-1 rounded-full bg-primary" />
-                        <h2 className="text-2xl font-semibold">Verification Badges</h2>
-                      </div>
-                    </div>
-                    <Shield className="size-6 text-muted-foreground" />
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Build trust in the community.
-                  </p>
+                <div className="mt-16 w-full">
+                  <PageHeader
+                    icon={Shield}
+                    title="Verification Badges"
+                    subtitle="Build trust in the community."
+                  />
                 </div>
 
                 <div className="w-full">
                   <Tabs defaultValue="phone" className="gap-4">
                     <TabsList className="rounded-2xl bg-transparent">
-                      <TabsTrigger value="phone" className="data-[state=active]:bg-blue-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                      <TabsTrigger
+                        value="phone"
+                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white"
+                      >
                         <Smartphone className="mr-1 size-3.5" />
                         Phone
                       </TabsTrigger>
-                      <TabsTrigger value="email" className="data-[state=active]:bg-purple-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                      <TabsTrigger
+                        value="email"
+                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white"
+                      >
                         <Mail className="mr-1 size-3.5" />
                         Email
                       </TabsTrigger>
-                      <TabsTrigger value="id" className="data-[state=active]:bg-green-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                      <TabsTrigger
+                        value="id"
+                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white"
+                      >
                         <BadgeCheck className="mr-1 size-3.5" />
                         ID
                       </TabsTrigger>
-                      <TabsTrigger value="credit" className="data-[state=active]:bg-amber-500 data-[state=active]:!text-white flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all">
+                      <TabsTrigger
+                        value="credit"
+                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white"
+                      >
                         <Shield className="mr-1 size-3.5" />
                         Credit
                       </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="phone" className="bg-blue-50/50 mt-0 rounded-3xl border-2 border-dashed border-blue-200 p-6">
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">Phone</h5>
-                      <p className="text-blue-700/80 border-blue-500 border-l-2 pl-4 text-sm leading-6">
-                        Confirm your mobile via OTP to{' '}
-                        <span className="text-blue-900 font-semibold">verify your identity</span>.
-                        Fastest way to build trust.
+                    <TabsContent
+                      value="phone"
+                      className="mt-0 rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6"
+                    >
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">
+                        Phone
+                      </h5>
+                      <p className="border-l-2 border-blue-500 pl-4 text-sm leading-6 text-blue-700/80">
+                        Confirm your mobile via OTP to{" "}
+                        <span className="font-semibold text-blue-900">
+                          verify your identity
+                        </span>
+                        . Fastest way to build trust.
                       </p>
                     </TabsContent>
 
-                    <TabsContent value="email" className="bg-purple-50/50 mt-0 rounded-3xl border-2 border-dashed border-purple-200 p-6">
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-800">Email</h5>
-                      <p className="text-purple-700/80 border-purple-500 border-l-2 pl-4 text-sm leading-6">
-                        Verify your email address to{' '}
-                        <span className="text-purple-900 font-semibold">receive important updates</span>{' '}
+                    <TabsContent
+                      value="email"
+                      className="mt-0 rounded-3xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-6"
+                    >
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-800">
+                        Email
+                      </h5>
+                      <p className="border-l-2 border-purple-500 pl-4 text-sm leading-6 text-purple-700/80">
+                        Verify your email address to{" "}
+                        <span className="font-semibold text-purple-900">
+                          receive important updates
+                        </span>{" "}
                         and confirm your account ownership.
                       </p>
                     </TabsContent>
 
-                    <TabsContent value="id" className="bg-green-50/50 mt-0 rounded-3xl border-2 border-dashed border-green-200 p-6">
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">ID</h5>
-                      <p className="text-green-700/80 border-green-500 border-l-2 pl-4 text-sm leading-6">
-                        Upload your SA ID or passport for{' '}
-                        <span className="text-green-900 font-semibold">official verification</span>.
-                        Encrypted and never shared publicly.
+                    <TabsContent
+                      value="id"
+                      className="mt-0 rounded-3xl border-2 border-dashed border-green-200 bg-green-50/50 p-6"
+                    >
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">
+                        ID
+                      </h5>
+                      <p className="border-l-2 border-green-500 pl-4 text-sm leading-6 text-green-700/80">
+                        Upload your SA ID or passport for{" "}
+                        <span className="font-semibold text-green-900">
+                          official verification
+                        </span>
+                        . Encrypted and never shared publicly.
                       </p>
                     </TabsContent>
 
-                    <TabsContent value="credit" className="bg-amber-50/50 mt-0 rounded-3xl border-2 border-dashed border-amber-200 p-6">
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">Credit</h5>
-                      <p className="text-amber-700/80 border-amber-500 border-l-2 pl-4 text-sm leading-6">
-                        Complete a{' '}
-                        <span className="text-amber-900 font-semibold">financial responsibility check</span>{' '}
+                    <TabsContent
+                      value="credit"
+                      className="mt-0 rounded-3xl border-2 border-dashed border-amber-200 bg-amber-50/50 p-6"
+                    >
+                      <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">
+                        Credit
+                      </h5>
+                      <p className="border-l-2 border-amber-500 pl-4 text-sm leading-6 text-amber-700/80">
+                        Complete a{" "}
+                        <span className="font-semibold text-amber-900">
+                          financial responsibility check
+                        </span>{" "}
                         to unlock priority listings.
                       </p>
                     </TabsContent>
@@ -825,11 +921,44 @@ function MainApp({ province: initialProvince }: { province: string }) {
               </div>
             )}
           </div>
+
+          {/* WatchList carousel — full width, outside max-w-md */}
+          {activeTab === "WatchList" && watchlistCards.length > 0 && (
+            <MinimalCarousel
+              cards={watchlistCards}
+              onFavoriteToggle={(card) => {
+                toggleFavorite(card.id)
+              }}
+            />
+          )}
+
+          {/* WatchList empty state */}
+          {activeTab === "WatchList" && watchlistCards.length === 0 && (
+            <div className="mx-auto w-full max-w-md">
+              <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
+                <div className="flex size-16 items-center justify-center rounded-full bg-muted/50">
+                  <Heart className="size-7 text-muted-foreground/40" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">
+                    Your WatchList is empty
+                  </h3>
+                  <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-muted-foreground">
+                    Browse profiles on the{" "}
+                    <span className="font-medium text-accent">Home</span> tab
+                    and tap the{" "}
+                    <Heart className="inline size-3.5 align-text-top text-muted-foreground" />{" "}
+                    icon to save your favorites here.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </AppShell>
 
       {/* Fixed bottom dock — mobile-first */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center">
+      <div className="fixed right-0 bottom-0 left-0 z-30 flex justify-center">
         <div className="w-full max-w-md">
           <GlassDock
             items={dockItems}
@@ -898,7 +1027,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                         aria-hidden="true"
                         className="h-7 w-7 object-contain drop-shadow-sm"
                       />
-                      <span className="text-[10px] font-medium leading-tight text-center">
+                      <span className="text-center text-[10px] leading-tight font-medium">
                         {name}
                       </span>
                     </button>

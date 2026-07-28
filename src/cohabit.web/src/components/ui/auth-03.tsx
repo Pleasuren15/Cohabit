@@ -56,20 +56,20 @@ function PasswordInput({
 
   return (
     <div className="relative">
-      <MdLock className="text-muted-foreground absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2" />
+      <MdLock className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         id={id}
         type={visible ? "text" : "password"}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-muted focus-visible:ring-accent/30 h-10 border-border pl-10 pr-10 shadow-none"
+        className="h-10 border-border bg-muted pr-10 pl-10 shadow-none focus-visible:ring-accent/30"
         required
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+        className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
         aria-label={visible ? "Hide password" : "Show password"}
       >
         {visible ? (
@@ -105,31 +105,37 @@ export function Auth3({
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [isSigningUp, setIsSigningUp] = useState(false)
 
-  const handleSignIn = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSigningIn(true)
-    try {
-      await Promise.all([
-        onSignIn?.(siEmail, siPassword),
-        new Promise<void>((r) => setTimeout(r, 1200)),
-      ])
-    } finally {
-      setIsSigningIn(false)
-    }
-  }, [siEmail, siPassword, onSignIn])
+  const handleSignIn = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault()
+      setIsSigningIn(true)
+      try {
+        await Promise.all([
+          onSignIn?.(siEmail, siPassword),
+          new Promise<void>((r) => setTimeout(r, 1200)),
+        ])
+      } finally {
+        setIsSigningIn(false)
+      }
+    },
+    [siEmail, siPassword, onSignIn]
+  )
 
-  const handleSignUp = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSigningUp(true)
-    try {
-      await Promise.all([
-        onSignUp?.(suName, suEmail, suPassword),
-        new Promise<void>((r) => setTimeout(r, 1200)),
-      ])
-    } finally {
-      setIsSigningUp(false)
-    }
-  }, [suName, suEmail, suPassword, onSignUp])
+  const handleSignUp = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault()
+      setIsSigningUp(true)
+      try {
+        await Promise.all([
+          onSignUp?.(suName, suEmail, suPassword),
+          new Promise<void>((r) => setTimeout(r, 1200)),
+        ])
+      } finally {
+        setIsSigningUp(false)
+      }
+    },
+    [suName, suEmail, suPassword, onSignUp]
+  )
 
   return (
     <div className="flex w-full items-center justify-center px-4 py-10">
@@ -146,24 +152,24 @@ export function Auth3({
         </div>
 
         {/* Auth card */}
-        <div className="border-border bg-card rounded-2xl border shadow-lg">
+        <div className="rounded-2xl border border-border bg-card shadow-lg">
           <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="bg-muted mx-4 mt-4 grid h-10 w-auto grid-cols-2 gap-1 rounded-lg p-0.5">
+            <TabsList className="mx-4 mt-4 grid h-10 w-auto grid-cols-2 gap-1 rounded-lg bg-muted p-0.5">
               <TabsTrigger
                 value="signin"
-                className="data-[state=active]:bg-background rounded-md text-xs font-medium data-[state=active]:shadow-sm"
+                className="rounded-md text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 Sign in
               </TabsTrigger>
               <TabsTrigger
                 value="signup"
-                className="data-[state=active]:bg-background rounded-md text-xs font-medium data-[state=active]:shadow-sm"
+                className="rounded-md text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 Create account
               </TabsTrigger>
             </TabsList>
 
-            <div className="relative overflow-hidden px-4 pb-4 pt-2">
+            <div className="relative overflow-hidden px-4 pt-2 pb-4">
               <AnimatePresence mode="wait">
                 {tab === "signin" && (
                   <motion.div
@@ -192,7 +198,7 @@ export function Auth3({
                           </div>
                           <div className="flex items-center gap-3">
                             <Separator className="flex-1" />
-                            <span className="text-muted-foreground shrink-0 text-[11px]">
+                            <span className="shrink-0 text-[11px] text-muted-foreground">
                               {dividerText}
                             </span>
                             <Separator className="flex-1" />
@@ -207,7 +213,7 @@ export function Auth3({
                           Email address
                         </Label>
                         <div className="relative">
-                          <MdEmail className="text-muted-foreground absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2" />
+                          <MdEmail className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             id="auth3-si-email"
                             type="email"
@@ -215,7 +221,7 @@ export function Auth3({
                             value={siEmail}
                             onChange={(e) => setSiEmail(e.target.value)}
                             autoComplete="email"
-                            className="bg-muted focus-visible:ring-accent/30 h-10 border-border pl-10 shadow-none"
+                            className="h-10 border-border bg-muted pl-10 shadow-none focus-visible:ring-accent/30"
                             required
                           />
                         </div>
@@ -232,7 +238,7 @@ export function Auth3({
                           <button
                             type="button"
                             onClick={onForgotPassword}
-                            className="text-accent rounded-none text-xs underline-offset-4 transition-all hover:underline"
+                            className="rounded-none text-xs text-accent underline-offset-4 transition-all hover:underline"
                           >
                             {forgotPasswordText}
                           </button>
@@ -249,7 +255,7 @@ export function Auth3({
                       <Button
                         type="submit"
                         disabled={isSigningIn}
-                        className="h-10 w-full gap-2 font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        className="h-10 w-full gap-2 font-semibold disabled:pointer-events-none disabled:opacity-60"
                       >
                         {isSigningIn ? (
                           <span className="flex items-center justify-center">
@@ -292,7 +298,7 @@ export function Auth3({
 
                         <div className="flex items-center gap-3">
                           <Separator className="flex-1" />
-                          <span className="text-muted-foreground shrink-0 text-[11px]">
+                          <span className="shrink-0 text-[11px] text-muted-foreground">
                             {dividerText}
                           </span>
                           <Separator className="flex-1" />
@@ -309,7 +315,7 @@ export function Auth3({
                           Full name
                         </Label>
                         <div className="relative">
-                          <MdPerson className="text-muted-foreground absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2" />
+                          <MdPerson className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             id="auth3-su-name"
                             type="text"
@@ -317,7 +323,7 @@ export function Auth3({
                             value={suName}
                             onChange={(e) => setSuName(e.target.value)}
                             autoComplete="name"
-                            className="bg-muted focus-visible:ring-accent/30 h-10 border-border pl-10 shadow-none"
+                            className="h-10 border-border bg-muted pl-10 shadow-none focus-visible:ring-accent/30"
                             required
                           />
                         </div>
@@ -331,14 +337,14 @@ export function Auth3({
                           Work email
                         </Label>
                         <div className="relative">
-                          <MdEmail className="text-muted-foreground absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2" />
+                          <MdEmail className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             id="auth3-su-email"
                             type="email"
                             placeholder="jane@company.com"
                             value={suEmail}
                             onChange={(e) => setSuEmail(e.target.value)}
-                            className="bg-muted focus-visible:ring-accent/30 h-10 border-border pl-10 shadow-none"
+                            className="h-10 border-border bg-muted pl-10 shadow-none focus-visible:ring-accent/30"
                             required
                           />
                         </div>
@@ -362,7 +368,7 @@ export function Auth3({
                       <Button
                         type="submit"
                         disabled={isSigningUp}
-                        className="mt-2 h-10 w-full gap-2 font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        className="mt-2 h-10 w-full gap-2 font-semibold disabled:pointer-events-none disabled:opacity-60"
                       >
                         {isSigningUp ? (
                           <span className="flex items-center justify-center">
@@ -374,7 +380,7 @@ export function Auth3({
                         {signUpLabel}
                       </Button>
 
-                      <p className="text-muted-foreground text-center text-xs leading-relaxed">
+                      <p className="text-center text-xs leading-relaxed text-muted-foreground">
                         By creating an account you agree to our{" "}
                         <a
                           href={termsHref}

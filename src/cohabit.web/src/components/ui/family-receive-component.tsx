@@ -1,45 +1,45 @@
-'use client';
+"use client"
 
-import React, { useState } from 'react';
+import React, { useState } from "react"
 import {
   motion,
   AnimatePresence,
   LayoutGroup,
   type Transition,
-} from 'motion/react';
-import { X, MapPin } from 'lucide-react';
+} from "motion/react"
+import { X, MapPin } from "lucide-react"
 
 export interface FamilyReceiveComponentProps {
-  triggerLabel?: string;
-  title?: string;
-  description?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  onConfirm?: () => void;
-  onCancel?: () => void;
-  icon?: React.ReactNode;
+  triggerLabel?: string
+  title?: string
+  description?: string
+  confirmLabel?: string
+  cancelLabel?: string
+  onConfirm?: () => void
+  onCancel?: () => void
+  icon?: React.ReactNode
   /** Open the dialog immediately instead of showing the trigger button first. */
-  defaultOpen?: boolean;
+  defaultOpen?: boolean
 }
 
 const springTransition: Transition = {
-  type: 'spring',
+  type: "spring",
   bounce: 0,
   duration: 0.4,
-};
+}
 
 export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
-  triggerLabel = 'Receive',
-  title = 'Confirm',
-  description = 'Are you sure you want to receive hell load of money?',
-  confirmLabel = 'Receive',
-  cancelLabel = 'Cancel',
+  triggerLabel = "Receive",
+  title = "Confirm",
+  description = "Are you sure you want to receive hell load of money?",
+  confirmLabel = "Receive",
+  cancelLabel = "Cancel",
   onConfirm,
   onCancel,
   icon,
   defaultOpen = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
     <div className="relative flex h-[400px] w-[360px] max-w-full items-center justify-center md:w-[720px]">
@@ -83,8 +83,8 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
 
                 <button
                   onClick={() => {
-                    setIsOpen(false);
-                    onCancel?.();
+                    setIsOpen(false)
+                    onCancel?.()
                   }}
                   className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-white/10 dark:hover:text-white"
                   aria-label="Close"
@@ -109,8 +109,8 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
                 <div className="mt-7 flex gap-3 md:mt-8">
                   <button
                     onClick={() => {
-                      setIsOpen(false);
-                      onCancel?.();
+                      setIsOpen(false)
+                      onCancel?.()
                     }}
                     className="h-12 flex-1 rounded-xl bg-zinc-100 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-200 md:text-base dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10"
                   >
@@ -120,8 +120,8 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
                   <motion.button
                     layoutId="action-button"
                     onClick={() => {
-                      onConfirm?.();
-                      setIsOpen(false);
+                      onConfirm?.()
+                      setIsOpen(false)
                     }}
                     className="h-12 flex-1 cursor-pointer rounded-xl bg-[#00A6F4] text-sm font-semibold text-white shadow-lg shadow-[#00A6F4]/25 transition-colors hover:bg-[#0095db] md:text-base"
                     transition={springTransition}
@@ -135,5 +135,5 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
         </AnimatePresence>
       </LayoutGroup>
     </div>
-  );
-};
+  )
+}

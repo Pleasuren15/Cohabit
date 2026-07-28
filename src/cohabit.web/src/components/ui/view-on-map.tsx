@@ -38,7 +38,9 @@ export function ViewOnMap({
   return (
     <div className="w-full">
       <div className="flex w-full flex-col items-center justify-center">
-        <div className={`relative flex w-full items-center justify-center ${className}`}>
+        <div
+          className={`relative flex w-full items-center justify-center ${className}`}
+        >
           <AnimatePresence mode="popLayout">
             {!isOpen ? (
               <motion.div
@@ -112,7 +114,7 @@ export function ViewOnMap({
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   onClick={toggleOpen}
-                  className="absolute right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-muted"
+                  className="absolute top-3 right-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-muted"
                 >
                   <X className="h-4 w-4" strokeWidth={2.5} />
                 </motion.button>

@@ -19,10 +19,7 @@ const ThemeProviderContext = React.createContext<
   ThemeProviderState | undefined
 >(undefined)
 
-export function ThemeProvider({
-  children,
-  ...props
-}: ThemeProviderProps) {
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   // Always light — no localStorage, no 'd' key toggle, no system preference
   React.useEffect(() => {
     const root = document.documentElement
@@ -30,7 +27,11 @@ export function ThemeProvider({
     root.classList.add("light")
 
     // Clean up any stale localStorage key from previous sessions
-    try { localStorage.removeItem("theme") } catch { /* noop */ }
+    try {
+      localStorage.removeItem("theme")
+    } catch {
+      /* noop */
+    }
   }, [])
 
   const value = React.useMemo(
