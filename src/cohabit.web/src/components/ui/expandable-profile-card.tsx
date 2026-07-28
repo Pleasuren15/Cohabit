@@ -83,14 +83,14 @@ export function ExpandableProfileCard({
 
           {/* Photo count badge — top-right */}
           {photoCount !== undefined && (
-            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+            <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
               <Camera className="size-3" />
               {photoCount}
             </span>
           )}
 
           {/* Bottom-right actions: heart + share */}
-          <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1">
+          <div className="absolute right-2 bottom-2 z-10 flex items-center gap-1">
             {/* Favorite heart button */}
             {onToggleFavorite && id && (
               <button
@@ -100,13 +100,13 @@ export function ExpandableProfileCard({
                   onToggleFavorite(id)
                 }}
                 className="flex size-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm transition-transform hover:scale-110"
-                aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                aria-label={
+                  isFavorited ? "Remove from favorites" : "Add to favorites"
+                }
               >
                 <Heart
                   className={`size-3.5 transition-colors ${
-                    isFavorited
-                      ? "fill-red-500 text-red-500"
-                      : "text-white/80"
+                    isFavorited ? "fill-red-500 text-red-500" : "text-white/80"
                   }`}
                 />
               </button>
@@ -116,7 +116,7 @@ export function ExpandableProfileCard({
             <button
               type="button"
               onClick={handleShare}
-              className="flex size-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-white/70 transition-colors hover:text-white"
+              className="flex size-7 items-center justify-center rounded-full bg-black/50 text-white/70 backdrop-blur-sm transition-colors hover:text-white"
               aria-label="Share profile"
             >
               <Share2 className="size-3.5" />
@@ -125,52 +125,52 @@ export function ExpandableProfileCard({
         </div>
 
         {/* Dark gradient bed + overlaid content at the bottom of the image */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-8">
+        <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-8">
           <div className="space-y-1.5 px-4 pb-3">
-          {/* Name + chevron */}
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <h3 className="truncate text-sm font-semibold text-white drop-shadow-sm">
-                {name}
-              </h3>
+            {/* Name + chevron */}
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-white drop-shadow-sm">
+                  {name}
+                </h3>
+              </div>
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="shrink-0"
+              >
+                <ChevronDown className="size-5 text-white/70" />
+              </motion.div>
             </div>
-            <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="shrink-0"
-            >
-              <ChevronDown className="size-5 text-white/70" />
-            </motion.div>
-          </div>
 
-          {/* Location */}
-          <p className="flex items-center gap-1 text-xs text-white/80">
-            <MapPin className="size-3 shrink-0" />
-            <span className="truncate">{location}</span>
-          </p>
+            {/* Location */}
+            <p className="flex items-center gap-1 text-xs text-white/80">
+              <MapPin className="size-3 shrink-0" />
+              <span className="truncate">{location}</span>
+            </p>
 
-          {/* Verification badges */}
-          {verified.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {verified.map((v) => {
-                const config = VERIFICATION_CONFIG[v]
-                const Icon = config.icon
-                return (
-                  <span
-                    key={v}
-                    className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm"
-                  >
+            {/* Verification badges */}
+            {verified.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {verified.map((v) => {
+                  const config = VERIFICATION_CONFIG[v]
+                  const Icon = config.icon
+                  return (
                     <span
-                      className={`size-1.5 rounded-full ${config.dotColor}`}
-                    />
-                    <Icon className="size-2.5" />
-                    {config.label}
-                  </span>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                      key={v}
+                      className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm"
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${config.dotColor}`}
+                      />
+                      <Icon className="size-2.5" />
+                      {config.label}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </button>
 
@@ -185,7 +185,7 @@ export function ExpandableProfileCard({
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="border-t border-border/30 px-4 pb-4 pt-3">
+            <div className="border-t border-border/30 px-4 pt-3 pb-4">
               {/* Bio */}
               {bio && (
                 <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
@@ -194,9 +194,7 @@ export function ExpandableProfileCard({
               )}
 
               {/* View on Map */}
-              {mapAddress && (
-                <ViewOnMap address={mapAddress} />
-              )}
+              {mapAddress && <ViewOnMap address={mapAddress} />}
             </div>
           </motion.div>
         )}

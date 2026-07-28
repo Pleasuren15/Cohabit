@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
 import {
   motion,
   AnimatePresence,
   MotionConfig,
   type Transition,
-} from "motion/react";
+} from "motion/react"
 import {
   Pin,
   MessageCircle,
@@ -13,18 +13,18 @@ import {
   UtensilsCrossed,
   Fuel,
   Pill,
-} from "lucide-react";
-import { MessagePopover } from "@/components/ui/popover-12";
+} from "lucide-react"
+import { MessagePopover } from "@/components/ui/popover-12"
 
 export type PlaceItem = {
-  id: number;
-  name: string;
-  type: string;
-  status: string;
-  icon?: React.ComponentType<{ size?: number }>;
-  avatarUrl?: string;
-  pinned?: boolean;
-};
+  id: number
+  name: string
+  type: string
+  status: string
+  icon?: React.ComponentType<{ size?: number }>
+  avatarUrl?: string
+  pinned?: boolean
+}
 
 const INITIAL_PLACES: PlaceItem[] = [
   {
@@ -67,19 +67,19 @@ const INITIAL_PLACES: PlaceItem[] = [
     icon: Pill,
     pinned: false,
   },
-];
+]
 
 const springConfig: Transition = {
   type: "spring",
   stiffness: 400,
   damping: 40,
-};
+}
 
 type PinItemComponentProps = {
-  items?: PlaceItem[];
-  pinnedLabel?: string;
-  allLabel?: string;
-};
+  items?: PlaceItem[]
+  pinnedLabel?: string
+  allLabel?: string
+}
 
 export const PinItemComponent = ({
   items = INITIAL_PLACES,
@@ -88,18 +88,18 @@ export const PinItemComponent = ({
 }: PinItemComponentProps) => {
   const [places, setPlaces] = useState<PlaceItem[]>(
     items.map((p) => ({ ...p, pinned: p.pinned ?? false }))
-  );
+  )
 
   const togglePin = (id: number) => {
     setPlaces((prev) =>
       prev.map((place) =>
         place.id === id ? { ...place, pinned: !place.pinned } : place
       )
-    );
-  };
+    )
+  }
 
-  const pinnedPlaces = places.filter((p) => p.pinned);
-  const unpinnedPlaces = places.filter((p) => !p.pinned);
+  const pinnedPlaces = places.filter((p) => p.pinned)
+  const unpinnedPlaces = places.filter((p) => !p.pinned)
 
   return (
     <div className="w-full space-y-6">
@@ -149,15 +149,15 @@ export const PinItemComponent = ({
         </motion.div>
       </MotionConfig>
     </div>
-  );
-};
+  )
+}
 
 const PlaceCard = ({
   place,
   onToggle,
 }: {
-  place: PlaceItem;
-  onToggle: (id: number) => void;
+  place: PlaceItem
+  onToggle: (id: number) => void
 }) => {
   return (
     <motion.div
@@ -171,8 +171,8 @@ const PlaceCard = ({
         status={place.status}
         pinned={place.pinned}
       >
-        <div className="flex flex-1 min-w-0 cursor-pointer items-center gap-3">
-          <motion.div layout className="flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+          <motion.div layout className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
               <h4 className="truncate text-base font-semibold text-foreground">
                 {place.name}
@@ -203,5 +203,5 @@ const PlaceCard = ({
         <Pin size={16} className="fill-white" />
       </motion.button>
     </motion.div>
-  );
-};
+  )
+}

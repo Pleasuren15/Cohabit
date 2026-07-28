@@ -28,13 +28,13 @@ export function Faq6({ badge, title, faqs, className }: Faq6Props) {
     <section
       className={cn(
         "mx-auto w-full max-w-6xl border-y border-dashed border-border md:border-x",
-        className,
+        className
       )}
     >
       <div className="relative grid grid-cols-1 md:grid-cols-12">
-        <div className="flex flex-col justify-start border-b border-dashed border-border p-8 md:col-span-4 md:border-b-0 md:border-r md:p-12 lg:col-span-5">
+        <div className="flex flex-col justify-start border-b border-dashed border-border p-8 md:col-span-4 md:border-r md:border-b-0 md:p-12 lg:col-span-5">
           {badge && (
-            <span className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="mb-4 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               {badge}
             </span>
           )}
@@ -50,9 +50,9 @@ export function Faq6({ badge, title, faqs, className }: Faq6Props) {
               <AccordionItem
                 key={faq.id}
                 value={faq.id}
-                className="border-b border-dashed border-border px-6 md:px-8 last:border-b-0"
+                className="border-b border-dashed border-border px-6 last:border-b-0 md:px-8"
               >
-                <AccordionTrigger className="group flex items-center py-6 md:py-8 hover:no-underline [&_[data-slot=accordion-trigger-icon]]:hidden">
+                <AccordionTrigger className="group flex items-center py-6 hover:no-underline md:py-8 [&_[data-slot=accordion-trigger-icon]]:hidden">
                   <div className="flex flex-1 items-center gap-6">
                     <span className="text-xs font-semibold tracking-widest text-muted-foreground">
                       Q{index + 1}
@@ -66,7 +66,7 @@ export function Faq6({ badge, title, faqs, className }: Faq6Props) {
                     <FaMinus className="hidden h-3 w-3 group-data-[state=open]:block" />
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 pl-[3.25rem] pr-12">
+                <AccordionContent className="pr-12 pb-8 pl-[3.25rem]">
                   <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
                     {faq.answer}
                   </p>
