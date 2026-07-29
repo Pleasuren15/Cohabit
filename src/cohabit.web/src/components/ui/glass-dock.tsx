@@ -672,7 +672,7 @@ export const GlassDock = React.forwardRef<HTMLDivElement, GlassDockProps>(
                   ) : (
                     <Icon
                       className={cn(
-                        "h-[22px] w-[22px] transition-colors duration-200",
+                        "h-[18px] w-[18px] transition-colors duration-200",
                         isHighlighted ? "text-accent" : "text-muted-foreground"
                       )}
                     />
@@ -682,7 +682,7 @@ export const GlassDock = React.forwardRef<HTMLDivElement, GlassDockProps>(
                 {showLabels && (
                   <span
                     className={cn(
-                      "text-[10px] leading-none font-medium whitespace-nowrap transition-colors duration-200",
+                      "text-[9px] leading-none font-medium whitespace-nowrap transition-colors duration-200",
                       isHighlighted ? "text-accent" : "text-muted-foreground"
                     )}
                   >

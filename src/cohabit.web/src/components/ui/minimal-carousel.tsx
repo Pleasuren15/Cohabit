@@ -16,11 +16,13 @@ export interface CarouselCard {
 interface MinimalCarouselProps {
   cards: CarouselCard[]
   onFavoriteToggle?: (card: CarouselCard) => void
+  onViewListing?: (card: CarouselCard) => void
 }
 
 export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
   cards,
   onFavoriteToggle,
+  onViewListing,
 }) => {
   // Default-select the first card
   const [activeId, setActiveId] = useState<string | null>(
@@ -76,19 +78,8 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                     <div className={`absolute inset-0 ${activeCard.color}`} />
                   )}
 
-                  {/* Top: view listing button + unfavorite heart */}
+                  {/* Top: unfavorite heart + view listing button */}
                   <div className="relative z-10 flex items-start justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // TODO: navigate to full listing view
-                      }}
-                      className="rounded-full bg-black/20 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-black/30"
-                    >
-                      View listing
-                    </button>
-
                     {onFavoriteToggle && (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -104,6 +95,17 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                         <Heart className="size-4 fill-red-500 text-red-500" />
                       </motion.button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onViewListing?.(activeCard)
+                      }}
+                      className="rounded-full bg-black/20 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-black/30"
+                    >
+                      View listing
+                    </button>
                   </div>
 
                   {/* Bottom: name + location */}
@@ -150,6 +152,18 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                   ) : (
                     <div className={`absolute inset-0 ${card.color}`} />
                   )}
+
+                  {/* Top-right view button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onViewListing?.(card)
+                    }}
+                    className="absolute top-2 right-2 z-10 cursor-pointer rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-black/50"
+                  >
+                    View
+                  </button>
 
                   <div className="relative z-10 overflow-hidden">
                     <h4
