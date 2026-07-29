@@ -37,6 +37,7 @@ import {
 import { Faq6, type FaqItem } from "@/components/ui/faq-06"
 import { PinItemComponent, type PlaceItem } from "@/components/ui/pin-item"
 import { ExpandableProfileCard } from "@/components/ui/expandable-profile-card"
+import { DetailPage } from "@/components/ui/detail-page"
 import {
   MinimalCarousel,
   type CarouselCard,
@@ -527,6 +528,13 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [showAuth, setShowAuth] = useState(false)
   const [showProvincePicker, setShowProvincePicker] = useState(false)
   const [profilesLoading, setProfilesLoading] = useState(true)
+  const [selectedListing, setSelectedListing] =
+    useState<FeaturedProfile | null>(null)
+
+  const handleViewListing = (id: string) => {
+    const profile = FEATURED_PROFILES.find((p) => p.id === id)
+    if (profile) setSelectedListing(profile)
+  }
   const [favorites, setFavorites] = useState<Set<string>>(
     () => new Set(["thabo-mokoena", "priya-naidoo", "lindiwe-dlamini"])
   )
@@ -730,6 +738,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                           (item as FeaturedProfile).id
                         )}
                         onToggleFavorite={toggleFavorite}
+                        onView={handleViewListing}
                       />
                     )
                   )}
@@ -929,6 +938,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
               onFavoriteToggle={(card) => {
                 toggleFavorite(card.id)
               }}
+              onViewListing={(card) => handleViewListing(card.id)}
             />
           )}
 
@@ -965,7 +975,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
             activeTitle={activeTab}
             showLabels
             className="w-full"
-            dockClassName="rounded-none bg-background/95 border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
+            dockClassName="rounded-none bg-background/95 border-t border-border gap-2 px-3 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
           />
         </div>
       </div>
@@ -1036,6 +1046,21 @@ function MainApp({ province: initialProvince }: { province: string }) {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Listing detail page overlay */}
+      <AnimatePresence mode="wait">
+        {selectedListing && (
+          <DetailPage
+            key={selectedListing.id}
+            {...selectedListing}
+            onBack={() => setSelectedListing(null)}
+            relatedListings={FEATURED_PROFILES.filter(
+              (p) => p.id !== selectedListing.id
+            )}
+            onViewRelated={handleViewListing}
+          />
         )}
       </AnimatePresence>
     </>

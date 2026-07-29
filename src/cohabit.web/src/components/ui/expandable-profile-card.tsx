@@ -29,6 +29,7 @@ interface ExpandableProfileCardProps {
   verified?: VerificationType[]
   isFavorited?: boolean
   onToggleFavorite?: (id: string) => void
+  onView?: (id: string) => void
 }
 
 const VERIFICATION_CONFIG: Record<
@@ -52,6 +53,7 @@ export function ExpandableProfileCard({
   verified = [],
   isFavorited = false,
   onToggleFavorite,
+  onView,
 }: ExpandableProfileCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -81,13 +83,28 @@ export function ExpandableProfileCard({
             className="h-full w-full object-cover"
           />
 
-          {/* Photo count badge — top-right */}
-          {photoCount !== undefined && (
-            <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
-              <Camera className="size-3" />
-              {photoCount}
-            </span>
-          )}
+          {/* Top-right actions: view + photo count */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            {/* View button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onView?.(id ?? name.toLowerCase().replace(/\s+/g, "-"))
+              }}
+              className="inline-flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+            >
+              View
+            </button>
+
+            {/* Photo count badge */}
+            {photoCount !== undefined && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+                <Camera className="size-3" />
+                {photoCount}
+              </span>
+            )}
+          </div>
 
           {/* Bottom-right actions: heart + share */}
           <div className="absolute right-2 bottom-2 z-10 flex items-center gap-1">
