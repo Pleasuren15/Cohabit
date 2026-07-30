@@ -54,6 +54,8 @@ interface FeaturedProfile {
   bio: string
   photoCount: number
   verified: VerificationType[]
+  province: string
+  type: "roommate" | "rentals"
 }
 
 const FEATURED_PROFILES: FeaturedProfile[] = [
@@ -67,6 +69,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Creative graphic designer looking for a shared space with like-minded people. I love hosting braais on weekends and exploring hiking trails.",
     photoCount: 6,
     verified: ["phone", "email", "id"],
+    province: "wc",
+    type: "roommate",
   },
   {
     id: "priya-naidoo",
@@ -78,6 +82,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Remote software developer seeking a quiet, clean flatmate. I enjoy cooking, yoga, and beach walks. Non-smoker, pet-friendly.",
     photoCount: 8,
     verified: ["phone", "email", "id", "credit"],
+    province: "kzn",
+    type: "roommate",
   },
   {
     id: "james-van-der-merwe",
@@ -89,6 +95,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Medical student at UCT. I keep irregular hours but I'm tidy and respectful. Love board games and morning runs.",
     photoCount: 4,
     verified: ["phone", "id"],
+    province: "wc",
+    type: "roommate",
   },
   {
     id: "lindiwe-dlamini",
@@ -100,6 +108,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Marketing manager at a tech startup. I work from home 3 days a week and enjoy wine tasting, live music, and meeting new people.",
     photoCount: 10,
     verified: ["phone", "email", "id", "credit"],
+    province: "gp",
+    type: "roommate",
   },
   {
     id: "sipho-zulu",
@@ -111,6 +121,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Freelance photographer and content creator. I'm out most days shooting but enjoy cozy nights in. Looking for an artsy flatmate.",
     photoCount: 7,
     verified: ["phone", "email"],
+    province: "gp",
+    type: "roommate",
   },
   {
     id: "emma-coetzee",
@@ -122,6 +134,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Postgraduate student in viticulture. Quiet and dedicated, but I unwind with hiking and dog parks on weekends. Non-smoker.",
     photoCount: 5,
     verified: ["phone", "id", "credit"],
+    province: "wc",
+    type: "roommate",
   },
   {
     id: "nomsa-mthembu",
@@ -133,6 +147,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Registered nurse working night shifts at Addington Hospital. I need a calm, clean space during the day to rest. Respectful and drama-free.",
     photoCount: 3,
     verified: ["phone", "email", "id"],
+    province: "kzn",
+    type: "roommate",
   },
   {
     id: "kyle-petersen",
@@ -144,6 +160,8 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Chef at a restaurant in town. I bring home leftovers and love sharing meals. Tidy in shared spaces, out most evenings. Looking for a relaxed flatmate.",
     photoCount: 6,
     verified: ["phone", "id", "credit"],
+    province: "wc",
+    type: "rentals",
   },
   {
     id: "zanele-khumalo",
@@ -155,6 +173,125 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     bio: "Civil engineer working on infrastructure projects. I'm outdoorsy and enjoy trail running, but also love quiet evenings with a good book. Pet-friendly.",
     photoCount: 9,
     verified: ["phone", "email", "id"],
+    province: "gp",
+    type: "rentals",
+  },
+  {
+    id: "mandla-grootboom",
+    imageSrc:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Mandla Grootboom",
+    location: "Summerstrand, Gqeberha",
+    mapAddress: "Summerstrand, Gqeberha, South Africa",
+    bio: "Lecturer at NMU looking for a quiet flatmate. I enjoy reading, surfing on weekends, and live music. Non-smoker, no pets.",
+    photoCount: 5,
+    verified: ["phone", "email", "id"],
+    province: "ec",
+    type: "roommate",
+  },
+  {
+    id: "natasha-kemp",
+    imageSrc:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Natasha Kemp",
+    location: "Eastern Beach, East London",
+    mapAddress: "East London, South Africa",
+    bio: "Accountant at a firm in town. I'm neat, organised, and enjoy a peaceful home environment. Love beach walks and Sunday roasts.",
+    photoCount: 7,
+    verified: ["phone", "id", "credit"],
+    province: "ec",
+    type: "rentals",
+  },
+  {
+    id: "katlego-mokoena",
+    imageSrc:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Katlego Mokoena",
+    location: "Bloemfontein Central",
+    mapAddress: "Bloemfontein, South Africa",
+    bio: "Journalist covering local news. I work flexible hours and enjoy hiking, photography, and trying new restaurants. Looking for a laid-back flatmate.",
+    photoCount: 4,
+    verified: ["phone", "email"],
+    province: "fs",
+    type: "roommate",
+  },
+  {
+    id: "anelize-visser",
+    imageSrc:
+      "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Anelize Visser",
+    location: "Universitas, Bloemfontein",
+    mapAddress: "Bloemfontein, South Africa",
+    bio: "Masters student at UFS. I need a quiet study environment but enjoy board games and coffee chats. Tidy, respectful, and drama-free.",
+    photoCount: 3,
+    verified: ["phone", "id"],
+    province: "fs",
+    type: "roommate",
+  },
+  {
+    id: "tendai-masuku",
+    imageSrc:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Tendai Masuku",
+    location: "Polokwane Central",
+    mapAddress: "Polokwane, South Africa",
+    bio: "Pharmacist at a local hospital. I work shifts but keep a tidy home. Love gardening, cooking, and weekend braais. Pet-friendly.",
+    photoCount: 6,
+    verified: ["phone", "email", "id"],
+    province: "lp",
+    type: "roommate",
+  },
+  {
+    id: "megan-dlamini",
+    imageSrc:
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Megan Dlamini",
+    location: "Mbombela City Center",
+    mapAddress: "Mbombela, South Africa",
+    bio: "Tourism guide specialising in Kruger Park safaris. Outgoing, adventurous, and love sharing travel stories. Looking for an easygoing flatmate.",
+    photoCount: 8,
+    verified: ["phone", "email", "id", "credit"],
+    province: "mp",
+    type: "roommate",
+  },
+  {
+    id: "johan-dupreez",
+    imageSrc:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Johan du Preez",
+    location: "Kimberley City",
+    mapAddress: "Kimberley, South Africa",
+    bio: "Mining engineer with a calm demeanour. I spend most weekends at the diamond fields but need a clean home base. Non-smoker, no pets.",
+    photoCount: 4,
+    verified: ["phone", "id"],
+    province: "nc",
+    type: "roommate",
+  },
+  {
+    id: "olwethu-ntuli",
+    imageSrc:
+      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Olwethu Ntuli",
+    location: "Mahikeng City",
+    mapAddress: "Mahikeng, South Africa",
+    bio: "Social worker passionate about community development. I enjoy quiet evenings, cooking traditional meals, and tending to my plants.",
+    photoCount: 5,
+    verified: ["phone", "email", "id"],
+    province: "nw",
+    type: "roommate",
+  },
+  {
+    id: "nadia-van-wyk",
+    imageSrc:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=1000&h=700",
+    name: "Nadia van Wyk",
+    location: "Klerksdorp Central",
+    mapAddress: "Klerksdorp, South Africa",
+    bio: "High school teacher looking for a quiet, respectful flatmate. I'm tidy, love baking, and enjoy weekend hikes. Non-smoker.",
+    photoCount: 6,
+    verified: ["phone", "email", "id", "credit"],
+    province: "nw",
+    type: "rentals",
   },
 ]
 
@@ -531,8 +668,19 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [selectedListing, setSelectedListing] =
     useState<FeaturedProfile | null>(null)
 
+  const filteredProfiles = useMemo(
+    () =>
+      FEATURED_PROFILES.filter((p) => {
+        if (p.province !== province) return false
+        if (listingFilter === "roommate" && p.type !== "roommate") return false
+        if (listingFilter === "rentals" && p.type !== "rentals") return false
+        return true
+      }),
+    [province, listingFilter]
+  )
+
   const handleViewListing = (id: string) => {
-    const profile = FEATURED_PROFILES.find((p) => p.id === id)
+    const profile = filteredProfiles.find((p) => p.id === id)
     if (profile) setSelectedListing(profile)
   }
   const [favorites, setFavorites] = useState<Set<string>>(
@@ -703,17 +851,15 @@ function MainApp({ province: initialProvince }: { province: string }) {
                 {/* Featured profiles */}
                 <div className="w-full space-y-3 text-left">
                   {(profilesLoading
-                    ? Array.from({ length: FEATURED_PROFILES.length })
-                    : FEATURED_PROFILES
+                    ? Array.from({ length: filteredProfiles.length })
+                    : filteredProfiles
                   ).map((item, i) =>
                     profilesLoading ? (
                       <div
                         key={i}
                         className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm"
                       >
-                        {/* Image skeleton */}
                         <div className="h-32 animate-pulse bg-muted sm:h-40" />
-                        {/* Content skeleton */}
                         <div className="space-y-2.5 px-4 pt-3 pb-4">
                           <div className="h-4 w-3/5 animate-pulse rounded bg-muted" />
                           <div className="h-3 w-2/5 animate-pulse rounded bg-muted" />
@@ -1056,7 +1202,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
             key={selectedListing.id}
             {...selectedListing}
             onBack={() => setSelectedListing(null)}
-            relatedListings={FEATURED_PROFILES.filter(
+            relatedListings={filteredProfiles.filter(
               (p) => p.id !== selectedListing.id
             )}
             onViewRelated={handleViewListing}
