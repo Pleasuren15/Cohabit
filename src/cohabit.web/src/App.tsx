@@ -42,10 +42,11 @@ import {
   MinimalCarousel,
   type CarouselCard,
 } from "@/components/ui/minimal-carousel"
+import { UserProfile, type UserData } from "@/components/ui/user-profile"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
-interface FeaturedProfile {
+export interface FeaturedProfile {
   id: string
   imageSrc: string
   name: string
@@ -56,6 +57,7 @@ interface FeaturedProfile {
   verified: VerificationType[]
   province: string
   type: "roommate" | "rentals"
+  userId: string
 }
 
 const FEATURED_PROFILES: FeaturedProfile[] = [
@@ -71,6 +73,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id"],
     province: "wc",
     type: "roommate",
+    userId: "user-1",
   },
   {
     id: "priya-naidoo",
@@ -84,6 +87,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id", "credit"],
     province: "kzn",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "james-van-der-merwe",
@@ -97,6 +101,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "id"],
     province: "wc",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "lindiwe-dlamini",
@@ -110,6 +115,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id", "credit"],
     province: "gp",
     type: "roommate",
+    userId: "user-1",
   },
   {
     id: "sipho-zulu",
@@ -123,6 +129,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email"],
     province: "gp",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "emma-coetzee",
@@ -136,6 +143,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "id", "credit"],
     province: "wc",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "nomsa-mthembu",
@@ -149,6 +157,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id"],
     province: "kzn",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "kyle-petersen",
@@ -162,6 +171,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "id", "credit"],
     province: "wc",
     type: "rentals",
+    userId: "user-1",
   },
   {
     id: "zanele-khumalo",
@@ -175,6 +185,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id"],
     province: "gp",
     type: "rentals",
+    userId: "user-2",
   },
   {
     id: "mandla-grootboom",
@@ -188,6 +199,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id"],
     province: "ec",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "natasha-kemp",
@@ -201,6 +213,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "id", "credit"],
     province: "ec",
     type: "rentals",
+    userId: "user-2",
   },
   {
     id: "katlego-mokoena",
@@ -214,6 +227,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email"],
     province: "fs",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "anelize-visser",
@@ -227,6 +241,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "id"],
     province: "fs",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "tendai-masuku",
@@ -240,6 +255,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id"],
     province: "lp",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "megan-dlamini",
@@ -253,6 +269,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id", "credit"],
     province: "mp",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "johan-dupreez",
@@ -266,6 +283,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "id"],
     province: "nc",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "olwethu-ntuli",
@@ -279,6 +297,7 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id"],
     province: "nw",
     type: "roommate",
+    userId: "user-2",
   },
   {
     id: "nadia-van-wyk",
@@ -292,8 +311,23 @@ const FEATURED_PROFILES: FeaturedProfile[] = [
     verified: ["phone", "email", "id", "credit"],
     province: "nw",
     type: "rentals",
+    userId: "user-2",
   },
 ]
+
+const MOCK_USER: UserData = {
+  id: "user-1",
+  firstName: "Thabo",
+  lastName: "Mokoena",
+  cellphone: "+27 82 123 4567",
+  email: "thabo.m@example.com",
+  dateOfBirth: "1994-05-12",
+  gender: "male",
+  bio: "Creative graphic designer looking for a shared space.",
+  isOtpVerified: true,
+  avatarUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=200&h=200",
+  timestamp: "June 2025",
+}
 
 const COHABIT_PHRASES = ["Find Your Match", "Share Your Space", "Live Together"]
 
@@ -662,11 +696,14 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [province, setProvince] = useState(initialProvince)
   const [activeTab, setActiveTab] = useState("Home")
   const [listingFilter, setListingFilter] = useState("all")
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
+  const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
   const [showAuth, setShowAuth] = useState(false)
   const [showProvincePicker, setShowProvincePicker] = useState(false)
   const [profilesLoading, setProfilesLoading] = useState(true)
   const [selectedListing, setSelectedListing] =
     useState<FeaturedProfile | null>(null)
+  const [extraListings, setExtraListings] = useState<FeaturedProfile[]>([])
 
   const filteredProfiles = useMemo(
     () =>
@@ -750,9 +787,15 @@ function MainApp({ province: initialProvince }: { province: string }) {
       onClick: () => setActiveTab("Info"),
     },
     {
-      title: "Account",
+      title: currentUser ? "Profile" : "Account",
       icon: User,
-      onClick: () => setShowAuth(true),
+      onClick: () => {
+        if (currentUser) {
+          setActiveTab("Profile")
+        } else {
+          setShowAuth(true)
+        }
+      },
       className:
         "bg-red-500 [&_svg]:!text-white [&_span]:!text-white self-stretch -mr-4 -mt-3 -mb-3",
     },
@@ -785,7 +828,18 @@ function MainApp({ province: initialProvince }: { province: string }) {
               >
                 <X className="size-5" />
               </button>
-              <Auth3 />
+              <Auth3
+                onSignIn={() => {
+                  setCurrentUser(MOCK_USER)
+                  setShowAuth(false)
+                  setActiveTab("Profile")
+                }}
+                onSignUp={() => {
+                  setCurrentUser(MOCK_USER)
+                  setShowAuth(false)
+                  setActiveTab("Profile")
+                }}
+              />
             </motion.div>
           </motion.div>
         )}
@@ -1074,6 +1128,46 @@ function MainApp({ province: initialProvince }: { province: string }) {
                   </p>
                 </div>
               </div>
+            )}
+
+            {activeTab === "Profile" && currentUser && (
+              <UserProfile
+                user={currentUser}
+                userListings={[
+                  ...FEATURED_PROFILES.filter(
+                    (p) => p.userId === currentUser.id
+                  ),
+                  ...extraListings,
+                ]}
+                verified={userVerified}
+                onVerify={(type) => {
+                  if (!userVerified.includes(type)) {
+                    setUserVerified((prev) => [...prev, type])
+                  }
+                }}
+                onUpdateUser={setCurrentUser}
+                onToggleFavorite={toggleFavorite}
+                onViewListing={handleViewListing}
+
+                onAddListing={(data) => {
+                  const id = `user-listing-${Date.now()}`
+                  const newProfile: FeaturedProfile = {
+                    id,
+                    imageSrc:
+                      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=1000&h=700",
+                    name: data.name,
+                    location: data.location,
+                    mapAddress: data.location,
+                    bio: data.bio,
+                    photoCount: 0,
+                    verified: [],
+                    province,
+                    type: data.type,
+                    userId: currentUser.id,
+                  }
+                  setExtraListings((prev) => [...prev, newProfile])
+                }}
+              />
             )}
           </div>
 
