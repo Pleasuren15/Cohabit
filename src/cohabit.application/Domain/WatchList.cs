@@ -4,7 +4,7 @@ public sealed class WatchList
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
-    public string ListingId { get; private set; }
+    public Guid ListingId { get; private set; }
 
     // Navigation
     public User User { get; private set; } = null!;
@@ -12,7 +12,7 @@ public sealed class WatchList
 
     private WatchList() { }
 
-    public static WatchList Create(Guid userId, string listingId)
+    public static WatchList Create(Guid userId, Guid listingId)
     {
         return new WatchList
         {
