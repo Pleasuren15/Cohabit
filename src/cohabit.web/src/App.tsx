@@ -65,6 +65,7 @@ export interface FeaturedProfile {
   availableFrom: string
   responseTime: string
   rules: string[]
+  amenities?: string[]
 }
 
 const FEATURED_PROFILES: FeaturedProfile[] = [
@@ -829,6 +830,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [province, setProvince] = useState(initialProvince)
   const [activeTab, setActiveTab] = useState("Home")
   const [listingFilter, setListingFilter] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
   const [showAuth, setShowAuth] = useState(false)
@@ -844,13 +846,21 @@ function MainApp({ province: initialProvince }: { province: string }) {
         if (p.province !== province) return false
         if (listingFilter === "roommate" && p.type !== "roommate") return false
         if (listingFilter === "rentals" && p.type !== "rentals") return false
+        const q = searchQuery.trim().toLowerCase()
+        if (
+          q &&
+          !`${p.name} ${p.location}`.toLowerCase().includes(q)
+        )
+          return false
         return true
       }),
-    [province, listingFilter]
+    [province, listingFilter, searchQuery]
   )
 
   const handleViewListing = (id: string) => {
-    const profile = filteredProfiles.find((p) => p.id === id)
+    const profile =
+      filteredProfiles.find((p) => p.id === id) ||
+      extraListings.find((p) => p.id === id)
     if (profile) setSelectedListing(profile)
   }
   const [favorites, setFavorites] = useState<Set<string>>(
@@ -883,14 +893,16 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
   const watchlistCards: CarouselCard[] = useMemo(
     () =>
-      FEATURED_PROFILES.filter((p) => favorites.has(p.id)).map((p, i) => ({
-        id: p.id,
-        title: p.name,
-        value: p.location,
-        color: WATCHLIST_GRADIENTS[i % WATCHLIST_GRADIENTS.length],
-        imageSrc: p.imageSrc,
-      })),
-    [favorites]
+      [...FEATURED_PROFILES, ...extraListings]
+        .filter((p) => favorites.has(p.id))
+        .map((p, i) => ({
+          id: p.id,
+          title: p.name,
+          value: p.location,
+          color: WATCHLIST_GRADIENTS[i % WATCHLIST_GRADIENTS.length],
+          imageSrc: p.imageSrc,
+        })),
+    [favorites, extraListings]
   )
 
   useEffect(() => {
@@ -1002,7 +1014,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
             </div>
 
             {/* Search bar below filter */}
-            <form>
+            <form onSubmit={(e) => e.preventDefault()}>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
                   <Search className="size-3.5 text-muted-foreground" />
@@ -1010,12 +1022,23 @@ function MainApp({ province: initialProvince }: { province: string }) {
                 <input
                   type="search"
                   id="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
                   placeholder="Search apartments, areas..."
-                  required
                 />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="absolute top-1/2 end-16 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : null}
                 <button
-                  type="button"
+                  type="submit"
                   className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] leading-4 font-medium text-white shadow-sm transition-colors hover:bg-accent/90 focus:ring-2 focus:ring-accent/30 focus:outline-none"
                 >
                   Search
@@ -1033,6 +1056,21 @@ function MainApp({ province: initialProvince }: { province: string }) {
           <div className="mx-auto max-w-md">
             {activeTab === "Home" && (
               <>
+                {/* No results state */}
+                {!profilesLoading && filteredProfiles.length === 0 && (
+                  <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
+                    <div className="flex size-14 items-center justify-center rounded-full bg-muted/50">
+                      <Search className="size-6 text-muted-foreground/40" />
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground">
+                      No matching listings
+                    </h3>
+                    <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-muted-foreground">
+                      Try a different search term, filter, or province.
+                    </p>
+                  </div>
+                )}
+
                 {/* Featured profiles */}
                 <div className="w-full space-y-3 text-left">
                   {(profilesLoading
@@ -1289,7 +1327,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=1000&h=700",
                     name: data.name,
                     location: data.location,
-                    mapAddress: data.location,
+                    mapAddress: data.address || data.location,
                     bio: data.bio,
                     photoCount: 0,
                     verified: [],
@@ -1303,6 +1341,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                     availableFrom: data.availableFrom,
                     responseTime: "Within the hour",
                     rules: [],
+                    amenities: data.amenities,
                   }
                   setExtraListings((prev) => [...prev, newProfile])
                 }}
@@ -1441,9 +1480,10 @@ function MainApp({ province: initialProvince }: { province: string }) {
               setActiveTab("Messages")
             }}
             onBack={() => setSelectedListing(null)}
-            relatedListings={filteredProfiles.filter(
-              (p) => p.id !== selectedListing.id
-            )}
+            relatedListings={[
+              ...filteredProfiles,
+              ...extraListings,
+            ].filter((p) => p.id !== selectedListing.id)}
             onViewRelated={handleViewListing}
           />
         )}

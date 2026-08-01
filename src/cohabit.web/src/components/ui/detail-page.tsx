@@ -15,16 +15,6 @@ import {
   MessageSquare,
   ChevronRight,
   ChevronLeft,
-  Wifi,
-  Car,
-  Coffee,
-  ShowerHead,
-  WashingMachine,
-  Dumbbell,
-  Flame,
-  Snowflake,
-  Tv,
-  Refrigerator,
   Heart,
   Check,
   Share2,
@@ -35,6 +25,7 @@ import {
   Zap,
   ShieldCheck,
 } from "lucide-react"
+import { AMENITIES } from "@/lib/amenities"
 import { ViewOnMap } from "./view-on-map"
 import {
   Tooltip,
@@ -67,6 +58,7 @@ interface DetailPageProps {
   availableFrom: string
   responseTime: string
   rules: string[]
+  amenities?: string[]
   isFavorited?: boolean
   onToggleFavorite?: (id: string) => void
   onRequestView?: (id: string) => void
@@ -93,19 +85,6 @@ const VERIFICATION_CONFIG: Record<
   id: { icon: BadgeCheck, label: "ID" },
   credit: { icon: Shield, label: "Credit" },
 }
-
-const AMENITIES: { name: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { name: "Wi-Fi", icon: Wifi },
-  { name: "Parking", icon: Car },
-  { name: "Coffee bar", icon: Coffee },
-  { name: "En-suite bathroom", icon: ShowerHead },
-  { name: "Laundry", icon: WashingMachine },
-  { name: "Gym", icon: Dumbbell },
-  { name: "Heating", icon: Flame },
-  { name: "Air conditioning", icon: Snowflake },
-  { name: "Smart TV", icon: Tv },
-  { name: "Fridge", icon: Refrigerator },
-]
 
 /** Derive a consistent phone number from the profile id. */
 function derivePhone(id: string): string {
@@ -137,6 +116,7 @@ export function DetailPage({
   availableFrom,
   responseTime,
   rules,
+  amenities,
   isFavorited = false,
   onToggleFavorite,
   onRequestView,
@@ -453,7 +433,10 @@ export function DetailPage({
                   className="flex gap-2 overflow-x-auto scroll-smooth py-1 pr-1 [&::-webkit-scrollbar]:hidden"
                   style={{ scrollbarWidth: "none" }}
                 >
-                  {AMENITIES.map((amenity) => (
+                  {AMENITIES.filter(
+                    (amenity) =>
+                      !amenities || amenities.length === 0 || amenities.includes(amenity.name)
+                  ).map((amenity) => (
                     <Tooltip key={amenity.name}>
                       <TooltipTrigger asChild>
                         <span className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border/50 bg-muted/30 text-muted-foreground">

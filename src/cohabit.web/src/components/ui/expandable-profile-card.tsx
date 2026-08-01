@@ -72,9 +72,17 @@ export function ExpandableProfileCard({
   return (
     <div className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm transition-colors">
       {/* --- Image background + header overlay (always visible) --- */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
         onClick={() => setIsExpanded((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            setIsExpanded((prev) => !prev)
+          }
+        }}
         className="relative block w-full cursor-pointer text-left"
       >
         {/* Full-width background image */}
@@ -200,7 +208,7 @@ export function ExpandableProfileCard({
             )}
           </div>
         </div>
-      </button>
+      </div>
 
       {/* --- Expanded content (animated vertical reveal) --- */}
       <AnimatePresence initial={false}>
