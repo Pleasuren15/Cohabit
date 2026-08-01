@@ -1,36 +1,40 @@
 using System.Text.Json.Serialization;
+using cohabit.api.DatabaseAccessors;
+using cohabit.api.Helpers;
+using cohabit.api.Infrastructure;
 using cohabit.api.Services;
 using cohabit.application.Data;
 using cohabit.application.Data.Seeding;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.AddAzureBlobServiceClient("files");
 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    })
+    .AddMvcOptions(options =>
+    {
+        options.Filters.Add<ApiExceptionFilter>();
     });
 
-builder.Services.AddScoped<IBlobService, BlobService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ICache, InMemoryCache>();
+
+builder.Services.AddScoped<IListingAccessor, ListingAccessor>();
+builder.Services.AddScoped<IProvinceAccessor, ProvinceAccessor>();
+builder.Services.AddScoped<IListingService, ListingService>();
+builder.Services.AddScoped<IProvinceService, ProvinceService>();
+
 builder.Services.AddScoped<ILookupSeeder, ProvinceSeeder>();
 builder.Services.AddScoped<ILookupSeeder, ListingTypeSeeder>();
 builder.Services.AddScoped<ILookupSeeder, AmenitySeeder>();
 builder.Services.AddScoped<ILookupSeeder, RuleSeeder>();
 builder.Services.AddScoped<ILookupSeeder, VerificationTypeSeeder>();
 builder.Services.AddScoped<LookupSeedManager>();
-builder.Services.AddHttpContextAccessor();
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
-
-builder.Services.AddAuthorization();
 
 builder.AddNpgsqlDbContext<CohabitDbContext>("cohabit-db");
 
@@ -49,9 +53,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapControllers();
 
