@@ -65,6 +65,7 @@ export interface FeaturedProfile {
   availableFrom: string
   responseTime: string
   rules: string[]
+  amenities?: string[]
 }
 
 const FEATURED_PROFILES: FeaturedProfile[] = [
@@ -850,7 +851,9 @@ function MainApp({ province: initialProvince }: { province: string }) {
   )
 
   const handleViewListing = (id: string) => {
-    const profile = filteredProfiles.find((p) => p.id === id)
+    const profile =
+      filteredProfiles.find((p) => p.id === id) ||
+      extraListings.find((p) => p.id === id)
     if (profile) setSelectedListing(profile)
   }
   const [favorites, setFavorites] = useState<Set<string>>(
@@ -1289,7 +1292,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=1000&h=700",
                     name: data.name,
                     location: data.location,
-                    mapAddress: data.location,
+                    mapAddress: data.address || data.location,
                     bio: data.bio,
                     photoCount: 0,
                     verified: [],
@@ -1303,6 +1306,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                     availableFrom: data.availableFrom,
                     responseTime: "Within the hour",
                     rules: [],
+                    amenities: data.amenities,
                   }
                   setExtraListings((prev) => [...prev, newProfile])
                 }}

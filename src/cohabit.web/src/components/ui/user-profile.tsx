@@ -21,6 +21,7 @@ import {
   Building2,
 } from "lucide-react"
 import type { FeaturedProfile } from "@/App"
+import { AMENITIES } from "@/lib/amenities"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 import { EditProfile, type ProfileData } from "./edit-profile"
 import { FileUpload, type FileItem, type FileStatus } from "./file-upload-2"
@@ -41,7 +42,7 @@ export interface UserData {
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
-const LISTING_STEPS = ["Type", "Basics", "Price & size", "Description", "Photos"]
+const LISTING_STEPS = ["Type", "Basics", "Price & size", "Amenities", "Description", "Photos"]
 
 const ALL_VERIFICATIONS: {
   key: VerificationType
@@ -59,6 +60,7 @@ const ALL_VERIFICATIONS: {
 interface NewListingData {
   name: string
   location: string
+  address: string
   bio: string
   type: "roommate" | "rentals"
   price: number
@@ -66,6 +68,7 @@ interface NewListingData {
   beds: number
   baths: number
   availableFrom: string
+  amenities: string[]
 }
 
 interface UserProfileProps {
@@ -96,12 +99,14 @@ export function UserProfile({
   const [newListingType, setNewListingType] = useState<"roommate" | "rentals">("roommate")
   const [newListingName, setNewListingName] = useState("")
   const [newListingLocation, setNewListingLocation] = useState("")
+  const [newListingAddress, setNewListingAddress] = useState("")
   const [newListingBio, setNewListingBio] = useState("")
   const [newListingPrice, setNewListingPrice] = useState("")
   const [newListingDeposit, setNewListingDeposit] = useState("")
   const [newListingBeds, setNewListingBeds] = useState("1")
   const [newListingBaths, setNewListingBaths] = useState("1")
   const [newListingAvailable, setNewListingAvailable] = useState("")
+  const [newListingAmenities, setNewListingAmenities] = useState<string[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<FileItem[]>([])
 
   const resetNewListing = () => {
@@ -109,12 +114,14 @@ export function UserProfile({
     setNewListingType("roommate")
     setNewListingName("")
     setNewListingLocation("")
+    setNewListingAddress("")
     setNewListingBio("")
     setNewListingPrice("")
     setNewListingDeposit("")
     setNewListingBeds("1")
     setNewListingBaths("1")
     setNewListingAvailable("")
+    setNewListingAmenities([])
     setUploadedFiles([])
   }
 
@@ -151,6 +158,12 @@ export function UserProfile({
     setUploadedFiles((prev) => prev.filter((f) => f.id !== id))
   }, [])
 
+  const toggleAmenity = (name: string) => {
+    setNewListingAmenities((prev) =>
+      prev.includes(name) ? prev.filter((a) => a !== name) : [...prev, name]
+    )
+  }
+
   const handleNewListing = (e: FormEvent) => {
     e.preventDefault()
     if (listingStep < LISTING_STEPS.length) return
@@ -158,6 +171,7 @@ export function UserProfile({
     onAddListing?.({
       name: newListingName.trim(),
       location: newListingLocation.trim(),
+      address: newListingAddress.trim(),
       bio: newListingBio.trim(),
       type: newListingType,
       price: parseInt(newListingPrice, 10) || 0,
@@ -165,6 +179,7 @@ export function UserProfile({
       beds: parseInt(newListingBeds, 10) || 1,
       baths: parseInt(newListingBaths, 10) || 1,
       availableFrom: newListingAvailable.trim() || "Flexible",
+      amenities: newListingAmenities,
     })
     resetNewListing()
     setShowNewListing(false)
@@ -189,7 +204,9 @@ export function UserProfile({
 
   const canProceedStep =
     listingStep === 2
-      ? newListingName.trim().length > 0 && newListingLocation.trim().length > 0
+      ? newListingName.trim().length > 0 &&
+        newListingLocation.trim().length > 0 &&
+        newListingAddress.trim().length > 0
       : listingStep === 3
         ? (parseInt(newListingPrice, 10) || 0) > 0
         : true
@@ -469,6 +486,19 @@ export function UserProfile({
                         required
                       />
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Address
+                      </label>
+                      <input
+                        title="Address"
+                        value={newListingAddress}
+                        onChange={(e) => setNewListingAddress(e.target.value)}
+                        placeholder="e.g. 12 Main Road, Sea Point"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                        required
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -548,8 +578,42 @@ export function UserProfile({
                   </div>
                 )}
 
-                {/* Step 4 — description */}
+                {/* Step 4 — amenities */}
                 {listingStep === 4 && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      What does the space offer?
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {AMENITIES.map((amenity) => {
+                        const selected = newListingAmenities.includes(amenity.name)
+                        return (
+                          <button
+                            key={amenity.name}
+                            type="button"
+                            onClick={() => toggleAmenity(amenity.name)}
+                            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                              selected
+                                ? "border-accent bg-accent/10 text-accent"
+                                : "border-border bg-background text-muted-foreground"
+                            }`}
+                          >
+                            <amenity.icon className="size-3.5" />
+                            {amenity.name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {newListingAmenities.length === 0 && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Optional — you can add more later.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 5 — description */}
+                {listingStep === 5 && (
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Description</label>
                     <textarea
@@ -563,8 +627,8 @@ export function UserProfile({
                   </div>
                 )}
 
-                {/* Step 5 — photos */}
-                {listingStep === 5 && (
+                {/* Step 6 — photos */}
+                {listingStep === 6 && (
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Photos</label>
                     <FileUpload
