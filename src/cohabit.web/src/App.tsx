@@ -796,8 +796,6 @@ function MainApp({ province: initialProvince }: { province: string }) {
           setShowAuth(true)
         }
       },
-      className:
-        "bg-red-500 [&_svg]:!text-white [&_span]:!text-white self-stretch -mr-4 -mt-3 -mb-3",
     },
   ]
 

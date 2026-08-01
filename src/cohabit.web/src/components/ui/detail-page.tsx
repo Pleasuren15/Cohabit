@@ -15,8 +15,23 @@ import {
   MessageSquare,
   ChevronRight,
   ChevronLeft,
+  Wifi,
+  Car,
+  Coffee,
+  ShowerHead,
+  WashingMachine,
+  Dumbbell,
+  Flame,
+  Snowflake,
+  Tv,
+  Refrigerator,
 } from "lucide-react"
 import { ViewOnMap } from "./view-on-map"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -52,13 +67,26 @@ const INTERIOR_PHOTOS = [
 
 const VERIFICATION_CONFIG: Record<
   VerificationType,
-  { icon: typeof Smartphone; label: string; dotColor: string; description: string }
+  { icon: typeof Smartphone; label: string }
 > = {
-  phone: { icon: Smartphone, label: "Phone", dotColor: "bg-blue-500", description: "Phone number verified" },
-  email: { icon: Mail, label: "Email", dotColor: "bg-purple-500", description: "Email address verified" },
-  id: { icon: BadgeCheck, label: "ID", dotColor: "bg-green-500", description: "Identity verified" },
-  credit: { icon: Shield, label: "Credit", dotColor: "bg-amber-500", description: "Credit check completed" },
+  phone: { icon: Smartphone, label: "Phone" },
+  email: { icon: Mail, label: "Email" },
+  id: { icon: BadgeCheck, label: "ID" },
+  credit: { icon: Shield, label: "Credit" },
 }
+
+const AMENITIES: { name: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { name: "Wi-Fi", icon: Wifi },
+  { name: "Parking", icon: Car },
+  { name: "Coffee bar", icon: Coffee },
+  { name: "En-suite bathroom", icon: ShowerHead },
+  { name: "Laundry", icon: WashingMachine },
+  { name: "Gym", icon: Dumbbell },
+  { name: "Heating", icon: Flame },
+  { name: "Air conditioning", icon: Snowflake },
+  { name: "Smart TV", icon: Tv },
+  { name: "Fridge", icon: Refrigerator },
+]
 
 /** Derive a consistent phone number from the profile id. */
 function derivePhone(id: string): string {
@@ -262,63 +290,62 @@ export function DetailPage({
 
           {/* Content sections */}
           <div className="space-y-6 px-5 py-6">
-            {/* Verification badges */}
-            {verified.length > 0 && (
-              <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">
-                  Verification
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {verified.map((v) => {
-                    const config = VERIFICATION_CONFIG[v]
-                    const Icon = config.icon
-                    return (
-                      <span
-                        key={v}
-                        className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
-                      >
-                        <span
-                          className={`size-1.5 rounded-full ${config.dotColor}`}
-                        />
-                        <Icon className="size-3" />
-                        {config.description}
-                      </span>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* About / Bio */}
+            {/* Amenities — icons only */}
             <div>
               <h2 className="mb-2 text-sm font-semibold text-foreground">
-                About
+                Amenities
               </h2>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {bio}
-              </p>
+              <div className="flex flex-wrap gap-2">
+                {AMENITIES.map((amenity) => (
+                  <Tooltip key={amenity.name}>
+                    <TooltipTrigger asChild>
+                      <span className="flex size-10 cursor-pointer items-center justify-center rounded-full border border-border/50 bg-muted/30 text-muted-foreground">
+                        <amenity.icon className="size-5" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-neutral-200 text-neutral-950 dark:bg-neutral-50 [&_svg]:bg-neutral-200 [&_svg]:fill-neutral-200 dark:[&_svg]:bg-neutral-50 dark:[&_svg]:fill-neutral-50">
+                      <p>{amenity.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
             </div>
 
-            {/* Listed by — with contact actions */}
-            <div className="rounded-2xl border border-border/50 bg-muted/20 p-4">
-              <h2 className="mb-3 text-sm font-semibold text-foreground">
+            {/* Listed by — owner details card */}
+            <div>
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
                 Listed by
               </h2>
-              <div className="flex items-center gap-3">
-                <div className="size-12 shrink-0 overflow-hidden rounded-full">
-                  <img
-                    src={imageSrc}
-                    alt={name}
-                    className="h-full w-full object-cover"
-                  />
+              <div className="overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
+                <div className="flex items-center gap-4 bg-gradient-to-r from-accent/5 to-transparent p-5">
+                  <div className="size-14 shrink-0 overflow-hidden rounded-full ring-2 ring-accent/20">
+                    <img
+                      src={imageSrc}
+                      alt={name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold tracking-tight">
+                      {name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{bio}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground">{name}</p>
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="size-3" />
-                    {location}
-                  </p>
-                  <div className="mt-1 flex items-center gap-1">
+
+                <div className="divide-y divide-border/40 px-5 pb-1">
+                  <DetailRow icon={MapPin} label="Location" value={location} />
+                  <DetailRow
+                    icon={Phone}
+                    label="Cellphone"
+                    value={hasPhone ? phoneNumber : "Not shared"}
+                  />
+                  <DetailRow icon={Mail} label="Email" value={emailAddress} />
+                </div>
+
+                {/* Verification badges */}
+                {verified.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 border-t border-border/40 px-5 py-3">
                     {verified.map((v) => {
                       const config = VERIFICATION_CONFIG[v]
                       const Icon = config.icon
@@ -339,39 +366,39 @@ export function DetailPage({
                       )
                     })}
                   </div>
-                </div>
-              </div>
+                )}
 
-              {/* Contact actions */}
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {hasPhone && (
-                  <a
-                    href={`tel:${phoneNumber.replace(/\s/g, "")}`}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blue-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-blue-600"
+                {/* Contact actions */}
+                <div className="flex flex-wrap gap-1.5 border-t border-border/40 px-5 py-3">
+                  {hasPhone && (
+                    <a
+                      href={`tel:${phoneNumber.replace(/\s/g, "")}`}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blue-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-blue-600"
+                    >
+                      <Phone className="size-3" />
+                      Call
+                    </a>
+                  )}
+                  {hasEmail && (
+                    <a
+                      href={`mailto:${emailAddress}`}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-purple-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-purple-600"
+                    >
+                      <Mail className="size-3" />
+                      Email
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // TODO: open messaging thread
+                    }}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-[10px] font-medium text-foreground transition-colors hover:bg-muted"
                   >
-                    <Phone className="size-3" />
-                    Call
-                  </a>
-                )}
-                {hasEmail && (
-                  <a
-                    href={`mailto:${emailAddress}`}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-purple-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-purple-600"
-                  >
-                    <Mail className="size-3" />
-                    Email
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    // TODO: open messaging thread
-                  }}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-[10px] font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  <MessageSquare className="size-3" />
-                  Message
-                </button>
+                    <MessageSquare className="size-3" />
+                    Message
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -401,6 +428,16 @@ export function DetailPage({
                       >
                         <Expand className="size-3" />
                       </button>
+                      {i === galleryPhotos.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setFullScreenIndex(0)}
+                          className="absolute inset-x-0 bottom-0 flex cursor-pointer items-center justify-center gap-1 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-[10px] font-semibold text-white"
+                        >
+                          <Expand className="size-3" />
+                          View all photos
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -465,5 +502,25 @@ export function DetailPage({
         </div>
       </motion.div>
     </>
+  )
+}
+
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex items-center gap-3 py-3">
+      <Icon className="size-4 shrink-0 text-muted-foreground" />
+      <span className="w-24 shrink-0 text-xs text-muted-foreground">
+        {label}
+      </span>
+      <span className="truncate text-sm font-medium">{value}</span>
+    </div>
   )
 }
