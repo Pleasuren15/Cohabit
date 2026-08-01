@@ -153,6 +153,7 @@ export function UserProfile({
 
   const handleNewListing = (e: FormEvent) => {
     e.preventDefault()
+    if (listingStep < LISTING_STEPS.length) return
     if (!newListingName.trim() || !newListingLocation.trim()) return
     onAddListing?.({
       name: newListingName.trim(),
@@ -602,7 +603,10 @@ export function UserProfile({
                   {listingStep < LISTING_STEPS.length ? (
                     <button
                       type="button"
-                      onClick={() => setListingStep((s) => s + 1)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setListingStep((s) => s + 1)
+                      }}
                       disabled={!canProceedStep}
                       className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                     >
