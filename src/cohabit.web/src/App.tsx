@@ -68,7 +68,7 @@ export interface FeaturedProfile {
   amenities?: string[]
 }
 
-const FEATURED_PROFILES: FeaturedProfile[] = [
+export const FEATURED_PROFILES: FeaturedProfile[] = [
   {
     id: "thabo-mokoena",
     imageSrc:
