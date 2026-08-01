@@ -1,0 +1,56 @@
+name: Cohabit Web Continuous Integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/cohabit.web/**'
+      - 'test/cohabit.web.vite.tests/**'
+      - '.github/workflows/cohabit.web.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/cohabit.web/**'
+      - 'test/cohabit.web.vite.tests/**'
+      - '.github/workflows/cohabit.web.yml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/cohabit.web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/cohabit.web
+        run: npm install
+
+      - name: Typecheck
+        working-directory: src/cohabit.web
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: src/cohabit.web
+        run: npm run build
+
+      - name: Run unit tests
+        working-directory: src/cohabit.web
+        run: npm run test
+
+      - name: Publish coverage
+        working-directory: src/cohabit.web
+        run: npm run coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cohabit-web-coverage
+          path: src/cohabit.web/coverage
