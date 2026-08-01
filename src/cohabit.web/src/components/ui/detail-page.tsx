@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback, useEffect } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
   ArrowLeft,
@@ -25,6 +25,15 @@ import {
   Snowflake,
   Tv,
   Refrigerator,
+  Heart,
+  Check,
+  Share2,
+  BedDouble,
+  Bath,
+  Calendar,
+  Wallet,
+  Zap,
+  ShieldCheck,
 } from "lucide-react"
 import { ViewOnMap } from "./view-on-map"
 import {
@@ -51,6 +60,16 @@ interface DetailPageProps {
   bio: string
   photoCount: number
   verified: VerificationType[]
+  price: number
+  deposit: number
+  beds: number
+  baths: number
+  availableFrom: string
+  responseTime: string
+  rules: string[]
+  isFavorited?: boolean
+  onToggleFavorite?: (id: string) => void
+  onRequestView?: (id: string) => void
   onBack: () => void
   relatedListings?: RelatedListing[]
   onViewRelated?: (id: string) => void
@@ -111,11 +130,48 @@ export function DetailPage({
   bio,
   photoCount,
   verified,
+  price,
+  deposit,
+  beds,
+  baths,
+  availableFrom,
+  responseTime,
+  rules,
+  isFavorited = false,
+  onToggleFavorite,
+  onRequestView,
   onBack,
   relatedListings,
   onViewRelated,
 }: DetailPageProps) {
   const [fullScreenIndex, setFullScreenIndex] = useState<number | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [amenitiesScroll, setAmenitiesScroll] = useState({
+    canLeft: false,
+    canRight: false,
+  })
+  const amenitiesRef = useRef<HTMLDivElement>(null)
+
+  const updateAmenitiesScroll = useCallback(() => {
+    const el = amenitiesRef.current
+    if (!el) return
+    setAmenitiesScroll({
+      canLeft: el.scrollLeft > 4,
+      canRight: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    })
+  }, [])
+
+  useEffect(() => {
+    updateAmenitiesScroll()
+    const el = amenitiesRef.current
+    if (!el) return
+    el.addEventListener("scroll", updateAmenitiesScroll, { passive: true })
+    window.addEventListener("resize", updateAmenitiesScroll)
+    return () => {
+      el.removeEventListener("scroll", updateAmenitiesScroll)
+      window.removeEventListener("resize", updateAmenitiesScroll)
+    }
+  }, [updateAmenitiesScroll])
 
   const galleryPhotos = useMemo(() => {
     const photos = [imageSrc]
@@ -156,6 +212,29 @@ export function DetailPage({
   const emailAddress = useMemo(() => deriveEmail(name), [name])
   const hasPhone = verified.includes("phone")
   const hasEmail = verified.includes("email")
+
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/profile/${name
+      .toLowerCase()
+      .replace(/\s+/g, "-")}`
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${name} — ${location}`,
+          url: shareUrl,
+        })
+      } else {
+        await navigator.clipboard.writeText(shareUrl)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
+    } catch {
+      /* share dismissed */
+    }
+  }, [name, location])
+
+  const formatPrice = (value: number) =>
+    `R ${value.toLocaleString("en-ZA")}`
 
   return (
     <>
@@ -266,15 +345,52 @@ export function DetailPage({
               <ArrowLeft className="size-5" />
             </button>
 
-            {/* Full-screen icon on hero image */}
-            <button
-              type="button"
-              onClick={() => setFullScreenIndex(0)}
-              className="absolute top-4 right-4 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-              aria-label="View full screen"
-            >
-              <Expand className="size-4" />
-            </button>
+            {/* Top-right actions: favourite + share + full-screen */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onToggleFavorite?.(id)}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label={
+                  isFavorited ? "Remove from favorites" : "Add to favorites"
+                }
+              >
+                <Heart
+                  className={`size-4 ${
+                    isFavorited ? "fill-red-500 text-red-500" : ""
+                  }`}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label="Share listing"
+              >
+                {copied ? (
+                  <Check className="size-4" />
+                ) : (
+                  <Share2 className="size-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFullScreenIndex(0)}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label="View full screen"
+              >
+                <Expand className="size-4" />
+              </button>
+            </div>
+
+            {/* Price badge */}
+            <span className="absolute bottom-16 left-5 z-10 rounded-lg bg-accent px-2.5 py-1 text-sm font-bold text-white shadow-lg">
+              {formatPrice(price)}
+              <span className="text-[10px] font-medium text-white/80">
+                {" "}
+                /month
+              </span>
+            </span>
 
             {/* Name + location at bottom of hero */}
             <div className="pointer-events-none absolute right-0 bottom-0 left-0 px-5 pb-4">
@@ -290,24 +406,78 @@ export function DetailPage({
 
           {/* Content sections */}
           <div className="space-y-6 px-5 py-6">
-            {/* Amenities — icons only */}
+            {/* Key facts bar */}
+            <div className="grid grid-cols-4 divide-x divide-border/40 overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
+              <Fact
+                icon={BedDouble}
+                label="Bedrooms"
+                value={`${beds}`}
+              />
+              <Fact
+                icon={Bath}
+                label="Bathrooms"
+                value={`${baths}`}
+              />
+              <Fact
+                icon={Calendar}
+                label="Available"
+                value={availableFrom}
+              />
+              <Fact
+                icon={Wallet}
+                label="Deposit"
+                value={formatPrice(deposit)}
+              />
+            </div>
+
+            {/* Amenities — single-line scrollable row */}
             <div>
               <h2 className="mb-2 text-sm font-semibold text-foreground">
                 Amenities
               </h2>
-              <div className="flex flex-wrap gap-2">
-                {AMENITIES.map((amenity) => (
-                  <Tooltip key={amenity.name}>
-                    <TooltipTrigger asChild>
-                      <span className="flex size-10 cursor-pointer items-center justify-center rounded-full border border-border/50 bg-muted/30 text-muted-foreground">
-                        <amenity.icon className="size-5" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-neutral-200 text-neutral-950 dark:bg-neutral-50 [&_svg]:bg-neutral-200 [&_svg]:fill-neutral-200 dark:[&_svg]:bg-neutral-50 dark:[&_svg]:fill-neutral-50">
-                      <p>{amenity.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
+              <div className="relative">
+                {amenitiesScroll.canLeft && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      amenitiesRef.current?.scrollBy({ left: -120, behavior: "smooth" })
+                    }
+                    className="absolute top-1/2 -left-1.5 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:text-foreground"
+                    aria-label="Scroll amenities left"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                )}
+                <div
+                  ref={amenitiesRef}
+                  className="flex gap-2 overflow-x-auto scroll-smooth py-1 pr-1 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none" }}
+                >
+                  {AMENITIES.map((amenity) => (
+                    <Tooltip key={amenity.name}>
+                      <TooltipTrigger asChild>
+                        <span className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border/50 bg-muted/30 text-muted-foreground">
+                          <amenity.icon className="size-5" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-neutral-200 text-neutral-950 dark:bg-neutral-50 [&_svg]:bg-neutral-200 [&_svg]:fill-neutral-200 dark:[&_svg]:bg-neutral-50 dark:[&_svg]:fill-neutral-50">
+                        <p>{amenity.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+                {amenitiesScroll.canRight && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      amenitiesRef.current?.scrollBy({ left: 120, behavior: "smooth" })
+                    }
+                    className="absolute top-1/2 -right-1.5 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:text-foreground"
+                    aria-label="Scroll amenities right"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -370,6 +540,10 @@ export function DetailPage({
 
                 {/* Contact actions */}
                 <div className="flex flex-wrap gap-1.5 border-t border-border/40 px-5 py-3">
+                  <span className="mr-1 inline-flex w-full items-center gap-1.5 text-xs text-muted-foreground">
+                    <Zap className="size-3.5 text-accent" />
+                    Responds {responseTime.toLowerCase()}
+                  </span>
                   {hasPhone && (
                     <a
                       href={`tel:${phoneNumber.replace(/\s/g, "")}`}
@@ -390,17 +564,35 @@ export function DetailPage({
                   )}
                   <button
                     type="button"
-                    onClick={() => {
-                      // TODO: open messaging thread
-                    }}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-[10px] font-medium text-foreground transition-colors hover:bg-muted"
+                    onClick={() => onRequestView?.(id)}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-accent/90"
                   >
                     <MessageSquare className="size-3" />
-                    Message
+                    Is this still available?
                   </button>
                 </div>
               </div>
             </div>
+
+            {/* Home rules */}
+            {rules.length > 0 && (
+              <div>
+                <h2 className="mb-2 text-sm font-semibold text-foreground">
+                  Home rules
+                </h2>
+                <div className="flex flex-wrap gap-1.5">
+                  {rules.map((rule) => (
+                    <span
+                      key={rule}
+                      className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/30 px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+                    >
+                      <ShieldCheck className="size-3.5 text-accent" />
+                      {rule}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Photo gallery — each image clickable to zoom */}
             {galleryPhotos.length > 0 && (
@@ -500,8 +692,57 @@ export function DetailPage({
             <div className="h-8" />
           </div>
         </div>
+
+        {/* Sticky bottom action bar */}
+        <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 px-5 py-3 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-bold text-foreground">
+                {formatPrice(price)}
+                <span className="text-xs font-medium text-muted-foreground">
+                  {" "}
+                  /month
+                </span>
+              </p>
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="size-3 shrink-0" />
+                <span className="truncate">{location}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onRequestView?.(id)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-accent/90"
+            >
+              <MessageSquare className="size-3.5" />
+              Request to view
+            </button>
+          </div>
+        </div>
       </motion.div>
     </>
+  )
+}
+
+function Fact({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1 px-1 py-3 text-center">
+      <Icon className="size-4 shrink-0 text-accent" />
+      <span className="w-full truncate px-1 text-xs font-semibold text-foreground">
+        {value}
+      </span>
+      <span className="text-[9px] leading-none text-muted-foreground">
+        {label}
+      </span>
+    </div>
   )
 }
 
