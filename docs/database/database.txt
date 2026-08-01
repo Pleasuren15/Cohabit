@@ -1,0 +1,136 @@
+users [color: green, icon: user] {
+  id uuid pk
+  first_name string
+  last_name string
+  cellphone string
+  email string
+  date_of_birth date
+  gender char
+  bio string
+  avatar_url string
+  is_otp_verified boolean
+  timestamp datetime
+  address_id uuid fk
+}
+
+listings [color: blue, icon: house] {
+  id uuid pk
+  user_id uuid fk
+  address_id uuid fk
+  title string
+  description string
+  type_id uuid fk
+  price int
+  deposit int
+  beds int
+  baths int
+  available_from date
+  response_time string
+  timestamp datetime
+  expires datetime
+}
+
+addresses [color: grey, icon: pin] {
+  id uuid pk
+  address_line1 string
+  address_line2 string
+  suburb string
+  postal_code string
+  province_id uuid fk
+}
+
+provinces [color: teal, icon: flag] {
+  id uuid pk
+  name string
+}
+
+listing_types [color: purple, icon: tag] {
+  id uuid pk
+  name string
+}
+
+images [color: yellow, icon: image] {
+  id uuid pk
+  listing_id uuid fk
+  url string
+  is_primary boolean
+  timestamp date
+}
+
+watch_list [color: red, icon: heart] {
+  id uuid pk
+  user_id uuid fk
+  listing_id uuid fk
+}
+
+amenities [color: orange, icon: star] {
+  id uuid pk
+  name string
+}
+
+listing_amenities [color: orange, icon: link] {
+  id uuid pk
+  listing_id uuid fk
+  amenity_id uuid fk
+}
+
+rules [color: amber, icon: shield] {
+  id uuid pk
+  name string
+}
+
+listing_rules [color: amber, icon: link] {
+  id uuid pk
+  listing_id uuid fk
+  rule_id uuid fk
+}
+
+verification_types [color: cyan, icon: check] {
+  id uuid pk
+  name string
+}
+
+user_verifications [color: cyan, icon: badge] {
+  id uuid pk
+  user_id uuid fk
+  verification_type_id uuid fk
+  is_verified boolean
+  timestamp datetime
+}
+
+conversations [color: pink, icon: chat] {
+  id uuid pk
+  listing_id uuid fk
+  owner_user_id uuid fk
+  tenant_user_id uuid fk
+  created_at datetime
+}
+
+messages [color: pink, icon: message] {
+  id uuid pk
+  conversation_id uuid fk
+  sender_user_id uuid fk
+  content text
+  is_read boolean
+  timestamp datetime
+}
+
+provinces.id < addresses.province_id
+addresses.id < users.address_id
+addresses.id < listings.address_id
+users.id < listings.user_id
+listing_types.id < listings.type_id
+listings.id < images.listing_id
+listings.id < watch_list.listing_id
+users.id < watch_list.user_id
+amenities.id < listing_amenities.amenity_id
+listings.id < listing_amenities.listing_id
+rules.id < listing_rules.rule_id
+listings.id < listing_rules.listing_id
+verification_types.id < user_verifications.verification_type_id
+users.id < user_verifications.user_id
+listings.id < conversations.listing_id
+users.id < conversations.owner_user_id
+users.id < conversations.tenant_user_id
+conversations.id < messages.conversation_id
+users.id < messages.sender_user_id
