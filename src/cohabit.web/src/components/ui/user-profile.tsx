@@ -18,6 +18,7 @@ import {
   Mars,
   Pencil,
   Plus,
+  Building2,
 } from "lucide-react"
 import type { FeaturedProfile } from "@/App"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
@@ -40,6 +41,8 @@ export interface UserData {
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
+const LISTING_STEPS = ["Type", "Basics", "Price & size", "Description", "Photos"]
+
 const ALL_VERIFICATIONS: {
   key: VerificationType
   label: string
@@ -58,6 +61,11 @@ interface NewListingData {
   location: string
   bio: string
   type: "roommate" | "rentals"
+  price: number
+  deposit: number
+  beds: number
+  baths: number
+  availableFrom: string
 }
 
 interface UserProfileProps {
@@ -84,11 +92,36 @@ export function UserProfile({
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false)
   const [showNewListing, setShowNewListing] = useState(false)
+  const [listingStep, setListingStep] = useState(1)
   const [newListingType, setNewListingType] = useState<"roommate" | "rentals">("roommate")
   const [newListingName, setNewListingName] = useState("")
   const [newListingLocation, setNewListingLocation] = useState("")
   const [newListingBio, setNewListingBio] = useState("")
+  const [newListingPrice, setNewListingPrice] = useState("")
+  const [newListingDeposit, setNewListingDeposit] = useState("")
+  const [newListingBeds, setNewListingBeds] = useState("1")
+  const [newListingBaths, setNewListingBaths] = useState("1")
+  const [newListingAvailable, setNewListingAvailable] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<FileItem[]>([])
+
+  const resetNewListing = () => {
+    setListingStep(1)
+    setNewListingType("roommate")
+    setNewListingName("")
+    setNewListingLocation("")
+    setNewListingBio("")
+    setNewListingPrice("")
+    setNewListingDeposit("")
+    setNewListingBeds("1")
+    setNewListingBaths("1")
+    setNewListingAvailable("")
+    setUploadedFiles([])
+  }
+
+  const openNewListing = () => {
+    resetNewListing()
+    setShowNewListing(true)
+  }
 
   const fullName = `${user.firstName} ${user.lastName}`
 
@@ -120,18 +153,20 @@ export function UserProfile({
 
   const handleNewListing = (e: FormEvent) => {
     e.preventDefault()
+    if (listingStep < LISTING_STEPS.length) return
     if (!newListingName.trim() || !newListingLocation.trim()) return
     onAddListing?.({
       name: newListingName.trim(),
       location: newListingLocation.trim(),
       bio: newListingBio.trim(),
       type: newListingType,
+      price: parseInt(newListingPrice, 10) || 0,
+      deposit: parseInt(newListingDeposit, 10) || 0,
+      beds: parseInt(newListingBeds, 10) || 1,
+      baths: parseInt(newListingBaths, 10) || 1,
+      availableFrom: newListingAvailable.trim() || "Flexible",
     })
-    setNewListingName("")
-    setNewListingLocation("")
-    setNewListingBio("")
-    setNewListingType("roommate")
-    setUploadedFiles([])
+    resetNewListing()
     setShowNewListing(false)
   }
 
@@ -151,6 +186,13 @@ export function UserProfile({
     onUpdateUser?.(updated)
     setShowEditProfile(false)
   }
+
+  const canProceedStep =
+    listingStep === 2
+      ? newListingName.trim().length > 0 && newListingLocation.trim().length > 0
+      : listingStep === 3
+        ? (parseInt(newListingPrice, 10) || 0) > 0
+        : true
 
   const LISTING_GRADIENTS = [
     "bg-gradient-to-br from-rose-500 to-pink-600",
@@ -280,7 +322,7 @@ export function UserProfile({
           </div>
           <button
             type="button"
-            onClick={() => setShowNewListing(true)}
+            onClick={openNewListing}
             className="flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:opacity-90 hover:shadow-md"
             aria-label="New listing"
           >
@@ -331,93 +373,253 @@ export function UserProfile({
               </div>
 
               <form onSubmit={handleNewListing} className="space-y-4">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setNewListingType("roommate")}
-                    className={`flex-1 rounded-xl py-2 text-sm font-medium transition-all ${
-                      newListingType === "roommate"
-                        ? "bg-accent text-white"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    Roommate
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewListingType("rentals")}
-                    className={`flex-1 rounded-xl py-2 text-sm font-medium transition-all ${
-                      newListingType === "rentals"
-                        ? "bg-accent text-white"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    Rentals
-                  </button>
+                {/* Step indicator */}
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                    <span>
+                      Step {listingStep} of {LISTING_STEPS.length}
+                    </span>
+                    <span>{LISTING_STEPS[listingStep - 1]}</span>
+                  </div>
+                  <div className="h-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-accent transition-all duration-300"
+                      style={{
+                        width: `${(listingStep / LISTING_STEPS.length) * 100}%`,
+                      }}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Title</label>
-                  <input
-                    title="Title"
-                    value={newListingName}
-                    onChange={(e) => setNewListingName(e.target.value)}
-                    placeholder="e.g. Cozy room in Sea Point"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
-                    required
-                  />
-                </div>
+                {/* Step 1 — type */}
+                {listingStep === 1 && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      What are you listing?
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNewListingType("roommate")}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-4 text-center transition-all ${
+                          newListingType === "roommate"
+                            ? "border-accent bg-accent/10"
+                            : "border-border bg-background"
+                        }`}
+                      >
+                        <User
+                          className={`size-6 ${
+                            newListingType === "roommate"
+                              ? "text-accent"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                        <span className="text-sm font-medium">Roommate</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          Join a shared space
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewListingType("rentals")}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border p-4 text-center transition-all ${
+                          newListingType === "rentals"
+                            ? "border-accent bg-accent/10"
+                            : "border-border bg-background"
+                        }`}
+                      >
+                        <Building2
+                          className={`size-6 ${
+                            newListingType === "rentals"
+                              ? "text-accent"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                        <span className="text-sm font-medium">Rentals</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          Rent out a property
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Location</label>
-                  <input
-                    title="Location"
-                    value={newListingLocation}
-                    onChange={(e) => setNewListingLocation(e.target.value)}
-                    placeholder="e.g. Sea Point, Cape Town"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
-                    required
-                  />
-                </div>
+                {/* Step 2 — basics */}
+                {listingStep === 2 && (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Title</label>
+                      <input
+                        title="Title"
+                        value={newListingName}
+                        onChange={(e) => setNewListingName(e.target.value)}
+                        placeholder="e.g. Cozy room in Sea Point"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Location</label>
+                      <input
+                        title="Location"
+                        value={newListingLocation}
+                        onChange={(e) => setNewListingLocation(e.target.value)}
+                        placeholder="e.g. Sea Point, Cape Town"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Description</label>
-                  <textarea
-                    title="Description"
-                    value={newListingBio}
-                    onChange={(e) => setNewListingBio(e.target.value)}
-                    placeholder="Describe the space or what you're looking for..."
-                    rows={3}
-                    className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
-                  />
-                </div>
+                {/* Step 3 — price & size */}
+                {listingStep === 3 && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Price (R/month)
+                        </label>
+                        <input
+                          title="Price"
+                          type="number"
+                          min="0"
+                          inputMode="numeric"
+                          value={newListingPrice}
+                          onChange={(e) => setNewListingPrice(e.target.value)}
+                          placeholder="e.g. 6500"
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Deposit (R)
+                        </label>
+                        <input
+                          title="Deposit"
+                          type="number"
+                          min="0"
+                          inputMode="numeric"
+                          value={newListingDeposit}
+                          onChange={(e) => setNewListingDeposit(e.target.value)}
+                          placeholder="e.g. 6500"
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Bedrooms</label>
+                        <input
+                          title="Bedrooms"
+                          type="number"
+                          min="1"
+                          inputMode="numeric"
+                          value={newListingBeds}
+                          onChange={(e) => setNewListingBeds(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">Bathrooms</label>
+                        <input
+                          title="Bathrooms"
+                          type="number"
+                          min="1"
+                          inputMode="numeric"
+                          value={newListingBaths}
+                          onChange={(e) => setNewListingBaths(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Available from
+                      </label>
+                      <input
+                        title="Available from"
+                        value={newListingAvailable}
+                        onChange={(e) => setNewListingAvailable(e.target.value)}
+                        placeholder="e.g. 1 Sep 2026 or Flexible"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                      />
+                    </div>
+                  </div>
+                )}
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Photos</label>
-                  <FileUpload
-                    files={uploadedFiles}
-                    onFilesAdded={handleFilesAdded}
-                    onFileRemove={handleFileRemove}
-                    maxFiles={5}
-                    maxSizeMB={10}
-                    accept="image/*"
-                  />
-                </div>
+                {/* Step 4 — description */}
+                {listingStep === 4 && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Description</label>
+                    <textarea
+                      title="Description"
+                      value={newListingBio}
+                      onChange={(e) => setNewListingBio(e.target.value)}
+                      placeholder="Describe the space or what you're looking for..."
+                      rows={5}
+                      className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30"
+                    />
+                  </div>
+                )}
 
+                {/* Step 5 — photos */}
+                {listingStep === 5 && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Photos</label>
+                    <FileUpload
+                      files={uploadedFiles}
+                      onFilesAdded={handleFilesAdded}
+                      onFileRemove={handleFileRemove}
+                      maxFiles={5}
+                      maxSizeMB={10}
+                      accept="image/*"
+                    />
+                  </div>
+                )}
+
+                {/* Footer navigation */}
                 <div className="flex gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => { setShowNewListing(false); setUploadedFiles([]) }}
-                    className="flex-1 rounded-xl bg-muted py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
-                  >
-                    Create
-                  </button>
+                  {listingStep > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => setListingStep((s) => s - 1)}
+                      className="rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80"
+                    >
+                      Back
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewListing(false)
+                        resetNewListing()
+                      }}
+                      className="rounded-xl bg-muted px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  {listingStep < LISTING_STEPS.length ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setListingStep((s) => s + 1)
+                      }}
+                      disabled={!canProceedStep}
+                      className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Continue
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                    >
+                      Create listing
+                    </button>
+                  )}
                 </div>
               </form>
             </motion.div>

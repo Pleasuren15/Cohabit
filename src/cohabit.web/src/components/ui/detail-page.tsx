@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback, useEffect } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
   ArrowLeft,
@@ -15,8 +15,32 @@ import {
   MessageSquare,
   ChevronRight,
   ChevronLeft,
+  Wifi,
+  Car,
+  Coffee,
+  ShowerHead,
+  WashingMachine,
+  Dumbbell,
+  Flame,
+  Snowflake,
+  Tv,
+  Refrigerator,
+  Heart,
+  Check,
+  Share2,
+  BedDouble,
+  Bath,
+  Calendar,
+  Wallet,
+  Zap,
+  ShieldCheck,
 } from "lucide-react"
 import { ViewOnMap } from "./view-on-map"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -36,6 +60,16 @@ interface DetailPageProps {
   bio: string
   photoCount: number
   verified: VerificationType[]
+  price: number
+  deposit: number
+  beds: number
+  baths: number
+  availableFrom: string
+  responseTime: string
+  rules: string[]
+  isFavorited?: boolean
+  onToggleFavorite?: (id: string) => void
+  onRequestView?: (id: string) => void
   onBack: () => void
   relatedListings?: RelatedListing[]
   onViewRelated?: (id: string) => void
@@ -52,13 +86,26 @@ const INTERIOR_PHOTOS = [
 
 const VERIFICATION_CONFIG: Record<
   VerificationType,
-  { icon: typeof Smartphone; label: string; dotColor: string; description: string }
+  { icon: typeof Smartphone; label: string }
 > = {
-  phone: { icon: Smartphone, label: "Phone", dotColor: "bg-blue-500", description: "Phone number verified" },
-  email: { icon: Mail, label: "Email", dotColor: "bg-purple-500", description: "Email address verified" },
-  id: { icon: BadgeCheck, label: "ID", dotColor: "bg-green-500", description: "Identity verified" },
-  credit: { icon: Shield, label: "Credit", dotColor: "bg-amber-500", description: "Credit check completed" },
+  phone: { icon: Smartphone, label: "Phone" },
+  email: { icon: Mail, label: "Email" },
+  id: { icon: BadgeCheck, label: "ID" },
+  credit: { icon: Shield, label: "Credit" },
 }
+
+const AMENITIES: { name: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { name: "Wi-Fi", icon: Wifi },
+  { name: "Parking", icon: Car },
+  { name: "Coffee bar", icon: Coffee },
+  { name: "En-suite bathroom", icon: ShowerHead },
+  { name: "Laundry", icon: WashingMachine },
+  { name: "Gym", icon: Dumbbell },
+  { name: "Heating", icon: Flame },
+  { name: "Air conditioning", icon: Snowflake },
+  { name: "Smart TV", icon: Tv },
+  { name: "Fridge", icon: Refrigerator },
+]
 
 /** Derive a consistent phone number from the profile id. */
 function derivePhone(id: string): string {
@@ -83,11 +130,48 @@ export function DetailPage({
   bio,
   photoCount,
   verified,
+  price,
+  deposit,
+  beds,
+  baths,
+  availableFrom,
+  responseTime,
+  rules,
+  isFavorited = false,
+  onToggleFavorite,
+  onRequestView,
   onBack,
   relatedListings,
   onViewRelated,
 }: DetailPageProps) {
   const [fullScreenIndex, setFullScreenIndex] = useState<number | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [amenitiesScroll, setAmenitiesScroll] = useState({
+    canLeft: false,
+    canRight: false,
+  })
+  const amenitiesRef = useRef<HTMLDivElement>(null)
+
+  const updateAmenitiesScroll = useCallback(() => {
+    const el = amenitiesRef.current
+    if (!el) return
+    setAmenitiesScroll({
+      canLeft: el.scrollLeft > 4,
+      canRight: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    })
+  }, [])
+
+  useEffect(() => {
+    updateAmenitiesScroll()
+    const el = amenitiesRef.current
+    if (!el) return
+    el.addEventListener("scroll", updateAmenitiesScroll, { passive: true })
+    window.addEventListener("resize", updateAmenitiesScroll)
+    return () => {
+      el.removeEventListener("scroll", updateAmenitiesScroll)
+      window.removeEventListener("resize", updateAmenitiesScroll)
+    }
+  }, [updateAmenitiesScroll])
 
   const galleryPhotos = useMemo(() => {
     const photos = [imageSrc]
@@ -128,6 +212,29 @@ export function DetailPage({
   const emailAddress = useMemo(() => deriveEmail(name), [name])
   const hasPhone = verified.includes("phone")
   const hasEmail = verified.includes("email")
+
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/profile/${name
+      .toLowerCase()
+      .replace(/\s+/g, "-")}`
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${name} — ${location}`,
+          url: shareUrl,
+        })
+      } else {
+        await navigator.clipboard.writeText(shareUrl)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
+    } catch {
+      /* share dismissed */
+    }
+  }, [name, location])
+
+  const formatPrice = (value: number) =>
+    `R ${value.toLocaleString("en-ZA")}`
 
   return (
     <>
@@ -238,15 +345,52 @@ export function DetailPage({
               <ArrowLeft className="size-5" />
             </button>
 
-            {/* Full-screen icon on hero image */}
-            <button
-              type="button"
-              onClick={() => setFullScreenIndex(0)}
-              className="absolute top-4 right-4 z-10 flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-              aria-label="View full screen"
-            >
-              <Expand className="size-4" />
-            </button>
+            {/* Top-right actions: favourite + share + full-screen */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onToggleFavorite?.(id)}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label={
+                  isFavorited ? "Remove from favorites" : "Add to favorites"
+                }
+              >
+                <Heart
+                  className={`size-4 ${
+                    isFavorited ? "fill-red-500 text-red-500" : ""
+                  }`}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label="Share listing"
+              >
+                {copied ? (
+                  <Check className="size-4" />
+                ) : (
+                  <Share2 className="size-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFullScreenIndex(0)}
+                className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label="View full screen"
+              >
+                <Expand className="size-4" />
+              </button>
+            </div>
+
+            {/* Price badge */}
+            <span className="absolute bottom-16 left-5 z-10 rounded-lg bg-accent px-2.5 py-1 text-sm font-bold text-white shadow-lg">
+              {formatPrice(price)}
+              <span className="text-[10px] font-medium text-white/80">
+                {" "}
+                /month
+              </span>
+            </span>
 
             {/* Name + location at bottom of hero */}
             <div className="pointer-events-none absolute right-0 bottom-0 left-0 px-5 pb-4">
@@ -262,63 +406,116 @@ export function DetailPage({
 
           {/* Content sections */}
           <div className="space-y-6 px-5 py-6">
-            {/* Verification badges */}
-            {verified.length > 0 && (
-              <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">
-                  Verification
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {verified.map((v) => {
-                    const config = VERIFICATION_CONFIG[v]
-                    const Icon = config.icon
-                    return (
-                      <span
-                        key={v}
-                        className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
-                      >
-                        <span
-                          className={`size-1.5 rounded-full ${config.dotColor}`}
-                        />
-                        <Icon className="size-3" />
-                        {config.description}
-                      </span>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* About / Bio */}
-            <div>
-              <h2 className="mb-2 text-sm font-semibold text-foreground">
-                About
-              </h2>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {bio}
-              </p>
+            {/* Key facts bar */}
+            <div className="grid grid-cols-4 divide-x divide-border/40 overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
+              <Fact
+                icon={BedDouble}
+                label="Bedrooms"
+                value={`${beds}`}
+              />
+              <Fact
+                icon={Bath}
+                label="Bathrooms"
+                value={`${baths}`}
+              />
+              <Fact
+                icon={Calendar}
+                label="Available"
+                value={availableFrom}
+              />
+              <Fact
+                icon={Wallet}
+                label="Deposit"
+                value={formatPrice(deposit)}
+              />
             </div>
 
-            {/* Listed by — with contact actions */}
-            <div className="rounded-2xl border border-border/50 bg-muted/20 p-4">
-              <h2 className="mb-3 text-sm font-semibold text-foreground">
+            {/* Amenities — single-line scrollable row */}
+            <div>
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
+                Amenities
+              </h2>
+              <div className="relative">
+                {amenitiesScroll.canLeft && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      amenitiesRef.current?.scrollBy({ left: -120, behavior: "smooth" })
+                    }
+                    className="absolute top-1/2 -left-1.5 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:text-foreground"
+                    aria-label="Scroll amenities left"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                )}
+                <div
+                  ref={amenitiesRef}
+                  className="flex gap-2 overflow-x-auto scroll-smooth py-1 pr-1 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none" }}
+                >
+                  {AMENITIES.map((amenity) => (
+                    <Tooltip key={amenity.name}>
+                      <TooltipTrigger asChild>
+                        <span className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border/50 bg-muted/30 text-muted-foreground">
+                          <amenity.icon className="size-5" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-neutral-200 text-neutral-950 dark:bg-neutral-50 [&_svg]:bg-neutral-200 [&_svg]:fill-neutral-200 dark:[&_svg]:bg-neutral-50 dark:[&_svg]:fill-neutral-50">
+                        <p>{amenity.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+                {amenitiesScroll.canRight && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      amenitiesRef.current?.scrollBy({ left: 120, behavior: "smooth" })
+                    }
+                    className="absolute top-1/2 -right-1.5 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:text-foreground"
+                    aria-label="Scroll amenities right"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Listed by — owner details card */}
+            <div>
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
                 Listed by
               </h2>
-              <div className="flex items-center gap-3">
-                <div className="size-12 shrink-0 overflow-hidden rounded-full">
-                  <img
-                    src={imageSrc}
-                    alt={name}
-                    className="h-full w-full object-cover"
-                  />
+              <div className="overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
+                <div className="flex items-center gap-4 bg-gradient-to-r from-accent/5 to-transparent p-5">
+                  <div className="size-14 shrink-0 overflow-hidden rounded-full ring-2 ring-accent/20">
+                    <img
+                      src={imageSrc}
+                      alt={name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold tracking-tight">
+                      {name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{bio}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground">{name}</p>
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="size-3" />
-                    {location}
-                  </p>
-                  <div className="mt-1 flex items-center gap-1">
+
+                <div className="divide-y divide-border/40 px-5 pb-1">
+                  <DetailRow icon={MapPin} label="Location" value={location} />
+                  <DetailRow
+                    icon={Phone}
+                    label="Cellphone"
+                    value={hasPhone ? phoneNumber : "Not shared"}
+                  />
+                  <DetailRow icon={Mail} label="Email" value={emailAddress} />
+                </div>
+
+                {/* Verification badges */}
+                {verified.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 border-t border-border/40 px-5 py-3">
                     {verified.map((v) => {
                       const config = VERIFICATION_CONFIG[v]
                       const Icon = config.icon
@@ -339,41 +536,63 @@ export function DetailPage({
                       )
                     })}
                   </div>
+                )}
+
+                {/* Contact actions */}
+                <div className="flex flex-wrap gap-1.5 border-t border-border/40 px-5 py-3">
+                  <span className="mr-1 inline-flex w-full items-center gap-1.5 text-xs text-muted-foreground">
+                    <Zap className="size-3.5 text-accent" />
+                    Responds {responseTime.toLowerCase()}
+                  </span>
+                  {hasPhone && (
+                    <a
+                      href={`tel:${phoneNumber.replace(/\s/g, "")}`}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blue-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-blue-600"
+                    >
+                      <Phone className="size-3" />
+                      Call
+                    </a>
+                  )}
+                  {hasEmail && (
+                    <a
+                      href={`mailto:${emailAddress}`}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-purple-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-purple-600"
+                    >
+                      <Mail className="size-3" />
+                      Email
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onRequestView?.(id)}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-accent/90"
+                  >
+                    <MessageSquare className="size-3" />
+                    Is this still available?
+                  </button>
                 </div>
               </div>
-
-              {/* Contact actions */}
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {hasPhone && (
-                  <a
-                    href={`tel:${phoneNumber.replace(/\s/g, "")}`}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blue-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-blue-600"
-                  >
-                    <Phone className="size-3" />
-                    Call
-                  </a>
-                )}
-                {hasEmail && (
-                  <a
-                    href={`mailto:${emailAddress}`}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-purple-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-purple-600"
-                  >
-                    <Mail className="size-3" />
-                    Email
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    // TODO: open messaging thread
-                  }}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-[10px] font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  <MessageSquare className="size-3" />
-                  Message
-                </button>
-              </div>
             </div>
+
+            {/* Home rules */}
+            {rules.length > 0 && (
+              <div>
+                <h2 className="mb-2 text-sm font-semibold text-foreground">
+                  Home rules
+                </h2>
+                <div className="flex flex-wrap gap-1.5">
+                  {rules.map((rule) => (
+                    <span
+                      key={rule}
+                      className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/30 px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+                    >
+                      <ShieldCheck className="size-3.5 text-accent" />
+                      {rule}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Photo gallery — each image clickable to zoom */}
             {galleryPhotos.length > 0 && (
@@ -401,6 +620,16 @@ export function DetailPage({
                       >
                         <Expand className="size-3" />
                       </button>
+                      {i === galleryPhotos.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setFullScreenIndex(0)}
+                          className="absolute inset-x-0 bottom-0 flex cursor-pointer items-center justify-center gap-1 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-[10px] font-semibold text-white"
+                        >
+                          <Expand className="size-3" />
+                          View all photos
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -463,7 +692,76 @@ export function DetailPage({
             <div className="h-8" />
           </div>
         </div>
+
+        {/* Sticky bottom action bar */}
+        <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 px-5 py-3 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-bold text-foreground">
+                {formatPrice(price)}
+                <span className="text-xs font-medium text-muted-foreground">
+                  {" "}
+                  /month
+                </span>
+              </p>
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="size-3 shrink-0" />
+                <span className="truncate">{location}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onRequestView?.(id)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-accent/90"
+            >
+              <MessageSquare className="size-3.5" />
+              Request to view
+            </button>
+          </div>
+        </div>
       </motion.div>
     </>
+  )
+}
+
+function Fact({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1 px-1 py-3 text-center">
+      <Icon className="size-4 shrink-0 text-accent" />
+      <span className="w-full truncate px-1 text-xs font-semibold text-foreground">
+        {value}
+      </span>
+      <span className="text-[9px] leading-none text-muted-foreground">
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex items-center gap-3 py-3">
+      <Icon className="size-4 shrink-0 text-muted-foreground" />
+      <span className="w-24 shrink-0 text-xs text-muted-foreground">
+        {label}
+      </span>
+      <span className="truncate text-sm font-medium">{value}</span>
+    </div>
   )
 }
