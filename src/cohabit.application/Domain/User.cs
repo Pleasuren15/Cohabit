@@ -10,6 +10,7 @@ public sealed class User
     public DateOnly DateOfBirth { get; private set; }
     public char Gender { get; private set; }
     public string? Bio { get; private set; }
+    public string? AvatarUrl { get; private set; }
     public bool IsOtpVerified { get; private set; }
     public DateTime Timestamp { get; private set; }
     public Guid? AddressId { get; private set; }
@@ -18,6 +19,10 @@ public sealed class User
     public Address? Address { get; private set; }
     public ICollection<Listing> Listings { get; private set; } = [];
     public ICollection<WatchList> WatchLists { get; private set; } = [];
+    public ICollection<UserVerification> UserVerifications { get; private set; } = [];
+    public ICollection<Conversation> OwnerConversations { get; private set; } = [];
+    public ICollection<Conversation> TenantConversations { get; private set; } = [];
+    public ICollection<Message> SentMessages { get; private set; } = [];
 
     private User() { }
 
