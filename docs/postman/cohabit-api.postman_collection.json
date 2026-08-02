@@ -448,6 +448,62 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "Add listing to favorites",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}/favorites",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"listingId\": \"{{listingId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Marks a listing as a favorite for the user."
+          },
+          "response": []
+        },
+        {
+          "name": "List user's favorites",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}/favorites"
+          },
+          "response": []
+        },
+        {
+          "name": "Check if listing is favorite",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}/favorites/{{listingId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove listing from favorites",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}/favorites/{{listingId}}"
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [

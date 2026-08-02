@@ -442,8 +442,12 @@ public class UsersControllerTests
             new UserAccessor(db),
             cache,
             NullLogger<UserService>.Instance);
+        var watchListService = new WatchListService(
+            new WatchListAccessor(db),
+            cache,
+            NullLogger<WatchListService>.Instance);
 
-        return (new UsersController(service, userService), db, data, storage);
+        return (new UsersController(service, userService, watchListService), db, data, storage);
     }
 
     private static (UserService Service, CountingUserAccessor Accessor, TestData Data) CreateUserServiceUnderTestAsync()

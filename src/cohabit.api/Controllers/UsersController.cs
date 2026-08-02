@@ -6,7 +6,10 @@ namespace cohabit.api.Controllers;
 
 [ApiController]
 [Route("api/users")]
-public class UsersController(IListingService listingService, IUserService userService) : ControllerBase
+public class UsersController(
+    IListingService listingService,
+    IUserService userService,
+    IWatchListService watchListService) : ControllerBase
 {
     /// <summary>
     ///     Create a user with a full profile. Email and cellphone must be unique.
@@ -86,6 +89,54 @@ public class UsersController(IListingService listingService, IUserService userSe
     public async Task<IActionResult> Delete(Guid userId, Guid listingId, CancellationToken ct = default)
     {
         await listingService.DeleteAsync(userId, listingId, ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Mark a listing as a favorite for the user.
+    /// </summary>
+    [HttpPost("{userId:guid}/favorites")]
+    public async Task<ActionResult<FavoriteDto>> AddFavorite(
+        Guid userId,
+        [FromBody] AddFavoriteRequest request,
+        CancellationToken ct = default)
+    {
+        var favorite = await watchListService.AddAsync(userId, request.ListingId, ct);
+        return Created($"/api/users/{userId}/favorites/{favorite.ListingId}", favorite);
+    }
+
+    /// <summary>
+    ///     List all listings favorited by the user, newest favorited first.
+    /// </summary>
+    [HttpGet("{userId:guid}/favorites")]
+    public async Task<ActionResult<IReadOnlyList<ListingSummaryDto>>> GetFavorites(
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        var favorites = await watchListService.GetUserFavoritesAsync(userId, ct);
+        return Ok(favorites);
+    }
+
+    /// <summary>
+    ///     Check whether the user has favorited a given listing.
+    /// </summary>
+    [HttpGet("{userId:guid}/favorites/{listingId:guid}")]
+    public async Task<ActionResult<bool>> IsFavorite(
+        Guid userId,
+        Guid listingId,
+        CancellationToken ct = default)
+    {
+        var isFavorite = await watchListService.IsFavoriteAsync(userId, listingId, ct);
+        return Ok(isFavorite);
+    }
+
+    /// <summary>
+    ///     Remove a listing from the user's favorites.
+    /// </summary>
+    [HttpDelete("{userId:guid}/favorites/{listingId:guid}")]
+    public async Task<IActionResult> RemoveFavorite(Guid userId, Guid listingId, CancellationToken ct = default)
+    {
+        await watchListService.RemoveAsync(userId, listingId, ct);
         return NoContent();
     }
 }

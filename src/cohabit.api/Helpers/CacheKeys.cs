@@ -22,4 +22,6 @@ public static class CacheKeys
     public static string AddressDetail(Guid id) => $"{AddressDetailPrefix}{id}";
 
     public static string UserListings(Guid userId) => $"users:{userId}:listings";
+
+    public static string UserFavorites(Guid userId) => $"users:{userId}:favorites";
 }

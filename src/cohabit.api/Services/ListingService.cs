@@ -26,7 +26,7 @@ public sealed class ListingService(
             var (items, totalCount) = await listingAccessor.BrowseAsync(query, token);
             var totalPages = (int)Math.Ceiling(totalCount / (double)query.PageSize);
             return new PagedResult<ListingSummaryDto>(
-                items.Select(ToSummary).ToList(),
+                items.Select(ListingMapper.ToSummary).ToList(),
                 query.Page,
                 query.PageSize,
                 totalCount,
@@ -47,7 +47,7 @@ public sealed class ListingService(
                 throw new NotFoundException("listing_not_found", $"Listing '{id}' was not found.");
             }
 
-            return ToDetail(listing);
+            return ListingMapper.ToDetail(listing);
         }, CacheTtl, ct);
     }
 
@@ -58,7 +58,7 @@ public sealed class ListingService(
         return await cache.GetOrSetAsync(key, async token =>
         {
             var listings = await listingAccessor.GetUserListingsAsync(userId, token);
-            return listings.Select(ToSummary).ToList();
+            return listings.Select(ListingMapper.ToSummary).ToList();
         }, CacheTtl, ct);
     }
 
@@ -73,7 +73,7 @@ public sealed class ListingService(
 
         InvalidateListingCaches(userId, listingId);
 
-        return ToDetail(listing);
+        return ListingMapper.ToDetail(listing);
     }
 
     public async Task DeleteAsync(Guid userId, Guid listingId, CancellationToken ct = default)
@@ -119,7 +119,7 @@ public sealed class ListingService(
         cache.RemoveByPrefix(CacheKeys.ListingBrowsePrefix);
         cache.Remove(CacheKeys.UserListings(listing.UserId));
 
-        return ToDetail(listing);
+        return ListingMapper.ToDetail(listing);
     }
 
     private void InvalidateListingCaches(Guid userId, Guid listingId)
@@ -148,80 +148,5 @@ public sealed class ListingService(
         var page = query.Page < 1 ? 1 : query.Page;
         var pageSize = query.PageSize is < 1 or > 100 ? 20 : query.PageSize;
         return query with { Page = page, PageSize = pageSize };
-    }
-
-    private static ListingSummaryDto ToSummary(Listing listing)
-    {
-        return new ListingSummaryDto(
-            listing.Id,
-            listing.Title,
-            listing.Description,
-            listing.TypeId,
-            listing.Type.Name,
-            listing.Price,
-            listing.Deposit,
-            listing.Beds,
-            listing.Baths,
-            listing.AvailableFrom,
-            listing.ResponseTime,
-            PrimaryImageUrl(listing),
-            ToOwner(listing.User),
-            ToAddress(listing.Address));
-    }
-
-    private static ListingDetailDto ToDetail(Listing listing)
-    {
-        return new ListingDetailDto(
-            listing.Id,
-            listing.Title,
-            listing.Description,
-            listing.TypeId,
-            listing.Type.Name,
-            listing.Price,
-            listing.Deposit,
-            listing.Beds,
-            listing.Baths,
-            listing.AvailableFrom,
-            listing.ResponseTime,
-            PrimaryImageUrl(listing),
-            ToOwner(listing.User),
-            ToAddress(listing.Address),
-            listing.Images
-                .OrderByDescending(i => i.IsPrimary)
-                .Select(i => i.Url)
-                .ToList(),
-            listing.ListingAmenities
-                .Select(la => la.Amenity.Name)
-                .ToList(),
-            listing.ListingRules
-                .Select(lr => lr.Rule.Name)
-                .ToList(),
-            listing.User.UserVerifications
-                .Select(uv => new ListingVerificationDto(
-                    uv.VerificationType.Id,
-                    uv.VerificationType.Name,
-                    uv.IsVerified))
-                .ToList());
-    }
-
-    private static ListingOwnerDto ToOwner(User user)
-    {
-        return new ListingOwnerDto(user.Id, user.FirstName, user.LastName, user.AvatarUrl);
-    }
-
-    private static ListingAddressDto ToAddress(Address address)
-    {
-        return new ListingAddressDto(
-            address.Suburb,
-            address.PostalCode,
-            new ProvinceDto(address.Province.Id, address.Province.Name));
-    }
-
-    private static string? PrimaryImageUrl(Listing listing)
-    {
-        return listing.Images
-            .OrderByDescending(i => i.IsPrimary)
-            .Select(i => i.Url)
-            .FirstOrDefault();
     }
 }

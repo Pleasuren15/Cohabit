@@ -33,10 +33,12 @@ builder.Services.AddScoped<IListingAccessor, ListingAccessor>();
 builder.Services.AddScoped<IProvinceAccessor, ProvinceAccessor>();
 builder.Services.AddScoped<IUserAccessor, UserAccessor>();
 builder.Services.AddScoped<IAddressAccessor, AddressAccessor>();
+builder.Services.AddScoped<IWatchListAccessor, WatchListAccessor>();
 builder.Services.AddScoped<IListingService, ListingService>();
 builder.Services.AddScoped<IProvinceService, ProvinceService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<IWatchListService, WatchListService>();
 
 builder.Services.AddScoped<ILookupSeeder, ProvinceSeeder>();
 builder.Services.AddScoped<ILookupSeeder, ListingTypeSeeder>();

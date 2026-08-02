@@ -7,8 +7,7 @@ var cohabitDb = postgres.AddDatabase("cohabit-db");
 
 var storage = builder.AddAzureStorage("cohabit-storage")
     .RunAsEmulator(container => container
-        .WithDataVolume("cohabit-storage-data")
-        .WithEndpoint(port: 10000, name: "blob"));
+        .WithDataVolume("cohabit-storage-data"));
 var imagesBlob = storage.AddBlobs("cohabit-images");
 
 var cohabitApi = builder.AddProject<Projects.cohabit_api>("cohabit-api")
