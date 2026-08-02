@@ -1,4 +1,4 @@
-﻿namespace verification.api.unit.tests
+﻿namespace comms.api.unit.tests
 {
     public class Tests
     {

@@ -4,10 +4,10 @@
     <Project Path="src/cohabit.application/cohabit.application.csproj" />
     <Project Path="src/cohabit.aspire/cohabit.aspire.AppHost/cohabit.aspire.AppHost.csproj" Id="291478cb-c3ca-478c-8d4c-0755e43eca49" />
     <Project Path="src/cohabit.aspire/cohabit.aspire.ServiceDefaults/cohabit.aspire.ServiceDefaults.csproj" />
-    <Project Path="src/verification.api/cohabit.verification.api.csproj" />
+    <Project Path="src/comms.api/cohabit.comms.api.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/cohabit.api.unit.tests/cohabit.api.unit.tests.csproj" Id="bf0726f7-7b2c-4d99-bf61-7e0165b34b13" />
-    <Project Path="test/verification.api.unit.tests/verification.api.unit.tests.csproj" Id="07f429bc-5aff-460e-8f92-a2924c0295e7" />
+    <Project Path="test/comms.api.unit.tests/comms.api.unit.tests.csproj" Id="07f429bc-5aff-460e-8f92-a2924c0295e7" />
   </Folder>
 </Solution>

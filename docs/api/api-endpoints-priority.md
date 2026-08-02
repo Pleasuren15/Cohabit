@@ -19,9 +19,9 @@ tables it touches so the wiring work can be planned and parallelised.
 | GET | `/files` | `cohabit.api` | List blob files |
 | GET | `/files/{name}` | `cohabit.api` | Download a blob |
 | POST | `/files` | `cohabit.api` | Upload a blob (image uploads) |
-| GET | `/messages` | `verification.api` | BulkSMS messages |
-| GET | `/messages/{id}` | `verification.api` | BulkSMS message by id |
-| POST | `/send` | `verification.api` | Send an SMS via BulkSMS |
+| GET | `/messages` | `comms.api` | BulkSMS messages |
+| GET | `/messages/{id}` | `comms.api` | BulkSMS message by id |
+| POST | `/send` | `comms.api` | Send an SMS via BulkSMS |
 
 Everything below is **not yet wired** and is what the web app needs next.
 
@@ -181,7 +181,7 @@ Feeds the "Verification Badges" section in Profile and the Info tab.
 - **Auth:** required.
 
 ### 22. `POST /api/auth/otp/request` — Request phone OTP
-- **Powers:** Phone verification (uses `verification.api` `POST /send` under the hood).
+- **Powers:** Phone verification (uses `comms.api` `POST /send` under the hood).
 - **Tables:** `users` (cellphone), `user_verifications`.
 - **Auth:** required.
 
