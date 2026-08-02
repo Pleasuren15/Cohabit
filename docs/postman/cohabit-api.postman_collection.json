@@ -1,0 +1,531 @@
+{
+  "info": {
+    "_postman_id": "ad47925b-7258-4442-a9af-412c7f76d753",
+    "name": "Cohabit API",
+    "description": "API collection for the Cohabit platform.\n\n**Setup**\n1. Import this collection and the `cohabit-api.postman_environment.json` environment.\n2. Select the **Cohabit API (local)** environment in the top-right dropdown.\n3. `baseUrl` defaults to `http://localhost:5001` (the Aspire-hosted API).\n\n**Seeded data**\nLookup ids (provinces, listing types, amenities, rules, verification types) and entity ids (user, address, listing) are pre-loaded as environment variables, so you don't need to call list endpoints first. After a successful create request, the id is auto-captured into the environment for follow-up update/delete requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Provinces",
+      "item": [
+        {
+          "name": "List all provinces",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/provinces"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Thabo\",\n  \"lastName\": \"Mokoena\",\n  \"cellphone\": \"0825551234\",\n  \"email\": \"thabo.mokoena@example.com\",\n  \"dateOfBirth\": \"1994-06-12\",\n  \"gender\": \"M\",\n  \"bio\": \"Looking for a flatmate in Cape Town\",\n  \"addressId\": \"{{addressId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Creates a user. Captures the new user id into the environment as `userId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const _v = pm.response.json();",
+                  "    if (_v && _v.id) pm.environment.set('userId', _v.id);",
+                  "}",
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const _v = pm.response.json();",
+                  "    if (_v && _v.addressId) pm.environment.set('addressId', _v.addressId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List all users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users"
+          },
+          "response": []
+        },
+        {
+          "name": "List user's listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}/listings"
+          },
+          "response": []
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Thabo\",\n  \"lastName\": \"Mokoena\",\n  \"cellphone\": \"0825551234\",\n  \"email\": \"thabo.mokoena@example.com\",\n  \"dateOfBirth\": \"1994-06-12\",\n  \"gender\": \"M\",\n  \"bio\": \"Now living in Gauteng\",\n  \"addressId\": \"{{addressId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update user's listing",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}/listings/{{listingId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cosy studio near the mall\",\n  \"description\": \"Bright studio, water included\",\n  \"typeId\": \"{{listingTypeStudio}}\",\n  \"price\": 9200,\n  \"deposit\": 9200,\n  \"beds\": 1,\n  \"baths\": 1,\n  \"availableFrom\": \"2026-11-01\",\n  \"responseTime\": \"Within the hour\",\n  \"addressLine1\": \"12 Oxford Street\",\n  \"addressLine2\": \"Shop 3\",\n  \"suburb\": \"Rosebank\",\n  \"postalCode\": \"2196\",\n  \"provinceId\": \"{{provinceGauteng}}\",\n  \"amenityIds\": [{{amenityWifi}}, {{amenityParking}}],\n  \"ruleIds\": [{{ruleNoSmoking}}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Updates a listing owned by the user. Images are left untouched."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete user's listing",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}/listings/{{listingId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete user",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{userId}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Addresses",
+      "item": [
+        {
+          "name": "Search addresses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses?q=Sea&provinceId={{provinceWesternCape}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Sea",
+                  "description": "Search suburb, street or postal code"
+                },
+                {
+                  "key": "provinceId",
+                  "value": "{{provinceWesternCape}}"
+                }
+              ]
+            },
+            "description": "Search by suburb/street/postal code, optionally filtered by province."
+          },
+          "response": []
+        },
+        {
+          "name": "Get address by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/addresses/{{addressId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Create address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/addresses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressLine1\": \"10 Beach Road\",\n  \"addressLine2\": \"Flat 5\",\n  \"suburb\": \"Sea Point\",\n  \"postalCode\": \"8005\",\n  \"provinceId\": \"{{provinceWesternCape}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Creates an address. Captures the new address id into the environment as `addressId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const _v = pm.response.json();",
+                  "    if (_v && _v.id) pm.environment.set('addressId', _v.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/addresses/{{addressId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressLine1\": \"10 Beach Road\",\n  \"addressLine2\": \"Flat 5\",\n  \"suburb\": \"Sea Point\",\n  \"postalCode\": \"8005\",\n  \"provinceId\": \"{{provinceWesternCape}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete address",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/addresses/{{addressId}}",
+            "description": "Addresses referenced by a user or listing return 409."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Listings",
+      "item": [
+        {
+          "name": "Browse listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/listings?provinceId={{provinceWesternCape}}&type=Roommate&q=&page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "listings"
+              ],
+              "query": [
+                {
+                  "key": "provinceId",
+                  "value": "{{provinceWesternCape}}"
+                },
+                {
+                  "key": "type",
+                  "value": "Roommate",
+                  "description": "Roommate | Rentals"
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Search title/description/suburb"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get listing by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/listings/{{listingId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Create listing (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/listings",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "UserId",
+                  "value": "{{userId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Title",
+                  "value": "Sunny studio with sea views",
+                  "type": "text"
+                },
+                {
+                  "key": "Description",
+                  "value": "Bright studio a block from the promenade",
+                  "type": "text"
+                },
+                {
+                  "key": "TypeId",
+                  "value": "{{listingTypeStudio}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Price",
+                  "value": "8500",
+                  "type": "text"
+                },
+                {
+                  "key": "Deposit",
+                  "value": "8500",
+                  "type": "text"
+                },
+                {
+                  "key": "Beds",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "Baths",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "AvailableFrom",
+                  "value": "2026-11-01",
+                  "type": "text"
+                },
+                {
+                  "key": "ResponseTime",
+                  "value": "Within the hour",
+                  "type": "text"
+                },
+                {
+                  "key": "AddressLine1",
+                  "value": "2 Beach Road",
+                  "type": "text"
+                },
+                {
+                  "key": "AddressLine2",
+                  "value": "Unit 12",
+                  "type": "text"
+                },
+                {
+                  "key": "Suburb",
+                  "value": "Sea Point",
+                  "type": "text"
+                },
+                {
+                  "key": "PostalCode",
+                  "value": "8005",
+                  "type": "text"
+                },
+                {
+                  "key": "ProvinceId",
+                  "value": "{{provinceWesternCape}}",
+                  "type": "text"
+                },
+                {
+                  "key": "AmenityIds",
+                  "value": "1,6",
+                  "type": "text",
+                  "description": "Wi-Fi + Furnished. Comma list or repeated keys work."
+                },
+                {
+                  "key": "RuleIds",
+                  "value": "1,2",
+                  "type": "text",
+                  "description": "No Smoking + No Pets"
+                },
+                {
+                  "key": "PrimaryImageIndex",
+                  "value": "0",
+                  "type": "text",
+                  "description": "0-based index into the uploaded images"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": null,
+                  "description": "Pick one or more image files. Multiple entries share the same key."
+                }
+              ]
+            },
+            "description": "Multipart create. Pick an image for the `images` file field. Captures the new listing id into the environment as `listingId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const _v = pm.response.json();",
+                  "    if (_v && _v.id) pm.environment.set('listingId', _v.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001"
+    },
+    {
+      "key": "userId",
+      "value": "4bc6cc16-cb98-48ea-a00f-2c572aa7b1a4"
+    },
+    {
+      "key": "addressId",
+      "value": "c09ee4a5-82b7-4887-9398-bf1354adc56d"
+    },
+    {
+      "key": "listingId",
+      "value": "2ce997f4-1c55-404b-b616-f9d4c235cf37"
+    },
+    {
+      "key": "provinceEasternCape",
+      "value": "1"
+    },
+    {
+      "key": "provinceGauteng",
+      "value": "3"
+    },
+    {
+      "key": "provinceWesternCape",
+      "value": "9"
+    },
+    {
+      "key": "listingTypeRoom",
+      "value": "1"
+    },
+    {
+      "key": "listingTypeStudio",
+      "value": "2"
+    },
+    {
+      "key": "listingTypeApartment",
+      "value": "3"
+    },
+    {
+      "key": "amenityWifi",
+      "value": "1"
+    },
+    {
+      "key": "amenityParking",
+      "value": "2"
+    },
+    {
+      "key": "amenityFurnished",
+      "value": "6"
+    },
+    {
+      "key": "amenitySecurity",
+      "value": "9"
+    },
+    {
+      "key": "ruleNoSmoking",
+      "value": "1"
+    },
+    {
+      "key": "ruleNoPets",
+      "value": "2"
+    },
+    {
+      "key": "ruleQuietHours",
+      "value": "6"
+    },
+    {
+      "key": "verificationIdentity",
+      "value": "1"
+    },
+    {
+      "key": "verificationEmail",
+      "value": "4"
+    }
+  ]
+}

@@ -1,14 +1,17 @@
+using System.Security.Cryptography;
 using cohabit.api.Contracts;
 using cohabit.api.DatabaseAccessors;
 using cohabit.api.Helpers;
 using cohabit.api.Infrastructure;
 using cohabit.application.Domain;
+using Microsoft.AspNetCore.Http;
 
 namespace cohabit.api.Services;
 
 public sealed class ListingService(
     IListingAccessor listingAccessor,
     ICache cache,
+    IImageStorage imageStorage,
     ILogger<ListingService> logger) : IListingService
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
@@ -47,6 +50,98 @@ public sealed class ListingService(
             return ToDetail(listing);
         }, CacheTtl, ct);
     }
+
+    public async Task<IReadOnlyList<ListingSummaryDto>> GetUserListingsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var key = CacheKeys.UserListings(userId);
+
+        return await cache.GetOrSetAsync(key, async token =>
+        {
+            var listings = await listingAccessor.GetUserListingsAsync(userId, token);
+            return listings.Select(ToSummary).ToList();
+        }, CacheTtl, ct);
+    }
+
+    public async Task<ListingDetailDto> UpdateAsync(
+        Guid userId,
+        Guid listingId,
+        UpdateListingRequest request,
+        CancellationToken ct = default)
+    {
+        var listing = await listingAccessor.UpdateAsync(listingId, userId, request, ct);
+        logger.LogInformation("Updated listing {ListingId} for user {UserId}", listing.Id, userId);
+
+        InvalidateListingCaches(userId, listingId);
+
+        return ToDetail(listing);
+    }
+
+    public async Task DeleteAsync(Guid userId, Guid listingId, CancellationToken ct = default)
+    {
+        await listingAccessor.DeleteAsync(listingId, userId, ct);
+        logger.LogInformation("Deleted listing {ListingId} for user {UserId}", listingId, userId);
+
+        InvalidateListingCaches(userId, listingId);
+    }
+
+    public async Task<ListingDetailDto> CreateAsync(
+        CreateListingRequest request,
+        IReadOnlyList<IFormFile> images,
+        CancellationToken ct = default)
+    {
+        var inputs = await Task.WhenAll(images.Select(file => ReadImageAsync(file, ct)));
+        var hashes = inputs.Select(i => i.Sha256).Distinct().ToList();
+
+        var resolvedUrls = new Dictionary<string, string>(await listingAccessor.FindImageUrlsBySha256Async(hashes, ct));
+
+        var resolved = new List<ResolvedImage>();
+        var primaryIndex = request.PrimaryImageIndex ?? 0;
+
+        for (var index = 0; index < inputs.Length; index++)
+        {
+            var input = inputs[index];
+
+            if (resolvedUrls.TryGetValue(input.Sha256, out var url))
+            {
+                logger.LogInformation("Reusing existing image {Sha256} at {Url}", input.Sha256, url);
+                resolved.Add(new ResolvedImage(url, input.Sha256, index == primaryIndex));
+                continue;
+            }
+
+            url = await imageStorage.UploadAsync(input.FileName, input.Content, input.ContentType, ct);
+            resolvedUrls[input.Sha256] = url;
+            resolved.Add(new ResolvedImage(url, input.Sha256, index == primaryIndex));
+        }
+
+        var listing = await listingAccessor.CreateAsync(request, resolved, ct);
+        logger.LogInformation("Created listing {ListingId} for user {UserId}", listing.Id, listing.UserId);
+
+        cache.RemoveByPrefix(CacheKeys.ListingBrowsePrefix);
+        cache.Remove(CacheKeys.UserListings(listing.UserId));
+
+        return ToDetail(listing);
+    }
+
+    private void InvalidateListingCaches(Guid userId, Guid listingId)
+    {
+        cache.RemoveByPrefix(CacheKeys.ListingBrowsePrefix);
+        cache.Remove(CacheKeys.UserListings(userId));
+        cache.Remove(CacheKeys.ListingDetail(listingId));
+    }
+
+    private static async Task<ImageInput> ReadImageAsync(IFormFile file, CancellationToken ct = default)
+    {
+        using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, ct);
+        var content = stream.ToArray();
+        return new ImageInput(
+            file.FileName,
+            file.ContentType,
+            content,
+            Convert.ToHexString(SHA256.HashData(content)).ToLowerInvariant());
+    }
+
+    private sealed record ImageInput(string FileName, string ContentType, byte[] Content, string Sha256);
 
     private static ListingQuery ValidateQuery(ListingQuery query)
     {

@@ -1,5 +1,6 @@
 using cohabit.api.Contracts;
 using cohabit.api.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace cohabit.api.Controllers;
@@ -33,5 +34,19 @@ public class ListingsController(IListingService listingService) : ControllerBase
     {
         var listing = await listingService.GetByIdAsync(id, ct);
         return Ok(listing);
+    }
+
+    /// <summary>
+    ///     Create a listing. Images are deduplicated by their sha256 signature: existing
+    ///     signatures reuse the stored blob URL, new ones are uploaded to blob storage.
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<ListingDetailDto>> Create(
+        [FromForm] CreateListingRequest request,
+        [FromForm] IReadOnlyList<IFormFile> images,
+        CancellationToken ct = default)
+    {
+        var listing = await listingService.CreateAsync(request, images, ct);
+        return CreatedAtAction(nameof(GetById), new { id = listing.Id }, listing);
     }
 }

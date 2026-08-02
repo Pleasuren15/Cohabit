@@ -131,6 +131,7 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.Property(i => i.Id).HasColumnName("id");
             entity.Property(i => i.ListingId).HasColumnName("listing_id").IsRequired();
             entity.Property(i => i.Url).HasColumnName("url").IsRequired();
+            entity.Property(i => i.Sha256).HasColumnName("sha256").HasMaxLength(64);
             entity.Property(i => i.IsPrimary).HasColumnName("is_primary");
             entity.Property(i => i.Timestamp).HasColumnName("timestamp");
 

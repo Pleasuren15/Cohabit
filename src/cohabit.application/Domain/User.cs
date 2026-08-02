@@ -33,7 +33,7 @@ public sealed class User
         string email,
         DateOnly dateOfBirth,
         char gender,
-        string bio,
+        string? bio,
         Guid addressId)
     {
         return new User
@@ -68,5 +68,25 @@ public sealed class User
             IsOtpVerified = false,
             Timestamp = DateTime.UtcNow
         };
+    }
+
+    public void Update(
+        string firstName,
+        string lastName,
+        string cellphone,
+        string email,
+        DateOnly dateOfBirth,
+        char gender,
+        string? bio,
+        Guid addressId)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+        Cellphone = cellphone;
+        Email = email;
+        DateOfBirth = dateOfBirth;
+        Gender = gender;
+        Bio = bio;
+        AddressId = addressId;
     }
 }

@@ -5,6 +5,7 @@ public sealed class Image
     public Guid Id { get; private set; }
     public Guid ListingId { get; private set; }
     public string Url { get; private set; }
+    public string? Sha256 { get; private set; }
     public bool IsPrimary { get; private set; }
     public DateOnly Timestamp { get; private set; }
 
@@ -13,13 +14,14 @@ public sealed class Image
 
     private Image() { }
 
-    public static Image Create(Guid listingId, string url, bool isPrimary)
+    public static Image Create(Guid listingId, string url, bool isPrimary, string? sha256 = null)
     {
         return new Image
         {
             Id = Guid.NewGuid(),
             ListingId = listingId,
             Url = url,
+            Sha256 = sha256,
             IsPrimary = isPrimary,
             Timestamp = DateOnly.FromDateTime(DateTime.UtcNow)
         };
