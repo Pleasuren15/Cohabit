@@ -17,7 +17,7 @@ var cohabitApi = builder.AddProject<Projects.cohabit_api>("cohabit-api")
     .WaitFor(cohabitDb)
     .WaitFor(imagesBlob);
 
-var verificationApi = builder.AddProject<Projects.cohabit_verification_api>("verification-api")
+var commsApi = builder.AddProject<Projects.cohabit_comms_api>("comms-api")
     .WithHttpEndpoint(port: 5002, name: "http")
     .WithReference(cohabitDb)
     .WaitFor(cohabitDb);

@@ -1,5 +1,5 @@
-using cohabit.verification.api.Extensions;
-using cohabit.verification.api.Features.BulkSms;
+using cohabit.comms.api.Extensions;
+using cohabit.comms.api.Features.BulkSms;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

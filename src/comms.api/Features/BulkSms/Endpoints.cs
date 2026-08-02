@@ -2,7 +2,7 @@ using cohabit.application.Features.BulkSms;
 using cohabit.application.Features.BulkSms.Messages;
 using cohabit.application.Features.BulkSms.Send;
 
-namespace cohabit.verification.api.Features.BulkSms;
+namespace cohabit.comms.api.Features.BulkSms;
 
 public static class BulkSmsEndpoints
 {

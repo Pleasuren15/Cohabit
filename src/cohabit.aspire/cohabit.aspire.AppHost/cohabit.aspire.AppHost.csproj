@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\cohabit.api\cohabit.api.csproj" />
-    <ProjectReference Include="..\..\verification.api\cohabit.verification.api.csproj" />
+    <ProjectReference Include="..\..\comms.api\cohabit.comms.api.csproj" />
   </ItemGroup>
 
 </Project>

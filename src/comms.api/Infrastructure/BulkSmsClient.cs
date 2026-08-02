@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using cohabit.application.Features.BulkSms;
 
-namespace cohabit.verification.api.Infrastructure;
+namespace cohabit.comms.api.Infrastructure;
 
 public sealed class BulkSmsClient(HttpClient httpClient, ILogger<BulkSmsClient> logger) : IBulkSmsClient
 {

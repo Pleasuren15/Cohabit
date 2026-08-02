@@ -2,9 +2,9 @@ using System.Net.Http.Headers;
 using cohabit.application.Features.BulkSms;
 using cohabit.application.Features.BulkSms.Messages;
 using cohabit.application.Features.BulkSms.Send;
-using cohabit.verification.api.Infrastructure;
+using cohabit.comms.api.Infrastructure;
 
-namespace cohabit.verification.api.Extensions;
+namespace cohabit.comms.api.Extensions;
 
 public static class ServiceExtensions
 {

@@ -1,34 +1,18 @@
-./bin
-./obj
-/.vs/verification.api.slnx/v18
-/.vs/verification.api.slnx/FileContentIndex
-/src/verification.api/.vs/verification.api.slnx
-/src/verification.api/obj
-/src/cohabit.application/bin/Debug/net10.0
-/src/cohabit.application/obj/Debug/net10.0/ref
-/src/cohabit.application/obj/Debug/net10.0/refint
-/src/verification.api/bin/Debug/net10.0
-/src/cohabit.application/obj/Debug/net10.0
-/.vs/cohabit.slnx/DesignTimeBuild
-/.vs/ProjectEvaluation
-/.vs/cohabit.slnx/FileContentIndex
-/.vs/cohabit.slnx/v18
-/.vs/verification.api.slnx/DesignTimeBuild
-/src/cohabit.application/obj
-/test/verification.api.unit.tests/bin/Debug/net10.0
-/test/verification.api.unit.tests/obj
-/.vs/cohabit.slnx/config
+# ---- .NET build output ----
+bin/
+obj/
 
-/src/cohabit.api/obj
-/src/cohabit.api/bin/Debug/net10.0
-/test/cohabit.api.unit.tests/bin/Debug/net10.0
-/test/cohabit.api.unit.tests/obj
-/src/cohabit.aspire/cohabit.aspire.AppHost/bin/Debug/net10.0
-/src/cohabit.aspire/cohabit.aspire.AppHost/obj
-/src/cohabit.aspire/cohabit.aspire.ServiceDefaults/bin/Debug/net10.0
-/src/cohabit.aspire/cohabit.aspire.ServiceDefaults/obj/Debug/net10.0
-/src/cohabit.aspire/cohabit.aspire.ServiceDefaults/obj
-/.vs/cohabit.slnx
+# ---- Test results ----
+TestResults/
+
+# ---- Visual Studio ----
+.vs/
+*.suo
+*.user
+
+# ---- JetBrains / ReSharper (keep shared .DotSettings, ignore local overrides) ----
+.idea/
+*.DotSettings.user
 
 # ---- Node / web (cohabit.web) ----
 node_modules
@@ -38,12 +22,12 @@ build
 *.local
 .vite
 
-# Environment / secrets — never push these
+# ---- Environment / secrets — never push these ----
 .env
 .env.*
 !.env.example
 
-# JS logs
+# ---- Logs ----
 logs
 *.log
 npm-debug.log*
@@ -51,19 +35,23 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Test coverage
+# ---- Test coverage ----
 coverage/
 
-# OS / editor
-.DS_Store
-.idea/
-.vscode/*
-!.vscode/extensions.json
-
-# Claude Code local (keep shared settings.json, ignore local overrides)
-.claude/settings.local.json
+# ---- Azurite emulator ----
 __azurite_db_blob__.json
 __azurite_db_blob_extent__.json
 __azurite_db_queue__.json
 __azurite_db_queue_extent__.json
 __azurite_db_table__.json
+__blobstorage__/
+__queuestorage__/
+__tablestorage__/
+
+# ---- OS / editor ----
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# ---- Claude Code local (keep shared settings.json, ignore local overrides) ----
+.claude/settings.local.json
