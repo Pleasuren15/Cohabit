@@ -61,4 +61,26 @@ public sealed class Listing
             Expires = expires
         };
     }
+
+    public void Update(
+        string title,
+        string description,
+        int typeId,
+        int price,
+        int deposit,
+        int beds,
+        int baths,
+        DateOnly availableFrom,
+        string responseTime)
+    {
+        Title = title;
+        Description = description;
+        TypeId = typeId;
+        Price = price;
+        Deposit = deposit;
+        Beds = beds;
+        Baths = baths;
+        AvailableFrom = availableFrom;
+        ResponseTime = responseTime;
+    }
 }

@@ -33,4 +33,18 @@ public sealed class Address
             ProvinceId = provinceId
         };
     }
+
+    public void Update(
+        string addressLine1,
+        string addressLine2,
+        string suburb,
+        string postalCode,
+        int provinceId)
+    {
+        AddressLine1 = addressLine1;
+        AddressLine2 = addressLine2;
+        Suburb = suburb;
+        PostalCode = postalCode;
+        ProvinceId = provinceId;
+    }
 }

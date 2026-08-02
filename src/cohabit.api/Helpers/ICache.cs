@@ -9,4 +9,6 @@ public interface ICache
     void Set<T>(string key, T value, TimeSpan ttl);
 
     void Remove(string key);
+
+    void RemoveByPrefix(string prefix);
 }

@@ -10,6 +10,12 @@ public sealed class TestData
     public Province Gauteng { get; private set; } = null!;
     public ListingType Room { get; private set; } = null!;
     public ListingType Apartment { get; private set; } = null!;
+    public User Alice { get; private set; } = null!;
+    public User Bob { get; private set; } = null!;
+    public Amenity Wifi { get; private set; } = null!;
+    public Rule NoSmoking { get; private set; } = null!;
+    public Address WcAddress { get; private set; } = null!;
+    public Address GpAddress { get; private set; } = null!;
     public Listing RoomListing { get; private set; } = null!;
     public Listing ApartmentListing { get; private set; } = null!;
     public Listing ExpiredListing { get; private set; } = null!;
@@ -33,11 +39,21 @@ public sealed class TestData
 
         var alice = User.CreateFromJwt("Alice", "Smith", DateOnly.Parse("1995-01-01"), 'F');
         var bob = User.CreateFromJwt("Bob", "Jones", DateOnly.Parse("1992-05-05"), 'M');
+        Alice = alice;
+        Bob = bob;
         db.Users.AddRange(alice, bob);
+        await db.SaveChangesAsync();
+
+        Wifi = Amenity.Create("Wi-Fi");
+        NoSmoking = Rule.Create("No smoking");
+        db.Amenities.Add(Wifi);
+        db.Rules.Add(NoSmoking);
         await db.SaveChangesAsync();
 
         var wcAddress = Address.Create("1 Main Rd", "", "Sea Point", "8005", WesternCape.Id);
         var gpAddress = Address.Create("2 Fox St", "", "Sandton", "2001", Gauteng.Id);
+        WcAddress = wcAddress;
+        GpAddress = gpAddress;
         db.Addresses.AddRange(wcAddress, gpAddress);
         await db.SaveChangesAsync();
 

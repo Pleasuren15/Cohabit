@@ -10,4 +10,23 @@ public interface IListingAccessor
         CancellationToken ct = default);
 
     Task<Listing?> GetByIdAsync(Guid id, CancellationToken ct = default);
+
+    Task<IReadOnlyList<Listing>> GetUserListingsAsync(Guid userId, CancellationToken ct = default);
+
+    Task<Listing> UpdateAsync(
+        Guid listingId,
+        Guid ownerUserId,
+        UpdateListingRequest request,
+        CancellationToken ct = default);
+
+    Task DeleteAsync(Guid listingId, Guid ownerUserId, CancellationToken ct = default);
+
+    Task<IReadOnlyDictionary<string, string>> FindImageUrlsBySha256Async(
+        IReadOnlyCollection<string> sha256Hashes,
+        CancellationToken ct = default);
+
+    Task<Listing> CreateAsync(
+        CreateListingRequest request,
+        IReadOnlyList<ResolvedImage> images,
+        CancellationToken ct = default);
 }

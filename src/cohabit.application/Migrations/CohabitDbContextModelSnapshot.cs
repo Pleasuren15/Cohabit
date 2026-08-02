@@ -128,6 +128,11 @@ namespace cohabit.application.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("listing_id");
 
+                    b.Property<string>("Sha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("sha256");
+
                     b.Property<DateOnly>("Timestamp")
                         .HasColumnType("date")
                         .HasColumnName("timestamp");
