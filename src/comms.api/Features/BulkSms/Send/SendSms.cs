@@ -1,4 +1,4 @@
-namespace cohabit.application.Features.BulkSms.Send;
+namespace cohabit.comms.api.Features.BulkSms.Send;
 
 public sealed class SendSmsHandler(IBulkSmsClient smsClient)
 {

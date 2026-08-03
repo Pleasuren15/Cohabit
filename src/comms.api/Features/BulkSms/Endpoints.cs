@@ -1,6 +1,6 @@
-using cohabit.application.Features.BulkSms;
-using cohabit.application.Features.BulkSms.Messages;
-using cohabit.application.Features.BulkSms.Send;
+using cohabit.comms.api.Features.BulkSms;
+using cohabit.comms.api.Features.BulkSms.Messages;
+using cohabit.comms.api.Features.BulkSms.Send;
 
 namespace cohabit.comms.api.Features.BulkSms;
 

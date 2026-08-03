@@ -1,8 +1,8 @@
 using System.Text;
 using System.Text.Json;
-using cohabit.application.Features.BulkSms;
+using cohabit.comms.api.Features.BulkSms;
 
-namespace cohabit.comms.api.Infrastructure;
+namespace cohabit.comms.api.Features.BulkSms.Infrastructure;
 
 public sealed class BulkSmsClient(HttpClient httpClient, ILogger<BulkSmsClient> logger) : IBulkSmsClient
 {
@@ -12,8 +12,7 @@ public sealed class BulkSmsClient(HttpClient httpClient, ILogger<BulkSmsClient> 
     {
         try
         {
-            var code = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
-            var body = $"Cohabit > Your OTP is {code}";
+            var body = request.Body ?? $"Cohabit > Your OTP is {Guid.NewGuid().ToString("N")[..6].ToUpperInvariant()}";
 
             var payload = JsonSerializer.Serialize(new { to = request.To, body }, JsonOptions);
             var httpRequest = new HttpRequestMessage(HttpMethod.Post, "messages")

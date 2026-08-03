@@ -22,6 +22,8 @@ tables it touches so the wiring work can be planned and parallelised.
 | GET | `/messages` | `comms.api` | BulkSMS messages |
 | GET | `/messages/{id}` | `comms.api` | BulkSMS message by id |
 | POST | `/send` | `comms.api` | Send an SMS via BulkSMS |
+| POST | `/api/otp/request` | `comms.api` | Dispatch an OTP (SMS or email) to the JWT user; destination taken from token, code cached 5 min (SHA-256 keyed); model-validated (400 on out-of-range channel) |
+| POST | `/api/otp/verify` | `comms.api` | Verify a received OTP for the JWT user; code consumed on first use (one-time), wrong/missing code returns `IsValid=false`; model-validated (400 on malformed code) |
 
 Everything below is **not yet wired** and is what the web app needs next.
 
@@ -181,7 +183,7 @@ Feeds the "Verification Badges" section in Profile and the Info tab.
 - **Auth:** required.
 
 ### 22. `POST /api/auth/otp/request` — Request phone OTP
-- **Powers:** Phone verification (uses `comms.api` `POST /send` under the hood).
+- **Powers:** Phone verification (proxies to `comms.api` `POST /api/otp/request`, which picks the SMS or email dispatcher via a factory and stores the code with a 5 minute TTL).
 - **Tables:** `users` (cellphone), `user_verifications`.
 - **Auth:** required.
 
@@ -189,6 +191,7 @@ Feeds the "Verification Badges" section in Profile and the Info tab.
 - **Powers:** Sets `is_otp_verified` and/or phone `user_verification`.
 - **Tables:** `users`, `user_verifications`.
 - **Auth:** required.
+- **Backend:** proxies to `comms.api` `POST /api/otp/verify` (`VerifyOtpRequest { Channel, Code }`); valid codes are consumed on first use, so each code verifies at most once.
 
 ### 24. `POST /api/users/me/verifications` — Complete a verification type
 - **Powers:** Profile "Verify" dialog (phone/email/id/credit).

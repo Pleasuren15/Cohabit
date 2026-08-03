@@ -1,8 +1,8 @@
-namespace cohabit.application.Features.BulkSms;
+namespace cohabit.comms.api.Features.BulkSms;
 
 // ── DTOs shared across the BulkSms feature ──────────────────────────
 
-public sealed record SendSmsRequest(string To);
+public sealed record SendSmsRequest(string To, string? Body = null);
 
 public sealed record BulkSmsMessageDto(
     string Id,

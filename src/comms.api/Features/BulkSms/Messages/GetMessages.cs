@@ -1,4 +1,4 @@
-namespace cohabit.application.Features.BulkSms.Messages;
+namespace cohabit.comms.api.Features.BulkSms.Messages;
 
 public sealed class GetAllMessagesHandler(IBulkSmsClient smsClient)
 {
