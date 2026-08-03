@@ -4,9 +4,12 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
+using cohabit.comms.api.Features.BulkSms;
 using cohabit.comms.api.Features.Otp;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 
 namespace comms.api.integration.tests;
@@ -90,5 +93,71 @@ public class OtpRequestIntegrationTests
         var response = await client.PostAsJsonAsync("/api/otp/verify", new { channel = "Sms", code = "12ab" });
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
+    public async Task Given_SameUser_When_RequestingOtpThreeTimes_Then_ThirdRequestIsRejected()
+    {
+        using var factory = CreateRateLimitedFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            CreateToken(Guid.NewGuid().ToString(), "+15551234567"));
+
+        var first = await client.PostAsJsonAsync("/api/otp/request", new { channel = "Sms" });
+        var second = await client.PostAsJsonAsync("/api/otp/request", new { channel = "Sms" });
+        var third = await client.PostAsJsonAsync("/api/otp/request", new { channel = "Sms" });
+
+        Assert.That(first.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(second.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(third.StatusCode, Is.EqualTo(HttpStatusCode.TooManyRequests));
+    }
+
+    [Test]
+    public async Task Given_DifferentUsers_When_EachRequestsOtpTwice_Then_NeitherIsRejected()
+    {
+        using var factory = CreateRateLimitedFactory();
+        using var clientA = factory.CreateClient();
+        using var clientB = factory.CreateClient();
+        clientA.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            CreateToken(Guid.NewGuid().ToString(), "+15551234567"));
+        clientB.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            CreateToken(Guid.NewGuid().ToString(), "+15551234567"));
+
+        var a1 = await clientA.PostAsJsonAsync("/api/otp/request", new { channel = "Sms" });
+        var b1 = await clientB.PostAsJsonAsync("/api/otp/request", new { channel = "Sms" });
+        var a2 = await clientA.PostAsJsonAsync("/api/otp/request", new { channel = "Sms" });
+        var b2 = await clientB.PostAsJsonAsync("/api/otp/request", new { channel = "Sms" });
+
+        Assert.That(a1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(b1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(a2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(b2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    private static WebApplicationFactory<Program> CreateRateLimitedFactory()
+    {
+        return CreateFactory()
+            .WithWebHostBuilder(builder =>
+                builder.ConfigureServices(services =>
+                {
+                    services.RemoveAll<IBulkSmsClient>();
+                    services.AddSingleton<IBulkSmsClient, StubBulkSmsClient>();
+                }));
+    }
+
+    private sealed class StubBulkSmsClient : IBulkSmsClient
+    {
+        public Task<BulkSmsMessageDto> SendAsync(SendSmsRequest request, CancellationToken ct = default)
+            => Task.FromResult(new BulkSmsMessageDto(
+                "msg-id", "sms", null, request.To, request.Body, null, null, null, null, null, null, null, null, null));
+
+        public Task<IReadOnlyList<BulkSmsMessageDto>> GetAllAsync(CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyList<BulkSmsMessageDto>>(Array.Empty<BulkSmsMessageDto>());
+
+        public Task<BulkSmsMessageDto?> GetByIdAsync(string id, CancellationToken ct = default)
+            => Task.FromResult<BulkSmsMessageDto?>(null);
     }
 }

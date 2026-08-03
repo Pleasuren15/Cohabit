@@ -2,6 +2,7 @@ using System.Security.Claims;
 using cohabit.comms.api.Features.Otp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace cohabit.comms.api.Controllers;
 
@@ -19,6 +20,7 @@ public class OtpController(IOtpService otpService) : ControllerBase
     ///     depending on the selected channel.
     /// </summary>
     [HttpPost("request")]
+    [EnableRateLimiting(RateLimitPolicies.OtpRequest)]
     public async Task<ActionResult<SendOtpResponse>> RequestOtp(
         [FromBody] SendOtpRequest request,
         CancellationToken ct = default)
