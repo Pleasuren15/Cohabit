@@ -7,6 +7,7 @@ on:
       - 'src/comms.api/**'
       - 'src/cohabit.application/**'
       - 'test/comms.api.unit.tests/**'
+      - 'test/comms.api.integration.tests/**'
       - 'cohabit.slnx'
   pull_request:
     branches: [main]
@@ -14,6 +15,7 @@ on:
       - 'src/comms.api/**'
       - 'src/cohabit.application/**'
       - 'test/comms.api.unit.tests/**'
+      - 'test/comms.api.integration.tests/**'
       - 'cohabit.slnx'
 
 jobs:
@@ -48,4 +50,37 @@ jobs:
         if: always()
         with:
           name: comms-api-test-results
+          path: ./TestResults
+
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore cohabit.slnx
+
+      - name: Build
+        run: dotnet build cohabit.slnx --no-restore --configuration Release
+
+      - name: Run integration tests
+        run: >-
+          dotnet test test/comms.api.integration.tests/comms.api.integration.tests.csproj
+          --no-restore
+          --configuration Release
+          --logger trx
+          --results-directory ./TestResults
+          --verbosity normal
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: comms-api-integration-test-results
           path: ./TestResults
