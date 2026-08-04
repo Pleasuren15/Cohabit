@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import { FileUpload, type FileItem, type FileStatus } from "./file-upload-2"
 
@@ -86,6 +87,12 @@ export const WithFiles: Story = {
         />
       </div>
     )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByText("bedroom.jpg")).toBeVisible()
+    await userEvent.click(canvas.getByRole("button", { name: "Remove bedroom.jpg" }))
+    await expect(canvas.queryByText("bedroom.jpg")).not.toBeInTheDocument()
   },
 }
 

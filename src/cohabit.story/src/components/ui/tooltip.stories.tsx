@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 import { Plus } from "lucide-react"
 
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip"
@@ -25,6 +26,14 @@ export const Basic: Story = {
       </Tooltip>
     </TooltipProvider>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.hover(canvas.getByRole("button", { name: "Hover me" }))
+    const tooltip = await within(document.body).findByRole("tooltip")
+    await expect(tooltip).toHaveTextContent("Simple tooltip")
+    await userEvent.unhover(canvas.getByRole("button", { name: "Hover me" }))
+    await expect(tooltip).not.toBeInTheDocument()
+  },
 }
 
 export const WithContent: Story = {

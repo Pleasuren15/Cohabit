@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import { ListingFilter } from "./listing-filter"
 
@@ -30,5 +31,11 @@ export const Default: Story = {
         </p>
       </div>
     )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const select = canvas.getByRole("combobox", { name: "Type" })
+    await userEvent.selectOptions(select, "roommate")
+    await expect(canvas.getByText("roommate")).toBeVisible()
   },
 }

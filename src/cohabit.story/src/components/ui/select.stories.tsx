@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import {
   Select,
@@ -26,7 +27,7 @@ export const Basic: Story = {
   render: () => (
     <div className="w-full max-w-sm">
       <Select defaultValue="bc">
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" aria-label="Province">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -38,6 +39,14 @@ export const Basic: Story = {
       </Select>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole("combobox", { name: "Province" })
+    await userEvent.click(trigger)
+    const listbox = await within(document.body).findByRole("listbox")
+    await userEvent.click(within(listbox).getByRole("option", { name: "Ontario" }))
+    await expect(trigger).toHaveTextContent("Ontario")
+  },
 }
 
 export const WithLabel: Story = {
@@ -63,7 +72,7 @@ export const Grouped: Story = {
   render: () => (
     <div className="w-full max-w-sm">
       <Select defaultValue="heat">
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" aria-label="Service">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -88,7 +97,7 @@ export const DisabledItem: Story = {
   render: () => (
     <div className="w-full max-w-sm">
       <Select defaultValue="room-3">
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" aria-label="Room">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -108,7 +117,7 @@ export const SizeSm: Story = {
   render: () => (
     <div className="w-full max-w-sm">
       <Select defaultValue="bc">
-        <SelectTrigger size="sm" className="w-full">
+        <SelectTrigger size="sm" className="w-full" aria-label="Province">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -126,7 +135,7 @@ export const Disabled: Story = {
   render: () => (
     <div className="w-full max-w-sm">
       <Select defaultValue="bc" disabled>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" aria-label="Province">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

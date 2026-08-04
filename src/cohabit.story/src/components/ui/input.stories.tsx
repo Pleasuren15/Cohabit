@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 import { Search } from "lucide-react"
 
 import { Input } from "./input"
@@ -25,6 +26,12 @@ export const WithLabel: Story = {
       <Input id="email-label" type="email" placeholder="you@example.com" />
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByRole("textbox", { name: "Email" })
+    await userEvent.type(input, "sam@example.com")
+    await expect(input).toHaveValue("sam@example.com")
+  },
 }
 
 export const WithIcon: Story = {
@@ -51,7 +58,7 @@ export const Disabled: Story = {
 }
 
 export const File: Story = {
-  render: () => <Input type="file" className="w-full max-w-sm" />,
+  render: () => <Input type="file" aria-label="Upload file" className="w-full max-w-sm" />,
 }
 
 export const Password: Story = {

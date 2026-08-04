@@ -115,6 +115,7 @@ export function FileUpload({
           multiple={maxFiles > 1}
           accept={accept}
           onChange={handleFileSelect}
+          aria-label="Upload photos"
         />
 
         <div className="flex items-center gap-3 p-3">
@@ -156,6 +157,7 @@ export function FileUpload({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onFileRemove?.(fileItem.id) }}
+                aria-label={`Remove ${fileItem.file.name}`}
                 className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="size-3" />

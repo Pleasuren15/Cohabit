@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import {
   Popover,
@@ -33,6 +34,16 @@ export const Basic: Story = {
       </PopoverContent>
     </Popover>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: "Open popover" }))
+    const dialog = await within(document.body).findByRole("dialog")
+    await expect(
+      within(dialog).getByText("Quickly note an expense or a chore for the house."),
+    ).toBeVisible()
+    await userEvent.keyboard("{Escape}")
+    await expect(dialog).not.toBeInTheDocument()
+  },
 }
 
 export const WithForm: Story = {

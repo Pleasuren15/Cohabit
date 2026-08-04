@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import { NativeSelect } from "./native-select"
 import { Label } from "@/components/ui/label"
@@ -16,7 +17,7 @@ type Story = StoryObj<typeof meta>
 export const Basic: Story = {
   render: () => (
     <div className="w-full max-w-sm">
-      <NativeSelect defaultValue="bc" className="rounded-md border border-input">
+      <NativeSelect defaultValue="bc" aria-label="Province" className="rounded-md border border-input">
         <option value="ab">Alberta</option>
         <option value="bc">British Columbia</option>
         <option value="on">Ontario</option>
@@ -24,6 +25,12 @@ export const Basic: Story = {
       </NativeSelect>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const select = canvas.getByRole("combobox", { name: "Province" })
+    await userEvent.selectOptions(select, "on")
+    await expect(select).toHaveValue("on")
+  },
 }
 
 export const WithLabel: Story = {
@@ -50,6 +57,7 @@ export const Disabled: Story = {
       <NativeSelect
         disabled
         defaultValue="bc"
+        aria-label="Province"
         className="rounded-md border border-input"
       >
         <option value="ab">Alberta</option>
@@ -62,7 +70,7 @@ export const Disabled: Story = {
 
 export const Sized: Story = {
   render: () => (
-    <NativeSelect defaultValue="bc" className="w-64 rounded-md border border-input">
+    <NativeSelect defaultValue="bc" aria-label="Province" className="w-64 rounded-md border border-input">
       <option value="ab">Alberta</option>
       <option value="bc">British Columbia</option>
       <option value="on">Ontario</option>
@@ -74,7 +82,7 @@ export const Sized: Story = {
 export const ManyOptions: Story = {
   render: () => (
     <div className="w-full max-w-sm">
-      <NativeSelect defaultValue="toronto" className="rounded-md border border-input">
+      <NativeSelect defaultValue="toronto" aria-label="City" className="rounded-md border border-input">
         <option value="toronto">Toronto</option>
         <option value="vancouver">Vancouver</option>
         <option value="montreal">Montreal</option>

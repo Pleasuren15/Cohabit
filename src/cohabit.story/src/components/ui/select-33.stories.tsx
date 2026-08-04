@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
-import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
   Select33,
@@ -25,10 +25,8 @@ type Story = StoryObj<typeof meta>
 export const Basic: Story = {
   render: () => (
     <Select33>
-      <Select33Trigger asChild>
-        <Button variant="outline">
-          <Select33Value placeholder="Pick a size" />
-        </Button>
+      <Select33Trigger aria-label="Pick a size">
+        <Select33Value placeholder="Pick a size" />
       </Select33Trigger>
       <Select33Content>
         <Select33Group>
@@ -41,17 +39,23 @@ export const Basic: Story = {
       </Select33Content>
     </Select33>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const trigger = canvas.getByRole("combobox", { name: "Pick a size" })
+    await userEvent.click(trigger)
+    const listbox = await within(document.body).findByRole("listbox")
+    await userEvent.click(within(listbox).getByRole("option", { name: "Medium" }))
+    await expect(trigger).toHaveTextContent("Medium")
+  },
 }
 
 export const WithLabel: Story = {
   render: () => (
     <div className="flex flex-col gap-2">
-      <Label>Choose a plan</Label>
+      <Label id="select33-plan">Choose a plan</Label>
       <Select33 defaultValue="pro">
-        <Select33Trigger asChild>
-          <Button variant="outline">
-            <Select33Value placeholder="Select plan" />
-          </Button>
+        <Select33Trigger aria-labelledby="select33-plan">
+          <Select33Value placeholder="Select plan" />
         </Select33Trigger>
         <Select33Content>
           <Select33Group>
@@ -69,10 +73,8 @@ export const WithLabel: Story = {
 export const DisabledItem: Story = {
   render: () => (
     <Select33>
-      <Select33Trigger asChild>
-        <Button variant="outline">
-          <Select33Value placeholder="Choose a color" />
-        </Button>
+      <Select33Trigger aria-label="Choose a color">
+        <Select33Value placeholder="Choose a color" />
       </Select33Trigger>
       <Select33Content>
         <Select33Group>
@@ -92,10 +94,8 @@ export const DisabledItem: Story = {
 export const SmSize: Story = {
   render: () => (
     <Select33 defaultValue="md">
-      <Select33Trigger asChild size="sm">
-        <Button variant="outline" size="sm">
-          <Select33Value placeholder="Size" />
-        </Button>
+      <Select33Trigger aria-label="Size" size="sm">
+        <Select33Value placeholder="Size" />
       </Select33Trigger>
       <Select33Content>
         <Select33Group>

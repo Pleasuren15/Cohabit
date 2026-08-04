@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 import { Wifi, Flame, Droplets } from "lucide-react"
 
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./accordion"
@@ -67,6 +68,17 @@ export const Multiple: Story = {
       </Accordion>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const guestPolicy = canvas.getByRole("button", { name: "Guest policy" })
+    const content = () =>
+      within(canvasElement).queryByText("Guests are welcome; just let the household know in advance.")
+    await expect(content()).not.toBeInTheDocument()
+    await userEvent.click(guestPolicy)
+    await expect(content()).toBeVisible()
+    await userEvent.click(guestPolicy)
+    await expect(content()).not.toBeInTheDocument()
+  },
 }
 
 export const WithIcons: Story = {

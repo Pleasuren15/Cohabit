@@ -1,11 +1,12 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import {
   UserProfile,
   type UserData,
-  type VerificationType,
   type NewListingData,
+  type VerificationType,
 } from "./user-profile"
 import type { CarouselCard } from "./minimal-carousel"
 
@@ -82,5 +83,15 @@ export const Default: Story = {
         />
       </div>
     )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: "Verify" }))
+    const dialog = await canvas.findByRole("heading", {
+      name: "Verify Your Identity",
+    })
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await expect(dialog).toBeVisible()
+    await userEvent.keyboard("{Escape}")
   },
 }

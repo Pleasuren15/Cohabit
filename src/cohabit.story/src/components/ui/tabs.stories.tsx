@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 import { Home, User, Settings } from "lucide-react"
 import { useState } from "react"
 
@@ -29,6 +30,15 @@ export const Basic: Story = {
       </Tabs>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const groceries = canvas.getByRole("tab", { name: "Groceries" })
+    await userEvent.click(groceries)
+    await expect(groceries).toHaveAttribute("aria-selected", "true")
+    await expect(
+      canvas.getByText("Weekly shop around $120."),
+    ).toBeVisible()
+  },
 }
 
 export const WithIcons: Story = {

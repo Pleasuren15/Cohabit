@@ -141,14 +141,14 @@ export function EditProfile({
               </div>
 
               <div className="space-y-1.5">
-                <Label>Gender</Label>
+                <Label htmlFor="ep-gender">Gender</Label>
                 <Select
                   value={formData.gender || undefined}
                   onValueChange={(value) =>
                     setFormData((prev) => ({ ...prev, gender: value }))
                   }
                 >
-                  <SelectTrigger className="w-full font-semibold">
+                  <SelectTrigger id="ep-gender" className="w-full font-semibold">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>

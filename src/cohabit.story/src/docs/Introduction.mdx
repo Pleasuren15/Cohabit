@@ -1,0 +1,30 @@
+import { Meta, Title, Subtitle, Description, IconGallery, IconItem, Markdown } from "@storybook/addon-docs/blocks"
+
+<Meta title="Introduction" />
+
+# Cohabit Storybook
+
+<Subtitle>A living catalogue for the Cohabit design system.</Subtitle>
+
+<Markdown>
+Cohabit's component catalogue documents every reusable UI building block used
+across the platform. Use this library to explore components, verify their
+accessibility, and test their behaviour before wiring them into a page.
+
+## What's inside
+
+- **base-ui** – low-level primitives built directly on shadcn/ui components.
+- **layout** – structural and decorative components (theme provider, mesh background, filters).
+- **loading-ui** – loading and transition states.
+- **ui** – higher-level product components (auth pages, profiles, carousels, forms).
+
+Every component ships with automatic accessibility checks, an interaction test
+suite, and dark-mode support via the theme toolbar above.
+</Markdown>
+
+<IconGallery>
+  <IconItem name="Components">Reusable, typed React components</IconItem>
+  <IconItem name="A11y">Automated axe-core checks on every story</IconItem>
+  <IconItem name="Themes">Light and dark previews with one click</IconItem>
+  <IconItem name="Tests">Interaction tests run in CI</IconItem>
+</IconGallery>

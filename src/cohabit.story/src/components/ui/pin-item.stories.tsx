@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import { PinItem } from "./pin-item"
 
@@ -58,6 +59,16 @@ export const Interactive: Story = {
         pinned={pinned}
         onPinToggle={() => setPinned((p) => !p)}
       />
+    )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const pin = canvas.getByRole("button", { name: "Pin item" })
+    await expect(pin).toHaveAttribute("aria-pressed", "false")
+    await userEvent.click(pin)
+    await expect(canvas.getByRole("button", { name: "Unpin item" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     )
   },
 }

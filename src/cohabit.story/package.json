@@ -7,9 +7,10 @@
     "dev": "storybook dev -p 6006",
     "build": "storybook build",
     "build:static": "tsc --noEmit && storybook build",
-    "test": "storybook test",
+    "test": "vitest --project=storybook run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "chromatic": "chromatic --build-script-name build --exit-zero-on-changes"
   },
   "dependencies": {
     "@fontsource-variable/montserrat": "^5.3.0",
@@ -36,13 +37,20 @@
   "devDependencies": {
     "@storybook/addon-a11y": "^10.5.6",
     "@storybook/addon-docs": "^10.5.6",
+    "@storybook/addon-themes": "^10.5.6",
+    "@storybook/addon-vitest": "^10.5.6",
     "@storybook/react": "^10.5.6",
     "@storybook/react-vite": "^10.5.6",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6",
+    "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.10",
+    "chromatic": "^18.1.0",
+    "playwright": "^1.62.1",
     "storybook": "^10.5.6",
-    "typescript": "~6"
+    "typescript": "~6",
+    "vitest": "^4.1.10"
   }
 }

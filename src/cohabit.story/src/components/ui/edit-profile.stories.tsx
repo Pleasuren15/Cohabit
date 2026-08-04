@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import { Button } from "./button"
 import { EditProfile, type ProfileData } from "./edit-profile"
@@ -56,6 +57,17 @@ export const Default: Story = {
         />
       </div>
     )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole("button", { name: "Edit profile" }))
+    const name = await canvas.findByLabelText("Full name")
+    await userEvent.clear(name)
+    await userEvent.type(name, "Naledi Mokoena")
+    await userEvent.click(canvas.getByRole("button", { name: /save/i }))
+    await expect(
+      await canvas.findByText("Saved changes for Naledi Mokoena"),
+    ).toBeVisible()
   },
 }
 

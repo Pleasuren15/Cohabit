@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 
@@ -48,6 +49,17 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: { cards },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(
+      canvas.getByRole("heading", { name: "Bright room in Observatory" }),
+    ).toBeVisible()
+    await userEvent.click(canvas.getByText("Garden flat in Rosebank"))
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    await expect(
+      canvas.getByRole("heading", { name: "Garden flat in Rosebank" }),
+    ).toBeVisible()
+  },
 }
 
 export const SingleCard: Story = {

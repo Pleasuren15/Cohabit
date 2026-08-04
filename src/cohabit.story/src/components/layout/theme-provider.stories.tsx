@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
+import { expect, userEvent, within } from "storybook/test"
 
 import { ThemeProvider, useTheme } from "./theme-provider"
 import { Button } from "@/components/ui/button"
@@ -67,4 +68,12 @@ export const Default: Story = {
       <StoryComponent />
     </ThemeProvider>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByText("Current theme: light")).toBeVisible()
+    await userEvent.click(canvas.getByRole("button", { name: "Dark" }))
+    await expect(canvas.getByText("Current theme: dark")).toBeVisible()
+    await userEvent.click(canvas.getByRole("button", { name: "System" }))
+    await expect(canvas.getByText("Current theme: system")).toBeVisible()
+  },
 }

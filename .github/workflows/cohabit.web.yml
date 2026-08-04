@@ -84,3 +84,26 @@ jobs:
         with:
           name: cohabit-storybook-static
           path: src/cohabit.story/storybook-static
+
+  test-storybook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: src/cohabit.story
+        run: npm install
+
+      - name: Install Playwright browser
+        working-directory: src/cohabit.story
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Storybook interaction tests
+        working-directory: src/cohabit.story
+        run: npm test
