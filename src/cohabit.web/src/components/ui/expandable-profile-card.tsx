@@ -92,8 +92,17 @@ export function ExpandableProfileCard({
     <div className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm transition-colors">
       {/* --- Image background + header overlay (always visible) --- */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="relative block w-full cursor-pointer text-left"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            setIsExpanded((prev) => !prev)
+          }
+        }}
+        className="relative block w-full cursor-pointer text-left focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {/* Full-width background image */}
         <div className="relative h-48 overflow-hidden sm:h-56">

@@ -122,6 +122,7 @@ function EditProfileForm({
                                         <input
                                             id={fullNameId}
                                             name="fullName"
+                                            title="fullName"
                                             value={formData.fullName}
                                             onChange={handleChange}
                                             className={fieldClass}
@@ -133,6 +134,7 @@ function EditProfileForm({
                                         <input
                                             id={emailId}
                                             name="email"
+                                            title="email"
                                             type="email"
                                             value={formData.email}
                                             onChange={handleChange}
@@ -145,6 +147,7 @@ function EditProfileForm({
                                         <input
                                             id={cellphoneId}
                                             name="cellphone"
+                                            title="cellphone"
                                             value={formData.cellphone}
                                             onChange={handleChange}
                                             className={fieldClass}
@@ -156,6 +159,7 @@ function EditProfileForm({
                                         <input
                                             id={dateOfBirthId}
                                             name="dateOfBirth"
+                                            title="dateOfBirth"
                                             type="date"
                                             value={formData.dateOfBirth}
                                             onChange={handleChange}
@@ -168,6 +172,7 @@ function EditProfileForm({
                                             <select
                                                 id={genderId}
                                                 name="gender"
+                                                title="gender"
                                                 value={formData.gender}
                                                 onChange={handleChange}
                                                 className={`${fieldClass} appearance-none`}
@@ -184,6 +189,7 @@ function EditProfileForm({
                                         <textarea
                                             id={titleId}
                                             name="title"
+                                            title="title"
                                             value={formData.title}
                                             onChange={handleChange}
                                             rows={3}
@@ -196,6 +202,7 @@ function EditProfileForm({
                                         <input
                                             id={avatarUrlId}
                                             name="avatarUrl"
+                                            title="avatarUrl"
                                             value={formData.avatarUrl}
                                             onChange={handleChange}
                                             placeholder="https://..."
