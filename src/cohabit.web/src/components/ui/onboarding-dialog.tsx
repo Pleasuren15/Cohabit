@@ -17,8 +17,8 @@ interface OnboardingDialogProps {
 }
 
 const TABS: TabItem[] = [
-  { id: "rent", label: "List for renting", icon: <KeyRound size={20} /> },
-  { id: "roommate", label: "Find a roommate", icon: <Users size={20} /> },
+  { id: "rent", label: "Renting", icon: <KeyRound size={20} /> },
+  { id: "roommate", label: "Roommate", icon: <Users size={20} /> },
 ]
 
 export function OnboardingDialog({
