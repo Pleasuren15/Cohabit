@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ReactNode } from "react"
+import { useState, useEffect, useMemo, useCallback, type ReactNode } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { GlassDock, type DockItem } from "@/components/ui/glass-dock"
 import {
@@ -17,6 +17,11 @@ import {
   Scale,
   Mail,
   Search,
+  BarChart3,
+  ShieldCheck,
+  Flag,
+  Lock,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react"
 import { FlipText } from "@/components/ui/flip-text"
@@ -43,6 +48,8 @@ import {
   type CarouselCard,
 } from "@/components/ui/minimal-carousel"
 import { UserProfile, type UserData } from "@/components/ui/user-profile"
+import { OnboardingDialog } from "@/components/ui/onboarding-dialog"
+import StatsCounter from "@/components/ui/stats-counter"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -541,6 +548,7 @@ const MESSAGE_THREADS: PlaceItem[] = [
     status:
       "Your account has been created successfully. Start exploring shared living spaces near you!",
     pinned: false,
+    unread: true,
   },
   {
     id: 2,
@@ -549,6 +557,7 @@ const MESSAGE_THREADS: PlaceItem[] = [
     status:
       "A new shared home in Sea Point has been listed that matches your preferences.",
     pinned: false,
+    unread: true,
   },
   {
     id: 3,
@@ -589,6 +598,7 @@ const MESSAGE_THREADS: PlaceItem[] = [
     status:
       "We found 3 potential roommates based on your preferences. Check them out!",
     pinned: true,
+    unread: true,
   },
   {
     id: 8,
@@ -836,6 +846,16 @@ function PageHeader({
   )
 }
 
+function SectionDivider() {
+  return (
+    <div className="mt-14 mb-4 flex w-full items-center gap-3">
+      <span className="h-px flex-1 bg-border/60" />
+      <span className="size-1.5 rounded-full bg-accent/60" />
+      <span className="h-px flex-1 bg-border/60" />
+    </div>
+  )
+}
+
 /** Main app shell with dock navbar */
 function MainApp({ province: initialProvince }: { province: string }) {
   const [province, setProvince] = useState(initialProvince)
@@ -850,6 +870,19 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [selectedListing, setSelectedListing] =
     useState<FeaturedProfile | null>(null)
   const [extraListings, setExtraListings] = useState<FeaturedProfile[]>([])
+  const [messageThreads, setMessageThreads] =
+    useState<PlaceItem[]>(MESSAGE_THREADS)
+
+  const messageTotal = messageThreads.length
+  const messageUnread = messageThreads.filter((t) => t.unread).length
+
+  const markMessageRead = useCallback((id: number) => {
+    setMessageThreads((prev) =>
+      prev.map((thread) =>
+        thread.id === id ? { ...thread, unread: false } : thread
+      )
+    )
+  }, [])
 
   const filteredProfiles = useMemo(
     () =>
@@ -924,6 +957,8 @@ function MainApp({ province: initialProvince }: { province: string }) {
       title: "Messages",
       icon: MessageSquare,
       onClick: () => setActiveTab("Messages"),
+      badge: messageTotal,
+      unread: messageUnread,
     },
     {
       title: "Info",
@@ -1127,9 +1162,14 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
             {activeTab === "Messages" && (
               <div className="flex flex-col items-center">
-                <PageHeader icon={MessageSquare} title="Messages" />
+                <PageHeader
+                  icon={MessageSquare}
+                  title="Messages"
+                  subtitle={`${messageTotal} total · ${messageUnread} unread`}
+                />
                 <PinItemComponent
-                  items={MESSAGE_THREADS}
+                  items={messageThreads}
+                  onOpen={markMessageRead}
                   pinnedLabel="Pinned"
                   allLabel="All Messages"
                 />
@@ -1138,55 +1178,62 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
             {activeTab === "Info" && (
               <div className="flex flex-col items-center">
-                <PageHeader
-                  icon={ScrollText}
-                  title="Terms &amp; Conditions"
-                  subtitle="Last updated 21 July 2026"
-                />
+                <div className="mt-8 w-full">
+                  <PageHeader
+                    icon={ShieldCheck}
+                    title="Trust &amp; Safety Hub"
+                    subtitle="How we keep Cohabit a safe place to find your housemate."
+                  />
+                </div>
 
-                <div className="w-full space-y-3">
-                  {TERMS.map((section, i) => {
-                    const icons = [ScrollText, Home, Wallet, Handshake, Scale]
-                    const IconComponent = icons[i] ?? ScrollText
+                <div className="grid w-full gap-3 sm:grid-cols-2">
+                  {[
+                    {
+                      icon: BadgeCheck,
+                      title: "Verified identities",
+                      body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
+                    },
+                    {
+                      icon: Flag,
+                      title: "Report &amp; block",
+                      body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
+                    },
+                    {
+                      icon: Lock,
+                      title: "Private by default",
+                      body: "Your personal details stay hidden until you choose to share them. Never share bank details or IDs on this platform.",
+                    },
+                    {
+                      icon: AlertTriangle,
+                      title: "Stay safe",
+                      body: "Meet in public, view the property first, and never pay deposits before signing a lease. Trust your instincts.",
+                    },
+                  ].map((item) => {
+                    const IconComponent = item.icon
                     return (
                       <div
-                        key={section.heading}
-                        className="rounded-2xl border border-border bg-muted/20 p-5"
+                        key={item.title}
+                        className="rounded-2xl bg-muted/40 p-5"
                       >
                         <div className="mb-2 flex items-center gap-3">
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
                             <IconComponent className="size-4" />
                           </span>
                           <h2 className="font-semibold text-foreground">
-                            {section.heading.replace(/^\d+\.\s*/, "")}
+                            {item.title}
                           </h2>
                         </div>
                         <p className="text-sm leading-relaxed text-muted-foreground">
-                          {section.body}
+                          {item.body}
                         </p>
                       </div>
                     )
                   })}
-                  <div className="rounded-2xl border border-border bg-muted/20 p-5">
-                    <p className="text-xs text-muted-foreground">
-                      Questions? Contact us at{" "}
-                      <span className="font-medium text-accent">
-                        hello@cohabit.co.za
-                      </span>
-                      .
-                    </p>
-                  </div>
                 </div>
 
-                <div className="mt-12 w-full">
-                  <Faq6
-                    badge="FAQ"
-                    title="Frequently Asked Questions"
-                    faqs={HOUSING_FAQS}
-                  />
-                </div>
+                <SectionDivider />
 
-                <div className="mt-16 w-full">
+                <div className="w-full">
                   <PageHeader
                     icon={Shield}
                     title="Verification Badges"
@@ -1295,6 +1342,92 @@ function MainApp({ province: initialProvince }: { province: string }) {
                   <p className="mt-4 text-center text-xs text-muted-foreground">
                     More badges = more trust.
                   </p>
+                </div>
+
+                <SectionDivider />
+
+                <div className="w-full">
+                  <PageHeader
+                    icon={BarChart3}
+                    title="Cohabit by the numbers"
+                    subtitle="A growing community of trusted housemates."
+                  />
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-3">
+                  {[
+                    { value: 1200, suffix: "+", label: "Verified members" },
+                    { value: 9, suffix: "", label: "Provinces covered" },
+                    { value: 4, suffix: "", label: "Verification levels" },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="flex flex-col items-center justify-center rounded-2xl bg-muted/40 p-5 text-center"
+                    >
+                      <StatsCounter
+                        value={stat.value}
+                        suffix={stat.suffix}
+                        className="text-3xl font-black tracking-tight text-foreground"
+                      />
+                      <span className="mt-1 text-xs text-muted-foreground">
+                        {stat.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <SectionDivider />
+
+                <div className="w-full">
+                  <Faq6
+                    badge="FAQ"
+                    title="Frequently Asked Questions"
+                    faqs={HOUSING_FAQS}
+                  />
+                </div>
+
+                <SectionDivider />
+
+                <div className="w-full">
+                  <PageHeader
+                    icon={ScrollText}
+                    title="Terms &amp; Conditions"
+                    subtitle="Last updated 21 July 2026"
+                  />
+                </div>
+
+                <div className="w-full space-y-3">
+                  {TERMS.map((section, i) => {
+                    const icons = [ScrollText, Home, Wallet, Handshake, Scale]
+                    const IconComponent = icons[i] ?? ScrollText
+                    return (
+                      <div
+                        key={section.heading}
+                        className="rounded-2xl bg-muted/40 p-5"
+                      >
+                        <div className="mb-2 flex items-center gap-3">
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <IconComponent className="size-4" />
+                          </span>
+                          <h2 className="font-semibold text-foreground">
+                            {section.heading.replace(/^\d+\.\s*/, "")}
+                          </h2>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {section.body}
+                        </p>
+                      </div>
+                    )
+                  })}
+                  <div className="rounded-2xl bg-muted/40 p-5">
+                    <p className="text-xs text-muted-foreground">
+                      Questions? Contact us at{" "}
+                      <span className="font-medium text-accent">
+                        hello@cohabit.co.za
+                      </span>
+                      .
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -1487,6 +1620,13 @@ function MainApp({ province: initialProvince }: { province: string }) {
           />
         )}
       </AnimatePresence>
+
+      {/* Onboarding choice dialog — appears 5s after entering the app,
+          unless the user previously opted to never see it again. */}
+      <OnboardingDialog
+        onRegister={() => setShowAuth(true)}
+        onLogin={() => setShowAuth(true)}
+      />
     </>
   )
 }

@@ -24,6 +24,7 @@ export type PlaceItem = {
   icon?: React.ComponentType<{ size?: number }>
   avatarUrl?: string
   pinned?: boolean
+  unread?: boolean
 }
 
 const INITIAL_PLACES: PlaceItem[] = [
@@ -79,12 +80,16 @@ type PinItemComponentProps = {
   items?: PlaceItem[]
   pinnedLabel?: string
   allLabel?: string
+  onOpen?: (id: number) => void
+  onTogglePin?: (id: number) => void
 }
 
 export const PinItemComponent = ({
   items = INITIAL_PLACES,
   pinnedLabel = "Pinned",
   allLabel = "All",
+  onOpen,
+  onTogglePin,
 }: PinItemComponentProps) => {
   const [places, setPlaces] = useState<PlaceItem[]>(
     items.map((p) => ({ ...p, pinned: p.pinned ?? false }))
@@ -98,6 +103,10 @@ export const PinItemComponent = ({
   }
 
   const togglePin = (id: number) => {
+    if (onTogglePin) {
+      onTogglePin(id)
+      return
+    }
     setPlaces((prev) =>
       prev.map((place) =>
         place.id === id ? { ...place, pinned: !place.pinned } : place
@@ -133,6 +142,7 @@ export const PinItemComponent = ({
                     key={place.id}
                     place={place}
                     onToggle={togglePin}
+                    onOpen={onOpen}
                   />
                 ))}
               </div>
@@ -150,7 +160,7 @@ export const PinItemComponent = ({
           </motion.div>
           <div className="space-y-3">
             {unpinnedPlaces.map((place) => (
-              <PlaceCard key={place.id} place={place} onToggle={togglePin} />
+              <PlaceCard key={place.id} place={place} onToggle={togglePin} onOpen={onOpen} />
             ))}
           </div>
         </motion.div>
@@ -162,9 +172,11 @@ export const PinItemComponent = ({
 const PlaceCard = ({
   place,
   onToggle,
+  onOpen,
 }: {
   place: PlaceItem
   onToggle: (id: number) => void
+  onOpen?: (id: number) => void
 }) => {
   return (
     <motion.div
@@ -172,13 +184,22 @@ const PlaceCard = ({
       transition={springConfig}
       className="relative flex items-center justify-between gap-2.5 rounded-xl border border-border/60 bg-muted/50 p-2.5 shadow-xs transition-shadow hover:shadow-sm sm:p-3"
     >
+      {place.unread && (
+        <span
+          className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-red-500"
+          aria-label="Unread"
+        />
+      )}
       <MessagePopover
         name={place.name}
         type={place.type}
         status={place.status}
         pinned={place.pinned}
       >
-        <div className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+        <div
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"
+          onClick={() => onOpen?.(place.id)}
+        >
           <motion.div layout className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
               <h4 className="truncate text-base font-semibold text-foreground">

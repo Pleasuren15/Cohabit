@@ -14,6 +14,10 @@ export interface DockItem {
   href?: string
   /** Optional Tailwind classes applied to the item container. */
   className?: string
+  /** Optional total count shown as a badge on the icon. */
+  badge?: number
+  /** Optional unread count shown as a red badge on the icon. */
+  unread?: number
 }
 
 export interface GlassDockProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -322,8 +326,11 @@ export const GlassDock = React.forwardRef<HTMLDivElement, GlassDockProps>(
 
             // Titles matching a morph config render a real <button> inside,
             // so the wrapper must not also be interactive (no nested buttons).
+            // Home is intentionally excluded (matches original behavior) so it
+            // renders as the lucide icon, not the invisible morph path.
             const type = el.title.toLowerCase()
-            const isAnimated = type in MORPH_CONFIGS
+            const isAnimated =
+              type !== "home" && type in MORPH_CONFIGS
 
             return (
               <div
@@ -355,6 +362,7 @@ export const GlassDock = React.forwardRef<HTMLDivElement, GlassDockProps>(
                     y: isHovered ? -3 : 0,
                   }}
                   transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                  className="relative"
                 >
                   {isAnimated ? (
                     <MorphingIcon
@@ -370,6 +378,19 @@ export const GlassDock = React.forwardRef<HTMLDivElement, GlassDockProps>(
                       )}
                     />
                   )}
+
+                  {el.unread ? (
+                    <span
+                      className="absolute -top-1.5 -right-2.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-1 text-[8px] leading-none font-semibold text-white"
+                      aria-label={`${el.unread} unread`}
+                    >
+                      {el.unread}
+                    </span>
+                  ) : el.badge ? (
+                    <span className="absolute -top-1.5 -right-2.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent px-1 text-[8px] leading-none font-semibold text-white">
+                      {el.badge}
+                    </span>
+                  ) : null}
                 </motion.div>
 
                 {showLabels && (
