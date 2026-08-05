@@ -21,6 +21,8 @@ const ThemeProviderContext = React.createContext<
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   // Always light — no localStorage, no 'd' key toggle, no system preference
+  const [theme, setThemeState] = React.useState<Theme>("light")
+
   React.useEffect(() => {
     const root = document.documentElement
     root.classList.remove("dark")
@@ -34,10 +36,14 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     }
   }, [])
 
-  const value = React.useMemo(
-    () => ({ theme: "light" as Theme, setTheme: () => {} }),
-    []
-  )
+  const setTheme = React.useCallback((next: Theme) => {
+    setThemeState(next)
+    const root = document.documentElement
+    root.classList.remove("dark", "light")
+    root.classList.add(next === "system" ? "light" : next)
+  }, [])
+
+  const value = { theme, setTheme }
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>

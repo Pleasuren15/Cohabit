@@ -56,15 +56,22 @@ export function FlipText({
 }: FlipTextProps) {
   const words = useMemo(() => children.split(separator), [children, separator])
   const totalChars = children.length
+  const separatorLen = separator === " " ? 1 : separator.length
+
+  // Prefix sums of word offsets so character indices are O(1) lookups
+  const wordOffsets = useMemo(() => {
+    const offsets: number[] = []
+    let acc = 0
+    for (const word of words) {
+      offsets.push(acc)
+      acc += word.length + separatorLen
+    }
+    return offsets
+  }, [words, separatorLen])
 
   // Calculate character index for each position
-  const getCharIndex = (wordIndex: number, charIndex: number) => {
-    let index = 0
-    for (let i = 0; i < wordIndex; i++) {
-      index += words[i].length + (separator === " " ? 1 : separator.length)
-    }
-    return index + charIndex
-  }
+  const getCharIndex = (wordIndex: number, charIndex: number) =>
+    wordOffsets[wordIndex] + charIndex
 
   return (
     <div

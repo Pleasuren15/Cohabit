@@ -60,6 +60,12 @@
     to { height: 0; }
 }
 
+@keyframes loading-ui-twin-orbit-rotate {
+    100% {
+        transform: rotate(360deg) translate(155%);
+    }
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);

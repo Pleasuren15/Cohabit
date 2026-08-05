@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useCallback, type FormEvent } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useCallback, useEffect, useId, type FormEvent } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import {
   User,
   Mail,
@@ -57,6 +57,18 @@ const ALL_VERIFICATIONS: {
   { key: "credit", label: "Credit", icon: Shield, color: "text-amber-500", bgColor: "bg-amber-50 dark:bg-amber-500/10" },
 ]
 
+const LISTING_GRADIENTS = [
+  "bg-gradient-to-br from-rose-500 to-pink-600",
+  "bg-gradient-to-br from-violet-500 to-purple-600",
+  "bg-gradient-to-br from-blue-500 to-cyan-600",
+  "bg-gradient-to-br from-emerald-500 to-teal-600",
+  "bg-gradient-to-br from-amber-500 to-orange-600",
+  "bg-gradient-to-br from-indigo-500 to-blue-600",
+  "bg-gradient-to-br from-teal-500 to-green-600",
+  "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+  "bg-gradient-to-br from-orange-500 to-red-600",
+]
+
 interface NewListingData {
   name: string
   location: string
@@ -108,6 +120,7 @@ export function UserProfile({
   const [newListingAvailable, setNewListingAvailable] = useState("")
   const [newListingAmenities, setNewListingAmenities] = useState<string[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<FileItem[]>([])
+  const listingFormId = useId()
 
   const resetNewListing = () => {
     setListingStep(1)
@@ -211,17 +224,18 @@ export function UserProfile({
         ? (parseInt(newListingPrice, 10) || 0) > 0
         : true
 
-  const LISTING_GRADIENTS = [
-    "bg-gradient-to-br from-rose-500 to-pink-600",
-    "bg-gradient-to-br from-violet-500 to-purple-600",
-    "bg-gradient-to-br from-blue-500 to-cyan-600",
-    "bg-gradient-to-br from-emerald-500 to-teal-600",
-    "bg-gradient-to-br from-amber-500 to-orange-600",
-    "bg-gradient-to-br from-indigo-500 to-blue-600",
-    "bg-gradient-to-br from-teal-500 to-green-600",
-    "bg-gradient-to-br from-fuchsia-500 to-pink-600",
-    "bg-gradient-to-br from-orange-500 to-red-600",
-  ]
+  // Close dialogs on Escape when open.
+  useEffect(() => {
+    if (!showNewListing && !showVerifyDialog) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowNewListing(false)
+        setShowVerifyDialog(false)
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [showNewListing, showVerifyDialog])
 
   const listingCards: CarouselCard[] = userListings.map((p, i) => ({
     id: p.id,
@@ -367,6 +381,9 @@ export function UserProfile({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="New listing"
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
             onClick={() => setShowNewListing(false)}
           >
@@ -465,9 +482,9 @@ export function UserProfile({
                 {listingStep === 2 && (
                   <div className="space-y-3">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Title</label>
+                      <label htmlFor={`${listingFormId}-title`} className="text-xs font-medium text-muted-foreground">Title</label>
                       <input
-                        title="Title"
+                        id={`${listingFormId}-title`}
                         value={newListingName}
                         onChange={(e) => setNewListingName(e.target.value)}
                         placeholder="e.g. Cozy room in Sea Point"
@@ -476,9 +493,9 @@ export function UserProfile({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">Location</label>
+                      <label htmlFor={`${listingFormId}-location`} className="text-xs font-medium text-muted-foreground">Location</label>
                       <input
-                        title="Location"
+                        id={`${listingFormId}-location`}
                         value={newListingLocation}
                         onChange={(e) => setNewListingLocation(e.target.value)}
                         placeholder="e.g. Sea Point, Cape Town"
@@ -487,11 +504,11 @@ export function UserProfile({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">
+                      <label htmlFor={`${listingFormId}-address`} className="text-xs font-medium text-muted-foreground">
                         Address
                       </label>
                       <input
-                        title="Address"
+                        id={`${listingFormId}-address`}
                         value={newListingAddress}
                         onChange={(e) => setNewListingAddress(e.target.value)}
                         placeholder="e.g. 12 Main Road, Sea Point"
@@ -507,11 +524,11 @@ export function UserProfile({
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">
+                        <label htmlFor={`${listingFormId}-price`} className="text-xs font-medium text-muted-foreground">
                           Price (R/month)
                         </label>
                         <input
-                          title="Price"
+                          id={`${listingFormId}-price`}
                           type="number"
                           min="0"
                           inputMode="numeric"
@@ -522,11 +539,11 @@ export function UserProfile({
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">
+                        <label htmlFor={`${listingFormId}-deposit`} className="text-xs font-medium text-muted-foreground">
                           Deposit (R)
                         </label>
                         <input
-                          title="Deposit"
+                          id={`${listingFormId}-deposit`}
                           type="number"
                           min="0"
                           inputMode="numeric"
@@ -539,9 +556,9 @@ export function UserProfile({
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">Bedrooms</label>
+                        <label htmlFor={`${listingFormId}-beds`} className="text-xs font-medium text-muted-foreground">Bedrooms</label>
                         <input
-                          title="Bedrooms"
+                          id={`${listingFormId}-beds`}
                           type="number"
                           min="1"
                           inputMode="numeric"
@@ -551,9 +568,9 @@ export function UserProfile({
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground">Bathrooms</label>
+                        <label htmlFor={`${listingFormId}-baths`} className="text-xs font-medium text-muted-foreground">Bathrooms</label>
                         <input
-                          title="Bathrooms"
+                          id={`${listingFormId}-baths`}
                           type="number"
                           min="1"
                           inputMode="numeric"
@@ -564,11 +581,11 @@ export function UserProfile({
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground">
+                      <label htmlFor={`${listingFormId}-available`} className="text-xs font-medium text-muted-foreground">
                         Available from
                       </label>
                       <input
-                        title="Available from"
+                        id={`${listingFormId}-available`}
                         value={newListingAvailable}
                         onChange={(e) => setNewListingAvailable(e.target.value)}
                         placeholder="e.g. 1 Sep 2026 or Flexible"
@@ -615,9 +632,9 @@ export function UserProfile({
                 {/* Step 5 — description */}
                 {listingStep === 5 && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Description</label>
+                    <label htmlFor={`${listingFormId}-description`} className="text-xs font-medium text-muted-foreground">Description</label>
                     <textarea
-                      title="Description"
+                      id={`${listingFormId}-description`}
                       value={newListingBio}
                       onChange={(e) => setNewListingBio(e.target.value)}
                       placeholder="Describe the space or what you're looking for..."
@@ -706,6 +723,9 @@ export function UserProfile({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Verify your identity"
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
             onClick={() => setShowVerifyDialog(false)}
           >
