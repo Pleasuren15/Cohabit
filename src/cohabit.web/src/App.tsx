@@ -846,16 +846,6 @@ function PageHeader({
   )
 }
 
-function SectionDivider() {
-  return (
-    <div className="mt-14 mb-4 flex w-full items-center gap-3">
-      <span className="h-px flex-1 bg-border/60" />
-      <span className="size-1.5 rounded-full bg-accent/60" />
-      <span className="h-px flex-1 bg-border/60" />
-    </div>
-  )
-}
-
 /** Main app shell with dock navbar */
 function MainApp({ province: initialProvince }: { province: string }) {
   const [province, setProvince] = useState(initialProvince)
@@ -1177,258 +1167,264 @@ function MainApp({ province: initialProvince }: { province: string }) {
             )}
 
             {activeTab === "Info" && (
-              <div className="flex flex-col items-center">
-                <div className="mt-8 w-full">
-                  <PageHeader
-                    icon={ShieldCheck}
-                    title="Trust &amp; Safety Hub"
-                    subtitle="How we keep Cohabit a safe place to find your housemate."
-                  />
-                </div>
-
-                <div className="grid w-full gap-3 sm:grid-cols-2">
-                  {[
-                    {
-                      icon: BadgeCheck,
-                      title: "Verified identities",
-                      body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
-                    },
-                    {
-                      icon: Flag,
-                      title: "Report &amp; block",
-                      body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
-                    },
-                    {
-                      icon: Lock,
-                      title: "Private by default",
-                      body: "Your personal details stay hidden until you choose to share them. Never share bank details or IDs on this platform.",
-                    },
-                    {
-                      icon: AlertTriangle,
-                      title: "Stay safe",
-                      body: "Meet in public, view the property first, and never pay deposits before signing a lease. Trust your instincts.",
-                    },
-                  ].map((item) => {
-                    const IconComponent = item.icon
-                    return (
-                      <div
-                        key={item.title}
-                        className="rounded-2xl bg-muted/40 p-5"
-                      >
-                        <div className="mb-2 flex items-center gap-3">
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-                            <IconComponent className="size-4" />
-                          </span>
-                          <h2 className="font-semibold text-foreground">
-                            {item.title}
-                          </h2>
-                        </div>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          {item.body}
-                        </p>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <SectionDivider />
-
-                <div className="w-full">
-                  <PageHeader
-                    icon={Shield}
-                    title="Verification Badges"
-                    subtitle="Build trust in the community."
-                  />
-                </div>
-
-                <div className="w-full">
-                  <Tabs defaultValue="phone" className="gap-4">
-                    <TabsList className="rounded-2xl bg-transparent">
-                      <TabsTrigger
-                        value="phone"
-                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white"
-                      >
-                        <Smartphone className="mr-1 size-3.5" />
-                        Phone
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="email"
-                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white"
-                      >
-                        <Mail className="mr-1 size-3.5" />
-                        Email
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="id"
-                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white"
-                      >
-                        <BadgeCheck className="mr-1 size-3.5" />
-                        ID
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="credit"
-                        className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white"
-                      >
-                        <Shield className="mr-1 size-3.5" />
-                        Credit
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent
-                      value="phone"
-                      className="mt-0 rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6"
-                    >
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">
-                        Phone
-                      </h5>
-                      <p className="border-l-2 border-blue-500 pl-4 text-sm leading-6 text-blue-700/80">
-                        Confirm your mobile via OTP to{" "}
-                        <span className="font-semibold text-blue-900">
-                          verify your identity
-                        </span>
-                        . Fastest way to build trust.
-                      </p>
-                    </TabsContent>
-
-                    <TabsContent
-                      value="email"
-                      className="mt-0 rounded-3xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-6"
-                    >
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-800">
-                        Email
-                      </h5>
-                      <p className="border-l-2 border-purple-500 pl-4 text-sm leading-6 text-purple-700/80">
-                        Verify your email address to{" "}
-                        <span className="font-semibold text-purple-900">
-                          receive important updates
-                        </span>{" "}
-                        and confirm your account ownership.
-                      </p>
-                    </TabsContent>
-
-                    <TabsContent
-                      value="id"
-                      className="mt-0 rounded-3xl border-2 border-dashed border-green-200 bg-green-50/50 p-6"
-                    >
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">
-                        ID
-                      </h5>
-                      <p className="border-l-2 border-green-500 pl-4 text-sm leading-6 text-green-700/80">
-                        Upload your SA ID or passport for{" "}
-                        <span className="font-semibold text-green-900">
-                          official verification
-                        </span>
-                        . Encrypted and never shared publicly.
-                      </p>
-                    </TabsContent>
-
-                    <TabsContent
-                      value="credit"
-                      className="mt-0 rounded-3xl border-2 border-dashed border-amber-200 bg-amber-50/50 p-6"
-                    >
-                      <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">
-                        Credit
-                      </h5>
-                      <p className="border-l-2 border-amber-500 pl-4 text-sm leading-6 text-amber-700/80">
-                        Complete a{" "}
-                        <span className="font-semibold text-amber-900">
-                          financial responsibility check
-                        </span>{" "}
-                        to unlock priority listings.
-                      </p>
-                    </TabsContent>
-                  </Tabs>
-
-                  <p className="mt-4 text-center text-xs text-muted-foreground">
-                    More badges = more trust.
-                  </p>
-                </div>
-
-                <SectionDivider />
-
-                <div className="w-full">
-                  <PageHeader
-                    icon={BarChart3}
-                    title="Cohabit by the numbers"
-                    subtitle="A growing community of trusted housemates."
-                  />
-                </div>
-
-                <div className="grid w-full grid-cols-3 gap-3">
-                  {[
-                    { value: 1200, suffix: "+", label: "Verified members" },
-                    { value: 9, suffix: "", label: "Provinces covered" },
-                    { value: 4, suffix: "", label: "Verification levels" },
-                  ].map((stat) => (
-                    <div
-                      key={stat.label}
-                      className="flex flex-col items-center justify-center rounded-2xl bg-muted/40 p-5 text-center"
-                    >
-                      <StatsCounter
-                        value={stat.value}
-                        suffix={stat.suffix}
-                        className="text-3xl font-black tracking-tight text-foreground"
+              <div className="flex flex-col items-center gap-10">
+                {/* Band 1 — Trust & Safety + Verification */}
+                <section className="w-full rounded-3xl bg-muted/20 px-5 py-8 sm:px-6">
+                  <div className="flex flex-col items-center">
+                    <div className="w-full">
+                      <PageHeader
+                        icon={ShieldCheck}
+                        title="Trust &amp; Safety Hub"
+                        subtitle="How we keep Cohabit a safe place to find your housemate."
                       />
-                      <span className="mt-1 text-xs text-muted-foreground">
-                        {stat.label}
-                      </span>
                     </div>
-                  ))}
-                </div>
 
-                <SectionDivider />
+                    <div className="grid w-full gap-3 sm:grid-cols-2">
+                      {[
+                        {
+                          icon: BadgeCheck,
+                          title: "Verified identities",
+                          body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
+                        },
+                        {
+                          icon: Flag,
+                          title: "Report &amp; block",
+                          body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
+                        },
+                        {
+                          icon: Lock,
+                          title: "Private by default",
+                          body: "Your personal details stay hidden until you choose to share them. Never share bank details or IDs on this platform.",
+                        },
+                        {
+                          icon: AlertTriangle,
+                          title: "Stay safe",
+                          body: "Meet in public, view the property first, and never pay deposits before signing a lease. Trust your instincts.",
+                        },
+                      ].map((item) => {
+                        const IconComponent = item.icon
+                        return (
+                          <div
+                            key={item.title}
+                            className="rounded-2xl bg-background/70 p-5"
+                          >
+                            <div className="mb-2 flex items-center gap-3">
+                              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                                <IconComponent className="size-4" />
+                              </span>
+                              <h2 className="font-semibold text-foreground">
+                                {item.title}
+                              </h2>
+                            </div>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              {item.body}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
 
-                <div className="w-full">
+                  <div className="mt-10 flex flex-col items-center">
+                    <div className="w-full">
+                      <PageHeader
+                        icon={Shield}
+                        title="Verification Badges"
+                        subtitle="Build trust in the community."
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <Tabs defaultValue="phone" className="gap-4">
+                        <TabsList className="rounded-2xl bg-transparent">
+                          <TabsTrigger
+                            value="phone"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white"
+                          >
+                            <Smartphone className="mr-1 size-3.5" />
+                            Phone
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="email"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white"
+                          >
+                            <Mail className="mr-1 size-3.5" />
+                            Email
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="id"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white"
+                          >
+                            <BadgeCheck className="mr-1 size-3.5" />
+                            ID
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="credit"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white"
+                          >
+                            <Shield className="mr-1 size-3.5" />
+                            Credit
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent
+                          value="phone"
+                          className="mt-0 rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6"
+                        >
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">
+                            Phone
+                          </h5>
+                          <p className="border-l-2 border-blue-500 pl-4 text-sm leading-6 text-blue-700/80">
+                            Confirm your phone via OTP to{" "}
+                            <span className="font-semibold text-blue-900">
+                              verify your identity
+                            </span>
+                            . Fastest way to build trust.
+                          </p>
+                        </TabsContent>
+
+                        <TabsContent
+                          value="email"
+                          className="mt-0 rounded-3xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-6"
+                        >
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-800">
+                            Email
+                          </h5>
+                          <p className="border-l-2 border-purple-500 pl-4 text-sm leading-6 text-purple-700/80">
+                            Verify your email address to{" "}
+                            <span className="font-semibold text-purple-900">
+                              receive important updates
+                            </span>{" "}
+                            and confirm your account ownership.
+                          </p>
+                        </TabsContent>
+
+                        <TabsContent
+                          value="id"
+                          className="mt-0 rounded-3xl border-2 border-dashed border-green-200 bg-green-50/50 p-6"
+                        >
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">
+                            ID
+                          </h5>
+                          <p className="border-l-2 border-green-500 pl-4 text-sm leading-6 text-green-700/80">
+                            Upload your SA ID or passport for{" "}
+                            <span className="font-semibold text-green-900">
+                              official verification
+                            </span>
+                            . Encrypted and never shared publicly.
+                          </p>
+                        </TabsContent>
+
+                        <TabsContent
+                          value="credit"
+                          className="mt-0 rounded-3xl border-2 border-dashed border-amber-200 bg-amber-50/50 p-6"
+                        >
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">
+                            Credit
+                          </h5>
+                          <p className="border-l-2 border-amber-500 pl-4 text-sm leading-6 text-amber-700/80">
+                            Complete a{" "}
+                            <span className="font-semibold text-amber-900">
+                              financial responsibility check
+                            </span>{" "}
+                            to unlock priority listings.
+                          </p>
+                        </TabsContent>
+                      </Tabs>
+
+                      <p className="mt-4 text-center text-xs text-muted-foreground">
+                        More badges = more trust.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Band 2 — Stats */}
+                <section className="w-full rounded-3xl bg-accent/5 px-5 py-8 sm:px-6">
+                  <div className="w-full">
+                    <PageHeader
+                      icon={BarChart3}
+                      title="Cohabit by the numbers"
+                      subtitle="A growing community of trusted housemates."
+                    />
+                  </div>
+
+                  <div className="grid w-full grid-cols-3 gap-3">
+                    {[
+                      { value: 1200, suffix: "+", label: "Verified members" },
+                      { value: 9, suffix: "", label: "Provinces covered" },
+                      { value: 4, suffix: "", label: "Verification levels" },
+                    ].map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="flex flex-col items-center justify-center rounded-2xl bg-background/70 p-5 text-center"
+                      >
+                        <StatsCounter
+                          value={stat.value}
+                          suffix={stat.suffix}
+                          className="text-3xl font-black tracking-tight text-foreground"
+                        />
+                        <span className="mt-1 text-xs text-muted-foreground">
+                          {stat.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Band 3 — FAQ */}
+                <section className="w-full px-1">
                   <Faq6
                     badge="FAQ"
                     title="Frequently Asked Questions"
                     faqs={HOUSING_FAQS}
                   />
-                </div>
+                </section>
 
-                <SectionDivider />
-
-                <div className="w-full">
-                  <PageHeader
-                    icon={ScrollText}
-                    title="Terms &amp; Conditions"
-                    subtitle="Last updated 21 July 2026"
-                  />
-                </div>
-
-                <div className="w-full space-y-3">
-                  {TERMS.map((section, i) => {
-                    const icons = [ScrollText, Home, Wallet, Handshake, Scale]
-                    const IconComponent = icons[i] ?? ScrollText
-                    return (
-                      <div
-                        key={section.heading}
-                        className="rounded-2xl bg-muted/40 p-5"
-                      >
-                        <div className="mb-2 flex items-center gap-3">
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            <IconComponent className="size-4" />
-                          </span>
-                          <h2 className="font-semibold text-foreground">
-                            {section.heading.replace(/^\d+\.\s*/, "")}
-                          </h2>
-                        </div>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          {section.body}
-                        </p>
-                      </div>
-                    )
-                  })}
-                  <div className="rounded-2xl bg-muted/40 p-5">
-                    <p className="text-xs text-muted-foreground">
-                      Questions? Contact us at{" "}
-                      <span className="font-medium text-accent">
-                        hello@cohabit.co.za
-                      </span>
-                      .
-                    </p>
+                {/* Band 4 — Terms & Conditions */}
+                <section className="w-full rounded-3xl bg-muted/20 px-5 py-8 sm:px-6">
+                  <div className="w-full">
+                    <PageHeader
+                      icon={ScrollText}
+                      title="Terms &amp; Conditions"
+                      subtitle="Last updated 21 July 2026"
+                    />
                   </div>
-                </div>
+
+                  <div className="w-full space-y-3">
+                    {TERMS.map((section, i) => {
+                      const icons = [ScrollText, Home, Wallet, Handshake, Scale]
+                      const IconComponent = icons[i] ?? ScrollText
+                      return (
+                        <div
+                          key={section.heading}
+                          className="rounded-2xl bg-background/70 p-5"
+                        >
+                          <div className="mb-2 flex items-center gap-3">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                              <IconComponent className="size-4" />
+                            </span>
+                            <h2 className="font-semibold text-foreground">
+                              {section.heading.replace(/^\d+\.\s*/, "")}
+                            </h2>
+                          </div>
+                          <p className="text-sm leading-relaxed text-muted-foreground">
+                            {section.body}
+                          </p>
+                        </div>
+                      )
+                    })}
+                    <div className="rounded-2xl bg-background/70 p-5">
+                      <p className="text-xs text-muted-foreground">
+                        Questions? Contact us at{" "}
+                        <span className="font-medium text-accent">
+                          hello@cohabit.co.za
+                        </span>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                </section>
               </div>
             )}
 
