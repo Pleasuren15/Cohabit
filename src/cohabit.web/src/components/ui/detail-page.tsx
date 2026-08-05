@@ -86,6 +86,15 @@ const VERIFICATION_CONFIG: Record<
   credit: { icon: Shield, label: "Credit" },
 }
 
+const VERIFICATION_COLORS: Record<VerificationType, string> = {
+  phone: "bg-blue-100 text-blue-700",
+  email: "bg-purple-100 text-purple-700",
+  id: "bg-green-100 text-green-700",
+  credit: "bg-amber-100 text-amber-700",
+}
+
+const formatPrice = (value: number) => `R ${value.toLocaleString("en-ZA")}`
+
 /** Derive a consistent phone number from the profile id. */
 function derivePhone(id: string): string {
   const digits = id
@@ -131,6 +140,16 @@ export function DetailPage({
     canRight: false,
   })
   const amenitiesRef = useRef<HTMLDivElement>(null)
+  const copiedTimer = useRef<number | null>(null)
+
+  // Clear any pending "copied" timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+    }
+  }, [])
 
   const updateAmenitiesScroll = useCallback(() => {
     const el = amenitiesRef.current
@@ -206,15 +225,15 @@ export function DetailPage({
       } else {
         await navigator.clipboard.writeText(shareUrl)
         setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        if (copiedTimer.current !== null) {
+          window.clearTimeout(copiedTimer.current)
+        }
+        copiedTimer.current = window.setTimeout(() => setCopied(false), 2000)
       }
     } catch {
       /* share dismissed */
     }
   }, [name, location])
-
-  const formatPrice = (value: number) =>
-    `R ${value.toLocaleString("en-ZA")}`
 
   return (
     <>
@@ -225,6 +244,9 @@ export function DetailPage({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Photo viewer"
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95"
             onClick={() => setFullScreenIndex(null)}
           >
@@ -493,7 +515,7 @@ export function DetailPage({
                     label="Cellphone"
                     value={hasPhone ? phoneNumber : "Not shared"}
                   />
-                  <DetailRow icon={Mail} label="Email" value={emailAddress} />
+                  <DetailRow icon={Mail} label="Email" value={hasEmail ? emailAddress : "Not shared"} />
                 </div>
 
                 {/* Verification badges */}
@@ -502,16 +524,10 @@ export function DetailPage({
                     {verified.map((v) => {
                       const config = VERIFICATION_CONFIG[v]
                       const Icon = config.icon
-                      const colorMap: Record<string, string> = {
-                        phone: "bg-blue-100 text-blue-700",
-                        email: "bg-purple-100 text-purple-700",
-                        id: "bg-green-100 text-green-700",
-                        credit: "bg-amber-100 text-amber-700",
-                      }
                       return (
                         <span
                           key={v}
-                          className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${colorMap[v]}`}
+                          className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${VERIFICATION_COLORS[v]}`}
                         >
                           <Icon className="size-2.5" />
                           {config.label}
@@ -586,7 +602,7 @@ export function DetailPage({
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {galleryPhotos.map((photo, i) => (
                     <div
-                      key={i}
+                      key={`${photo}-${i}`}
                       className="group relative overflow-hidden rounded-xl"
                     >
                       <img

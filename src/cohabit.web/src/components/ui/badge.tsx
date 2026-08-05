@@ -46,4 +46,5 @@ function Badge({
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- CVA variant helper
 export { Badge, badgeVariants }

@@ -33,7 +33,7 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
-} from "@/components/base-ui/tabs"
+} from "@/components/ui/tabs"
 import { Faq6, type FaqItem } from "@/components/ui/faq-06"
 import { PinItemComponent, type PlaceItem } from "@/components/ui/pin-item"
 import { ExpandableProfileCard } from "@/components/ui/expandable-profile-card"
@@ -68,6 +68,7 @@ export interface FeaturedProfile {
   amenities?: string[]
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- app-level demo data
 export const FEATURED_PROFILES: FeaturedProfile[] = [
   {
     id: "thabo-mokoena",
@@ -631,6 +632,18 @@ function SouthAfricaFlag({ className }: { className?: string }) {
   )
 }
 
+const WATCHLIST_GRADIENTS = [
+  "bg-gradient-to-br from-rose-500 to-pink-600",
+  "bg-gradient-to-br from-violet-500 to-purple-600",
+  "bg-gradient-to-br from-blue-500 to-cyan-600",
+  "bg-gradient-to-br from-emerald-500 to-teal-600",
+  "bg-gradient-to-br from-amber-500 to-orange-600",
+  "bg-gradient-to-br from-indigo-500 to-blue-600",
+  "bg-gradient-to-br from-teal-500 to-green-600",
+  "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+  "bg-gradient-to-br from-orange-500 to-red-600",
+]
+
 /** Shared full-bleed backdrop: MeshBackground + legibility scrim + decorative province shapes. */
 function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -715,24 +728,22 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
     return (
       <LandingShell>
         <main className="flex flex-1 flex-col items-center justify-center px-6">
-          <div className="w-full max-w-sm rounded-3xl border border-border/40 bg-background/40 p-6 shadow-sm backdrop-blur-xl sm:p-8">
-            <FamilyReceiveComponent
-              defaultOpen
-              title={PROVINCES[selectedProvince]}
-              description={`Start browsing shared living spaces in ${PROVINCES[selectedProvince]}?`}
-              confirmLabel="Let's Go"
-              cancelLabel="Change"
-              icon={
-                <img
-                  src={PROVINCE_SHAPES[selectedProvince]}
-                  alt={PROVINCES[selectedProvince]}
-                  className="h-10 w-10 object-contain"
-                />
-              }
-              onConfirm={() => onEnter(selectedProvince)}
-              onCancel={() => setSelectedProvince(null)}
-            />
-          </div>
+          <FamilyReceiveComponent
+            defaultOpen
+            title={PROVINCES[selectedProvince]}
+            description={`Start browsing shared living spaces in ${PROVINCES[selectedProvince]}?`}
+            confirmLabel="Let's Go"
+            cancelLabel="Change"
+            icon={
+              <img
+                src={PROVINCE_SHAPES[selectedProvince]}
+                alt={PROVINCES[selectedProvince]}
+                className="h-10 w-10 object-contain"
+              />
+            }
+            onConfirm={() => onEnter(selectedProvince)}
+            onCancel={() => setSelectedProvince(null)}
+          />
         </main>
       </LandingShell>
     )
@@ -878,18 +889,6 @@ function MainApp({ province: initialProvince }: { province: string }) {
       return next
     })
   }
-
-  const WATCHLIST_GRADIENTS = [
-    "bg-gradient-to-br from-rose-500 to-pink-600",
-    "bg-gradient-to-br from-violet-500 to-purple-600",
-    "bg-gradient-to-br from-blue-500 to-cyan-600",
-    "bg-gradient-to-br from-emerald-500 to-teal-600",
-    "bg-gradient-to-br from-amber-500 to-orange-600",
-    "bg-gradient-to-br from-indigo-500 to-blue-600",
-    "bg-gradient-to-br from-teal-500 to-green-600",
-    "bg-gradient-to-br from-fuchsia-500 to-pink-600",
-    "bg-gradient-to-br from-orange-500 to-red-600",
-  ]
 
   const watchlistCards: CarouselCard[] = useMemo(
     () =>

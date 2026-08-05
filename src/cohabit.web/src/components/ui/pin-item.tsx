@@ -89,6 +89,13 @@ export const PinItemComponent = ({
   const [places, setPlaces] = useState<PlaceItem[]>(
     items.map((p) => ({ ...p, pinned: p.pinned ?? false }))
   )
+  const [prevItems, setPrevItems] = useState(items)
+
+  // Keep local state in sync when the items prop changes (adjust during render)
+  if (items !== prevItems) {
+    setPrevItems(items)
+    setPlaces(items.map((p) => ({ ...p, pinned: p.pinned ?? false })))
+  }
 
   const togglePin = (id: number) => {
     setPlaces((prev) =>
@@ -190,6 +197,9 @@ const PlaceCard = ({
 
       <motion.button
         layout
+        type="button"
+        aria-pressed={place.pinned}
+        aria-label={place.pinned ? `Unpin ${place.name}` : `Pin ${place.name}`}
         onClick={(e: React.MouseEvent) => {
           e.stopPropagation()
           onToggle(place.id)

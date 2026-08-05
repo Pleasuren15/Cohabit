@@ -35,6 +35,22 @@ export interface FileUploadProps extends Omit<
   files?: FileItem[]
 }
 
+function formatFileSize(bytes: number) {
+  if (bytes === 0) return "0 Bytes"
+  const k = 1024
+  const sizes = ["Bytes", "KB", "MB", "GB"]
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+}
+
+function getFileIcon(fileType: string) {
+  if (fileType.includes("image/")) return <FaFileImage className="text-primary h-4 w-4" />
+  if (fileType.includes("pdf")) return <FaFilePdf className="text-destructive h-4 w-4" />
+  if (fileType.includes("video/")) return <FaFileVideo className="text-secondary-foreground h-4 w-4" />
+  if (fileType.includes("zip") || fileType.includes("archive")) return <FaFileArchive className="text-muted-foreground h-4 w-4" />
+  return <FaFileAlt className="text-foreground h-4 w-4" />
+}
+
 export function FileUpload({
   onFilesAdded,
   onFileRemove,
@@ -82,33 +98,37 @@ export function FileUpload({
     [onFilesAdded],
   )
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-  }
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes("image/")) return <FaFileImage className="text-primary h-4 w-4" />
-    if (fileType.includes("pdf")) return <FaFilePdf className="text-destructive h-4 w-4" />
-    if (fileType.includes("video/")) return <FaFileVideo className="text-secondary-foreground h-4 w-4" />
-    if (fileType.includes("zip") || fileType.includes("archive")) return <FaFileArchive className="text-muted-foreground h-4 w-4" />
-    return <FaFileAlt className="text-foreground h-4 w-4" />
-  }
+  const handleDropzoneKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault()
+        openFilePicker()
+      }
+    },
+    [openFilePicker],
+  )
 
   return (
     <div className={cn("w-full", className)} {...props}>
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Upload photos"
+        aria-describedby="file-upload-hint"
         className={cn(
           "group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed transition-all",
+          "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
           isDragging ? "border-accent scale-[1.01]" : "border-border hover:border-accent/50",
         )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={openFilePicker}
+        onKeyDown={handleDropzoneKeyDown}
       >
         <input
           type="file"
@@ -125,7 +145,7 @@ export function FileUpload({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">Upload photos</p>
-            <p className="text-xs text-muted-foreground">
+            <p id="file-upload-hint" className="text-xs text-muted-foreground">
               Tap to browse or drag & drop (max {maxSizeMB}MB each)
             </p>
           </div>
@@ -158,6 +178,7 @@ export function FileUpload({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onFileRemove?.(fileItem.id) }}
+                aria-label={`Remove ${fileItem.file.name}`}
                 className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
                 <FaTrashAlt className="size-3" />

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { useState, useEffect, useId } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { X } from "lucide-react";
 
 export interface ProfileData {
     fullName: string;
@@ -19,19 +19,53 @@ interface EditProfileProps {
     onSave: (data: ProfileData) => void;
 }
 
-export const EditProfile: React.FC<EditProfileProps> = ({
-    isOpen,
-    onClose,
-    initialData,
-    onSave
-}) => {
-    const [formData, setFormData] = useState<ProfileData>(initialData);
+const fieldClass =
+    "w-full px-4 py-2.5 rounded-[14px] border-[1.5px] outline-none transition-all text-[15px] font-semibold " +
+    "bg-white border-[#DFDDE6] text-[#131313] focus:border-black " +
+    "focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none " +
+    "dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500";
 
+export function EditProfile({ isOpen, onClose, initialData, onSave }: EditProfileProps) {
     useEffect(() => {
-        if (isOpen) {
-            setFormData(initialData);
-        }
-    }, [isOpen, initialData]);
+        if (!isOpen) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [isOpen, onClose]);
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <EditProfileForm
+                    key={JSON.stringify(initialData)}
+                    initialData={initialData}
+                    onClose={onClose}
+                    onSave={onSave}
+                />
+            )}
+        </AnimatePresence>
+    );
+}
+
+function EditProfileForm({
+    initialData,
+    onClose,
+    onSave,
+}: {
+    initialData: ProfileData;
+    onClose: () => void;
+    onSave: (data: ProfileData) => void;
+}) {
+    const [formData, setFormData] = useState<ProfileData>(initialData);
+    const fullNameId = useId();
+    const emailId = useId();
+    const cellphoneId = useId();
+    const dateOfBirthId = useId();
+    const genderId = useId();
+    const titleId = useId();
+    const avatarUrlId = useId();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -39,9 +73,12 @@ export const EditProfile: React.FC<EditProfileProps> = ({
     };
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 overflow-y-auto">
+        <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Edit your profile"
+                    className="fixed inset-0 z-100 flex items-center justify-center p-4 overflow-y-auto"
+                >
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -63,7 +100,12 @@ export const EditProfile: React.FC<EditProfileProps> = ({
                             {/* Header */}
                             <div className="flex items-center justify-between px-4 py-4 md:px-8">
                                 <h2 className="text-[18px] font-semibold text-[#010101] dark:text-white">Edit your profile</h2>
-                                <button title='close' onClick={onClose} className="text-[#a0a0a0] hover:text-gray-400 transition-colors p-1">
+                                <button
+                                    type="button"
+                                    aria-label="Close"
+                                    onClick={onClose}
+                                    className="text-[#a0a0a0] hover:text-gray-400 transition-colors p-1 rounded-full focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                                >
                                     <X size={20} />
                                 </button>
                             </div>
@@ -76,64 +118,59 @@ export const EditProfile: React.FC<EditProfileProps> = ({
                                 {/* Form Section */}
                                 <div className="flex-1 p-4 md:p-6 space-y-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Full name</label>
-                                        <input title='fullName'
+                                        <label htmlFor={fullNameId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Full name</label>
+                                        <input
+                                            id={fullNameId}
                                             name="fullName"
                                             value={formData.fullName}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2.5 rounded-[14px] border-[1.5px] outline-none transition-all text-[15px] font-semibold
-                                                     bg-white border-[#DFDDE6] text-[#131313] focus:border-black
-                                                     dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500"
+                                            className={fieldClass}
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Email</label>
-                                        <input title='email'
+                                        <label htmlFor={emailId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Email</label>
+                                        <input
+                                            id={emailId}
                                             name="email"
                                             type="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2.5 rounded-[14px] border-[1.5px] outline-none font-semibold transition-all text-[15px]
-                                                     bg-white border-[#DFDDE6] text-[#131313] focus:border-black
-                                                     dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500"
+                                            className={fieldClass}
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Cellphone</label>
-                                        <input title='cellphone'
+                                        <label htmlFor={cellphoneId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Cellphone</label>
+                                        <input
+                                            id={cellphoneId}
                                             name="cellphone"
                                             value={formData.cellphone}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2.5 rounded-[14px] border-[1.5px] outline-none font-semibold transition-all text-[15px]
-                                                     bg-white border-[#DFDDE6] text-[#131313] focus:border-black
-                                                     dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500"
+                                            className={fieldClass}
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Date of birth</label>
-                                        <input title='dateOfBirth'
+                                        <label htmlFor={dateOfBirthId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Date of birth</label>
+                                        <input
+                                            id={dateOfBirthId}
                                             name="dateOfBirth"
                                             type="date"
                                             value={formData.dateOfBirth}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2.5 rounded-[14px] border-[1.5px] outline-none text-[15px] font-semibold
-                                                     bg-white border-[#DFDDE6] text-[#131313] focus:border-black
-                                                     dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500"
+                                            className={fieldClass}
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Gender</label>
+                                        <label htmlFor={genderId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Gender</label>
                                         <div className="relative">
-                                            <select title='gender'
+                                            <select
+                                                id={genderId}
                                                 name="gender"
                                                 value={formData.gender}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-2.5 rounded-[14px] border appearance-none outline-none text-[15px] font-semibold
-                                                         bg-white border-[#DFDDE6] text-[#131313] focus:border-black
-                                                         dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500"
+                                                className={`${fieldClass} appearance-none`}
                                             >
                                                 <option value="male">Male</option>
                                                 <option value="female">Female</option>
@@ -143,28 +180,26 @@ export const EditProfile: React.FC<EditProfileProps> = ({
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Bio</label>
-                                        <textarea title='title'
+                                        <label htmlFor={titleId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Bio</label>
+                                        <textarea
+                                            id={titleId}
                                             name="title"
                                             value={formData.title}
                                             onChange={handleChange}
                                             rows={3}
-                                            className="w-full px-4 py-2.5 rounded-[14px] border outline-none transition-all text-[14px] font-semibold resize-none
-                                                     bg-white border-[#DFDDE6] text-[#131313] focus:border-black
-                                                     dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500"
+                                            className={`${fieldClass} resize-none text-[14px]`}
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Avatar URL</label>
-                                        <input title='avatarUrl'
+                                        <label htmlFor={avatarUrlId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Avatar URL</label>
+                                        <input
+                                            id={avatarUrlId}
                                             name="avatarUrl"
                                             value={formData.avatarUrl}
                                             onChange={handleChange}
                                             placeholder="https://..."
-                                            className="w-full px-4 py-2.5 rounded-[14px] border-[1.5px] outline-none transition-all text-[15px] font-semibold
-                                                     bg-white border-[#DFDDE6] text-[#131313] focus:border-black
-                                                     dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500"
+                                            className={fieldClass}
                                         />
                                     </div>
                                 </div>
@@ -177,6 +212,7 @@ export const EditProfile: React.FC<EditProfileProps> = ({
                                 </span>
                                 <div className="flex gap-3 w-full sm:w-auto">
                                     <button
+                                        type="button"
                                         onClick={onClose}
                                         className="flex-1 sm:flex-none px-5 py-2 rounded-full text-[14px] border-[1.6px] font-bold transition-colors
                                                  bg-[#f3f4f6] border-[#E2E2E6] text-[#0F0F0F]
@@ -185,6 +221,7 @@ export const EditProfile: React.FC<EditProfileProps> = ({
                                         Cancel
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => onSave(formData)}
                                         className="flex-1 sm:flex-none px-5 py-2 rounded-full text-[13px] font-bold transition-colors shadow-lg shadow-black/10
                                                  bg-[#0F0F0F] text-white hover:bg-[#222]
@@ -197,7 +234,5 @@ export const EditProfile: React.FC<EditProfileProps> = ({
                         </motion.div>
                     </div>
                 </div>
-            )}
-        </AnimatePresence>
     );
-};
+}

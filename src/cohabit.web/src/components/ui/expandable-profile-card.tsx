@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
   MapPin,
@@ -59,30 +59,40 @@ export function ExpandableProfileCard({
 }: ExpandableProfileCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
+  const copiedTimer = useRef<number | null>(null)
 
-  const handleShare = (e: React.MouseEvent) => {
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+    }
+  }, [])
+
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
     const shareUrl = `${window.location.origin}/profile/${name.toLowerCase().replace(/\s+/g, "-")}`
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: name, url: shareUrl })
+        return
+      }
+      await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+      copiedTimer.current = window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* share dismissed or clipboard denied */
+    }
   }
 
   return (
     <div className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm transition-colors">
       {/* --- Image background + header overlay (always visible) --- */}
       <div
-        role="button"
-        tabIndex={0}
-        aria-expanded={isExpanded}
         onClick={() => setIsExpanded((prev) => !prev)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            setIsExpanded((prev) => !prev)
-          }
-        }}
         className="relative block w-full cursor-pointer text-left"
       >
         {/* Full-width background image */}

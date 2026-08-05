@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import {
   motion,
   AnimatePresence,
@@ -17,7 +17,7 @@ export interface FamilyReceiveComponentProps {
   cancelLabel?: string
   onConfirm?: () => void
   onCancel?: () => void
-  icon?: React.ReactNode
+  icon?: ReactNode
   /** Open the dialog immediately instead of showing the trigger button first. */
   defaultOpen?: boolean
 }
@@ -28,18 +28,30 @@ const springTransition: Transition = {
   duration: 0.4,
 }
 
-export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
+export function FamilyReceiveComponent({
   triggerLabel = "Receive",
   title = "Confirm",
-  description = "Are you sure you want to receive hell load of money?",
+  description = "Are you sure you want to proceed?",
   confirmLabel = "Receive",
   cancelLabel = "Cancel",
   onConfirm,
   onCancel,
   icon,
   defaultOpen = false,
-}) => {
+}: FamilyReceiveComponentProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false)
+        onCancel?.()
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [isOpen, onCancel])
 
   return (
     <div className="relative flex h-[400px] w-[360px] max-w-full items-center justify-center md:w-[720px]">
@@ -49,6 +61,7 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
             <motion.button
               key="trigger"
               layoutId="action-button"
+              type="button"
               onClick={() => setIsOpen(true)}
               className="relative h-12 w-64 cursor-pointer rounded-full bg-[#00A6F4] text-lg font-medium text-white shadow-lg md:h-14 md:w-96 md:text-xl"
               whileTap={{ scale: 0.95 }}
@@ -63,6 +76,9 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
           {isOpen && (
             <motion.div
               key="overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-label={title}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -82,6 +98,7 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/60 to-transparent dark:from-white/10" />
 
                 <button
+                  type="button"
                   onClick={() => {
                     setIsOpen(false)
                     onCancel?.()
@@ -108,6 +125,7 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
 
                 <div className="mt-7 flex gap-3 md:mt-8">
                   <button
+                    type="button"
                     onClick={() => {
                       setIsOpen(false)
                       onCancel?.()
@@ -119,6 +137,7 @@ export const FamilyReceiveComponent: React.FC<FamilyReceiveComponentProps> = ({
 
                   <motion.button
                     layoutId="action-button"
+                    type="button"
                     onClick={() => {
                       onConfirm?.()
                       setIsOpen(false)

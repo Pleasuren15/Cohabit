@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { X, Loader2 } from "lucide-react"
 import { FaMap } from "react-icons/fa6"
+import { cn } from "@/lib/utils"
 
 interface ViewOnMapProps {
   locationName?: string
@@ -19,7 +20,6 @@ export function ViewOnMap({
 }: ViewOnMapProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isMapLoaded, setIsMapLoaded] = useState(false)
-  const [isDark] = useState(false)
 
   const toggleOpen = () => {
     setIsOpen(!isOpen)
@@ -39,7 +39,7 @@ export function ViewOnMap({
     <div className="w-full">
       <div className="flex w-full flex-col items-center justify-center">
         <div
-          className={`relative flex w-full items-center justify-center ${className}`}
+          className={cn("relative flex w-full items-center justify-center", className)}
         >
           <AnimatePresence mode="popLayout">
             {!isOpen ? (
@@ -93,9 +93,7 @@ export function ViewOnMap({
                     height="100%"
                     style={{
                       border: 0,
-                      filter: isDark
-                        ? "invert(90%) hue-rotate(180deg)"
-                        : "invert(15%) hue-rotate(180deg)",
+                      filter: "invert(15%) hue-rotate(180deg)",
                     }}
                     src={publicMapUrl}
                     allowFullScreen
