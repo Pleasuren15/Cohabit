@@ -50,6 +50,7 @@ import {
 import { UserProfile, type UserData } from "@/components/ui/user-profile"
 import { OnboardingDialog } from "@/components/ui/onboarding-dialog"
 import StatsCounter from "@/components/ui/stats-counter"
+import { toast, Toaster } from "sonner"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -73,6 +74,7 @@ export interface FeaturedProfile {
   responseTime: string
   rules: string[]
   amenities?: string[]
+  featured?: boolean
 }
 
 // eslint-disable-next-line react-refresh/only-export-components -- app-level demo data
@@ -97,6 +99,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     province: "wc",
     type: "roommate",
     userId: "user-1",
+    featured: true,
   },
   {
     id: "priya-naidoo",
@@ -118,6 +121,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     province: "kzn",
     type: "roommate",
     userId: "user-2",
+    featured: true,
   },
   {
     id: "james-van-der-merwe",
@@ -160,6 +164,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     province: "gp",
     type: "roommate",
     userId: "user-1",
+    featured: true,
   },
   {
     id: "sipho-zulu",
@@ -244,6 +249,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     province: "wc",
     type: "rentals",
     userId: "user-1",
+    featured: true,
   },
   {
     id: "zanele-khumalo",
@@ -265,6 +271,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     province: "gp",
     type: "rentals",
     userId: "user-2",
+    featured: true,
   },
   {
     id: "mandla-grootboom",
@@ -860,6 +867,9 @@ function MainApp({ province: initialProvince }: { province: string }) {
   const [selectedListing, setSelectedListing] =
     useState<FeaturedProfile | null>(null)
   const [extraListings, setExtraListings] = useState<FeaturedProfile[]>([])
+  const [promotedIds, setPromotedIds] = useState<Set<string>>(
+    () => new Set()
+  )
   const [messageThreads, setMessageThreads] =
     useState<PlaceItem[]>(MESSAGE_THREADS)
 
@@ -874,6 +884,11 @@ function MainApp({ province: initialProvince }: { province: string }) {
     )
   }, [])
 
+  const isFeatured = useCallback(
+    (p: FeaturedProfile) => p.featured === true || promotedIds.has(p.id),
+    [promotedIds]
+  )
+
   const filteredProfiles = useMemo(
     () =>
       FEATURED_PROFILES.filter((p) => {
@@ -887,9 +902,24 @@ function MainApp({ province: initialProvince }: { province: string }) {
         )
           return false
         return true
-      }),
-    [province, listingFilter, searchQuery]
+      })
+        .slice()
+        .sort((a, b) => Number(isFeatured(b)) - Number(isFeatured(a))),
+    [province, listingFilter, searchQuery, isFeatured]
   )
+
+  const promoteListing = useCallback((id: string) => {
+    setPromotedIds((prev) => {
+      if (prev.has(id)) return prev
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+    toast.success("Listing promoted", {
+      description:
+        "Your listing is now featured at the top of search results.",
+    })
+  }, [])
 
   const handleViewListing = (id: string) => {
     const profile =
@@ -942,13 +972,13 @@ function MainApp({ province: initialProvince }: { province: string }) {
       title: "WatchList",
       icon: Heart,
       onClick: () => setActiveTab("WatchList"),
+      badge: favorites.size > 5 ? "5+" : favorites.size,
     },
     {
       title: "Messages",
       icon: MessageSquare,
       onClick: () => setActiveTab("Messages"),
       badge: messageTotal,
-      unread: messageUnread,
     },
     {
       title: "Info",
@@ -1128,6 +1158,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                         photoCount={(item as FeaturedProfile).photoCount}
                         verified={(item as FeaturedProfile).verified}
                         price={(item as FeaturedProfile).price}
+                        featured={isFeatured(item as FeaturedProfile)}
                         isFavorited={favorites.has(
                           (item as FeaturedProfile).id
                         )}
@@ -1167,14 +1198,14 @@ function MainApp({ province: initialProvince }: { province: string }) {
             )}
 
             {activeTab === "Info" && (
-              <div className="flex flex-col items-center gap-10">
+              <div className="flex flex-col items-center gap-5">
                 {/* Band 1 — Trust & Safety + Verification */}
-                <section className="w-full rounded-3xl bg-muted/20 px-5 py-8 sm:px-6">
+                <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="flex flex-col items-center">
                     <div className="w-full">
                       <PageHeader
                         icon={ShieldCheck}
-                        title="Trust &amp; Safety Hub"
+                        title="Trust & Safety Hub"
                         subtitle="How we keep Cohabit a safe place to find your housemate."
                       />
                     </div>
@@ -1188,7 +1219,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                         },
                         {
                           icon: Flag,
-                          title: "Report &amp; block",
+                          title: "Report & block",
                           body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
                         },
                         {
@@ -1206,7 +1237,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                         return (
                           <div
                             key={item.title}
-                            className="rounded-2xl bg-background/70 p-5"
+                            className="bg-background/70 p-5"
                           >
                             <div className="mb-2 flex items-center gap-3">
                               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
@@ -1225,7 +1256,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                     </div>
                   </div>
 
-                  <div className="mt-10 flex flex-col items-center">
+                  <div className="mt-5 flex flex-col items-center">
                     <div className="w-full">
                       <PageHeader
                         icon={Shield}
@@ -1236,7 +1267,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
                     <div className="w-full">
                       <Tabs defaultValue="phone" className="gap-4">
-                        <TabsList className="rounded-2xl bg-transparent">
+                        <TabsList className="bg-transparent">
                           <TabsTrigger
                             value="phone"
                             className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white"
@@ -1269,7 +1300,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
                         <TabsContent
                           value="phone"
-                          className="mt-0 rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6"
+                          className="mt-0 border-2 border-dashed border-blue-200 bg-blue-50/50 p-6"
                         >
                           <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">
                             Phone
@@ -1285,7 +1316,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
                         <TabsContent
                           value="email"
-                          className="mt-0 rounded-3xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-6"
+                          className="mt-0 border-2 border-dashed border-purple-200 bg-purple-50/50 p-6"
                         >
                           <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-800">
                             Email
@@ -1301,7 +1332,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
                         <TabsContent
                           value="id"
-                          className="mt-0 rounded-3xl border-2 border-dashed border-green-200 bg-green-50/50 p-6"
+                          className="mt-0 border-2 border-dashed border-green-200 bg-green-50/50 p-6"
                         >
                           <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">
                             ID
@@ -1317,7 +1348,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
                         <TabsContent
                           value="credit"
-                          className="mt-0 rounded-3xl border-2 border-dashed border-amber-200 bg-amber-50/50 p-6"
+                          className="mt-0 border-2 border-dashed border-amber-200 bg-amber-50/50 p-6"
                         >
                           <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">
                             Credit
@@ -1340,7 +1371,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                 </section>
 
                 {/* Band 2 — Stats */}
-                <section className="w-full rounded-3xl bg-accent/5 px-5 py-8 sm:px-6">
+                <section className="w-full bg-accent/5 px-5 py-5 sm:px-6">
                   <div className="w-full">
                     <PageHeader
                       icon={BarChart3}
@@ -1357,7 +1388,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="flex flex-col items-center justify-center rounded-2xl bg-background/70 p-5 text-center"
+                        className="flex flex-col items-center justify-center bg-background/70 p-5 text-center"
                       >
                         <StatsCounter
                           value={stat.value}
@@ -1382,11 +1413,11 @@ function MainApp({ province: initialProvince }: { province: string }) {
                 </section>
 
                 {/* Band 4 — Terms & Conditions */}
-                <section className="w-full rounded-3xl bg-muted/20 px-5 py-8 sm:px-6">
+                <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="w-full">
                     <PageHeader
                       icon={ScrollText}
-                      title="Terms &amp; Conditions"
+                      title="Terms & Conditions"
                       subtitle="Last updated 21 July 2026"
                     />
                   </div>
@@ -1398,7 +1429,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                       return (
                         <div
                           key={section.heading}
-                          className="rounded-2xl bg-background/70 p-5"
+                          className="bg-background/70 p-5"
                         >
                           <div className="mb-2 flex items-center gap-3">
                             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -1414,7 +1445,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
                         </div>
                       )
                     })}
-                    <div className="rounded-2xl bg-background/70 p-5">
+                    <div className="bg-background/70 p-5">
                       <p className="text-xs text-muted-foreground">
                         Questions? Contact us at{" "}
                         <span className="font-medium text-accent">
@@ -1601,8 +1632,10 @@ function MainApp({ province: initialProvince }: { province: string }) {
           <DetailPage
             key={selectedListing.id}
             {...selectedListing}
+            featured={isFeatured(selectedListing)}
             isFavorited={favorites.has(selectedListing.id)}
             onToggleFavorite={toggleFavorite}
+            onPromote={promoteListing}
             onRequestView={() => {
               setSelectedListing(null)
               setActiveTab("Messages")
@@ -1623,6 +1656,8 @@ function MainApp({ province: initialProvince }: { province: string }) {
         onRegister={() => setShowAuth(true)}
         onLogin={() => setShowAuth(true)}
       />
+
+      <Toaster position="top-center" richColors />
     </>
   )
 }

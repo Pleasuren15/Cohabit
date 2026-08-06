@@ -55,3 +55,4 @@ __tablestorage__/
 
 # ---- Claude Code local (keep shared settings.json, ignore local overrides) ----
 .claude/settings.local.json
+src/cohabit.web/bun.lock

@@ -83,6 +83,16 @@ describe("ExpandableProfileCard data rendering", () => {
     )
     expect(screen.queryByText("6")).not.toBeInTheDocument()
   })
+
+  it("shows the Featured badge when featured is true", () => {
+    render(<ExpandableProfileCard name="A" location="L" featured />)
+    expect(screen.getByText("Featured")).toBeInTheDocument()
+  })
+
+  it("omits the Featured badge when not featured", () => {
+    render(<ExpandableProfileCard name="A" location="L" featured={false} />)
+    expect(screen.queryByText("Featured")).not.toBeInTheDocument()
+  })
 })
 
 describe("ExpandableProfileCard interaction", () => {

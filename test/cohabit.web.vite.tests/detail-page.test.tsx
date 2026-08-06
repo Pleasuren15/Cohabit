@@ -11,7 +11,12 @@ function renderDetail(
   {
     relatedListings = [],
     isFavorited = false,
-  }: { relatedListings?: typeof SAMPLE_RELATED_LISTINGS; isFavorited?: boolean } = {}
+    onPromote,
+  }: {
+    relatedListings?: typeof SAMPLE_RELATED_LISTINGS
+    isFavorited?: boolean
+    onPromote?: (id: string) => void
+  } = {}
 ) {
   const onBack = vi.fn()
   const onRequestView = vi.fn()
@@ -28,6 +33,7 @@ function renderDetail(
         onRequestView={onRequestView}
         onToggleFavorite={onToggleFavorite}
         onViewRelated={onViewRelated}
+        onPromote={onPromote}
       />
     </TooltipProvider>
   )
@@ -204,5 +210,43 @@ describe("DetailPage interaction", () => {
       screen.getByRole("button", { name: /add to favorites/i })
     )
     expect(onToggleFavorite).toHaveBeenCalledWith("listing-1")
+  })
+})
+
+describe("DetailPage promote upsell", () => {
+  it("shows the promote upsell with pricing tiers when not featured", () => {
+    renderDetail({ featured: false })
+
+    expect(
+      screen.getByRole("heading", { name: /promote this listing/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /r99 \/ 7 days/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /r249 \/ 30 days/i })
+    ).toBeInTheDocument()
+  })
+
+  it("calls onPromote with the listing id when a tier is selected", async () => {
+    const user = userEvent.setup()
+    const onPromote = vi.fn()
+    renderDetail({ id: "promote-me" }, { onPromote })
+
+    await user.click(
+      screen.getByRole("button", { name: /r99 \/ 7 days/i })
+    )
+    expect(onPromote).toHaveBeenCalledWith("promote-me")
+  })
+
+  it("shows the featured state instead of the upsell when featured", () => {
+    renderDetail({ featured: true })
+
+    expect(
+      screen.getByRole("heading", { name: /this listing is featured/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: /r99 \/ 7 days/i })
+    ).not.toBeInTheDocument()
   })
 })

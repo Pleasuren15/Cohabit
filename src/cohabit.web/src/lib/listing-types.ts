@@ -20,4 +20,5 @@ export interface FeaturedProfile {
   responseTime: string
   rules: string[]
   amenities?: string[]
+  featured?: boolean
 }

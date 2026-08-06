@@ -24,6 +24,8 @@ import {
   Wallet,
   Zap,
   ShieldCheck,
+  Star,
+  Megaphone,
 } from "lucide-react"
 import { AMENITIES } from "@/lib/amenities"
 import { ViewOnMap } from "./view-on-map"
@@ -59,6 +61,8 @@ interface DetailPageProps {
   responseTime: string
   rules: string[]
   amenities?: string[]
+  featured?: boolean
+  onPromote?: (id: string) => void
   isFavorited?: boolean
   onToggleFavorite?: (id: string) => void
   onRequestView?: (id: string) => void
@@ -126,6 +130,8 @@ export function DetailPage({
   responseTime,
   rules,
   amenities,
+  featured = false,
+  onPromote,
   isFavorited = false,
   onToggleFavorite,
   onRequestView,
@@ -430,6 +436,53 @@ export function DetailPage({
                 label="Deposit"
                 value={formatPrice(deposit)}
               />
+            </div>
+
+            {/* Promote this listing — upsell */}
+            <div className="overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50 to-orange-50 shadow-sm dark:border-amber-400/30 dark:from-amber-400/10 dark:to-orange-400/10">
+              {featured ? (
+                <div className="flex items-center gap-3 p-4">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-400 text-black">
+                    <Star className="size-5 fill-black" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-bold text-foreground">
+                      This listing is featured
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      It appears at the top of search results until the
+                      promotion expires.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4">
+                  <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+                    <Megaphone className="size-4 text-amber-500" />
+                    Promote this listing
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Get up to 3x more views by featuring your listing at the
+                    top of search results.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onPromote?.(id)}
+                      className="flex-1 cursor-pointer rounded-full border border-amber-300 bg-white px-3 py-2 text-center text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-400/40 dark:bg-background dark:text-amber-300"
+                    >
+                      R99 / 7 days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onPromote?.(id)}
+                      className="flex-1 cursor-pointer rounded-full bg-amber-400 px-3 py-2 text-center text-[11px] font-semibold text-black shadow-sm transition-colors hover:bg-amber-500"
+                    >
+                      R249 / 30 days
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Amenities — single-line scrollable row */}
