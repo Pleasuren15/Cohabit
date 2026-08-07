@@ -5,12 +5,14 @@ on:
     branches: [main]
     paths:
       - 'src/cohabit.web/**'
+      - 'src/cohabit.story/**'
       - 'test/cohabit.web.vite.tests/**'
       - '.github/workflows/cohabit.web.yml'
   pull_request:
     branches: [main]
     paths:
       - 'src/cohabit.web/**'
+      - 'src/cohabit.story/**'
       - 'test/cohabit.web.vite.tests/**'
       - '.github/workflows/cohabit.web.yml'
 
@@ -52,3 +54,62 @@ jobs:
         with:
           name: cohabit-web-coverage
           path: src/cohabit.web/coverage
+
+  build-storybook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: src/cohabit.story
+        run: npm install
+
+      - name: Typecheck
+        working-directory: src/cohabit.story
+        run: npm run typecheck
+
+      - name: Build Storybook
+        working-directory: src/cohabit.story
+        run: npm run build:static
+
+      - name: Upload Storybook build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cohabit-storybook-static
+          path: src/cohabit.story/storybook-static
+
+  test-storybook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: src/cohabit.story
+        run: npm install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('src/cohabit.story/package.json') }}
+
+      - name: Install Playwright browser
+        working-directory: src/cohabit.story
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Storybook interaction tests
+        working-directory: src/cohabit.story
+        run: npm test
