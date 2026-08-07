@@ -455,7 +455,17 @@ function PageHeader({
 }
 
 /** Main app shell with dock navbar */
-function MainApp({ province }: { province: string }) {
+function MainApp({
+  province,
+  setShowAuth,
+  currentUser,
+  setCurrentUser,
+}: {
+  province: string
+  setShowAuth: (show: boolean) => void
+  currentUser: UserData | null
+  setCurrentUser: (user: UserData | null) => void
+}) {
   const navigate = useNavigate()
   const {
     setProvince,
@@ -469,9 +479,7 @@ function MainApp({ province }: { province: string }) {
   } = useApp()
   const [listingFilter, setListingFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
-  const [showAuth, setShowAuth] = useState(false)
   const [showProvincePicker, setShowProvincePicker] = useState(false)
   const [messageThreads, setMessageThreads] =
     useState<PlaceItem[]>(MESSAGE_THREADS)
@@ -583,48 +591,6 @@ function MainApp({ province }: { province: string }) {
 
   return (
     <>
-      {/* Full-screen auth overlay with animation */}
-      <AnimatePresence>
-        {showAuth && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-md"
-            >
-              <button
-                type="button"
-                onClick={() => setShowAuth(false)}
-                className="absolute top-4 right-4 z-10 flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                aria-label="Close"
-              >
-                <X className="size-5" />
-              </button>
-              <Auth3
-                onSignIn={() => {
-                  setCurrentUser(MOCK_USER)
-                  setShowAuth(false)
-                  setActiveTab("Profile")
-                }}
-                onSignUp={() => {
-                  setCurrentUser(MOCK_USER)
-                  setShowAuth(false)
-                  setActiveTab("Profile")
-                }}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Fixed top bar: filter + search — home page only */}
       {activeTab === "Home" && (
         <div className="fixed top-0 right-0 left-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
@@ -1216,10 +1182,84 @@ function MainApp({ province }: { province: string }) {
           </motion.div>
         )}
       </AnimatePresence>
+    </>
+  )
+}
 
-      {/* Onboarding choice dialog — appears 5s after entering the app,
+export function App() {
+  return (
+    <AppProvider initialListings={FEATURED_PROFILES}>
+      <AppFrame />
+    </AppProvider>
+  )
+}
+
+/** App-wide shell: auth overlay, onboarding dialog and toasts on every route. */
+function AppFrame() {
+  const { setActiveTab } = useApp()
+  const [showAuth, setShowAuth] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
+
+  const handleAuthenticated = () => {
+    setCurrentUser(MOCK_USER)
+    setShowAuth(false)
+    setActiveTab("Profile")
+  }
+
+  return (
+    <>
+      {/* Full-screen auth overlay with animation */}
+      <AnimatePresence>
+        {showAuth && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="w-full max-w-md"
+            >
+              <button
+                type="button"
+                onClick={() => setShowAuth(false)}
+                className="absolute top-4 right-4 z-10 flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Close"
+              >
+                <X className="size-5" />
+              </button>
+              <Auth3
+                onSignIn={handleAuthenticated}
+                onSignUp={handleAuthenticated}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Routes>
+        <Route path="/listing/:id" element={<ListingDetailPage />} />
+        <Route
+          path="*"
+          element={
+            <AppRoot
+              setShowAuth={setShowAuth}
+              currentUser={currentUser}
+              setCurrentUser={setCurrentUser}
+            />
+          }
+        />
+      </Routes>
+
+      {/* Onboarding choice dialog — appears 3s after the app loads,
           unless the user previously opted to never see it again. */}
       <OnboardingDialog
+        delay={3000}
         onRegister={() => setShowAuth(true)}
         onLogin={() => setShowAuth(true)}
       />
@@ -1229,25 +1269,29 @@ function MainApp({ province }: { province: string }) {
   )
 }
 
-export function App() {
-  return (
-    <AppProvider initialListings={FEATURED_PROFILES}>
-      <Routes>
-        <Route path="/listing/:id" element={<ListingDetailPage />} />
-        <Route path="*" element={<AppRoot />} />
-      </Routes>
-    </AppProvider>
-  )
-}
-
-function AppRoot() {
+function AppRoot({
+  setShowAuth,
+  currentUser,
+  setCurrentUser,
+}: {
+  setShowAuth: (show: boolean) => void
+  currentUser: UserData | null
+  setCurrentUser: (user: UserData | null) => void
+}) {
   const { province, setProvince } = useApp()
 
   if (!province) {
     return <LandingPage onEnter={setProvince} />
   }
 
-  return <MainApp province={province} />
+  return (
+    <MainApp
+      province={province}
+      setShowAuth={setShowAuth}
+      currentUser={currentUser}
+      setCurrentUser={setCurrentUser}
+    />
+  )
 }
 
 function ListingDetailPage() {
