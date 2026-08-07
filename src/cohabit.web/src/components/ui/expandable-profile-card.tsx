@@ -74,7 +74,9 @@ export function ExpandableProfileCard({
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const shareUrl = `${window.location.origin}/profile/${name.toLowerCase().replace(/\s+/g, "-")}`
+    const slug =
+      id ?? name.toLowerCase().replace(/\s+/g, "-")
+    const shareUrl = `${window.location.origin}/listing/${slug}`
     try {
       if (navigator.share) {
         await navigator.share({ title: name, url: shareUrl })
