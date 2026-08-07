@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Heart } from "lucide-react"
 
@@ -28,9 +28,11 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
   const [activeId, setActiveId] = useState<string | null>(
     () => cards[0]?.id ?? null
   )
+  const [prevCards, setPrevCards] = useState(cards)
 
   // Keep selection valid when cards change (e.g., new favorite added)
-  useEffect(() => {
+  if (cards !== prevCards) {
+    setPrevCards(cards)
     setActiveId((prev) => {
       if (cards.length === 0) return null
       if (!prev || !cards.some((c) => c.id === prev)) {
@@ -38,7 +40,7 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
       }
       return prev
     })
-  }, [cards])
+  }
 
   const activeCard = cards.find((c) => c.id === activeId)
   const secondaryCards = cards.filter((c) => c.id !== activeId)

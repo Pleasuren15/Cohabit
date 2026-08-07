@@ -2,22 +2,14 @@ import { cn } from "@/lib/utils"
 
 function TwinOrbit({ className, ...props }: React.ComponentProps<"span">) {
   return (
-    <>
-      <style>{`
-        @keyframes loading-ui-twin-orbit-rotate {
-          100% {
-            transform: rotate(360deg) translate(155%);
-          }
-        }
-      `}</style>
-      <span
-        role="status"
-        className={cn(
-          "relative inline-block aspect-square rounded-full bg-current",
-          className
-        )}
-        {...props}
-      >
+    <span
+      role="status"
+      className={cn(
+        "relative inline-block aspect-square rounded-full bg-current",
+        className
+      )}
+      {...props}
+    >
         <span
           aria-hidden="true"
           className="absolute inset-0 rounded-full bg-current"
@@ -39,7 +31,6 @@ function TwinOrbit({ className, ...props }: React.ComponentProps<"span">) {
         />
         <span className="sr-only">Loading</span>
       </span>
-    </>
   )
 }
 

@@ -24,6 +24,8 @@ import {
   Wallet,
   Zap,
   ShieldCheck,
+  Star,
+  Megaphone,
 } from "lucide-react"
 import { AMENITIES } from "@/lib/amenities"
 import { ViewOnMap } from "./view-on-map"
@@ -59,6 +61,8 @@ interface DetailPageProps {
   responseTime: string
   rules: string[]
   amenities?: string[]
+  featured?: boolean
+  onPromote?: (id: string) => void
   isFavorited?: boolean
   onToggleFavorite?: (id: string) => void
   onRequestView?: (id: string) => void
@@ -85,6 +89,15 @@ const VERIFICATION_CONFIG: Record<
   id: { icon: BadgeCheck, label: "ID" },
   credit: { icon: Shield, label: "Credit" },
 }
+
+const VERIFICATION_COLORS: Record<VerificationType, string> = {
+  phone: "bg-blue-100 text-blue-700",
+  email: "bg-purple-100 text-purple-700",
+  id: "bg-green-100 text-green-700",
+  credit: "bg-amber-100 text-amber-700",
+}
+
+const formatPrice = (value: number) => `R ${value.toLocaleString("en-ZA")}`
 
 /** Derive a consistent phone number from the profile id. */
 function derivePhone(id: string): string {
@@ -117,6 +130,8 @@ export function DetailPage({
   responseTime,
   rules,
   amenities,
+  featured = false,
+  onPromote,
   isFavorited = false,
   onToggleFavorite,
   onRequestView,
@@ -131,6 +146,16 @@ export function DetailPage({
     canRight: false,
   })
   const amenitiesRef = useRef<HTMLDivElement>(null)
+  const copiedTimer = useRef<number | null>(null)
+
+  // Clear any pending "copied" timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+    }
+  }, [])
 
   const updateAmenitiesScroll = useCallback(() => {
     const el = amenitiesRef.current
@@ -206,15 +231,15 @@ export function DetailPage({
       } else {
         await navigator.clipboard.writeText(shareUrl)
         setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        if (copiedTimer.current !== null) {
+          window.clearTimeout(copiedTimer.current)
+        }
+        copiedTimer.current = window.setTimeout(() => setCopied(false), 2000)
       }
     } catch {
       /* share dismissed */
     }
   }, [name, location])
-
-  const formatPrice = (value: number) =>
-    `R ${value.toLocaleString("en-ZA")}`
 
   return (
     <>
@@ -225,6 +250,9 @@ export function DetailPage({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Photo viewer"
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95"
             onClick={() => setFullScreenIndex(null)}
           >
@@ -410,6 +438,53 @@ export function DetailPage({
               />
             </div>
 
+            {/* Promote this listing — upsell */}
+            <div className="overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50 to-orange-50 shadow-sm dark:border-amber-400/30 dark:from-amber-400/10 dark:to-orange-400/10">
+              {featured ? (
+                <div className="flex items-center gap-3 p-4">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-400 text-black">
+                    <Star className="size-5 fill-black" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-bold text-foreground">
+                      This listing is featured
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      It appears at the top of search results until the
+                      promotion expires.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4">
+                  <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+                    <Megaphone className="size-4 text-amber-500" />
+                    Promote this listing
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Get up to 3x more views by featuring your listing at the
+                    top of search results.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onPromote?.(id)}
+                      className="flex-1 cursor-pointer rounded-full border border-amber-300 bg-white px-3 py-2 text-center text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-400/40 dark:bg-background dark:text-amber-300"
+                    >
+                      R99 / 7 days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onPromote?.(id)}
+                      className="flex-1 cursor-pointer rounded-full bg-amber-400 px-3 py-2 text-center text-[11px] font-semibold text-black shadow-sm transition-colors hover:bg-amber-500"
+                    >
+                      R249 / 30 days
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Amenities — single-line scrollable row */}
             <div>
               <h2 className="mb-2 text-sm font-semibold text-foreground">
@@ -493,7 +568,7 @@ export function DetailPage({
                     label="Cellphone"
                     value={hasPhone ? phoneNumber : "Not shared"}
                   />
-                  <DetailRow icon={Mail} label="Email" value={emailAddress} />
+                  <DetailRow icon={Mail} label="Email" value={hasEmail ? emailAddress : "Not shared"} />
                 </div>
 
                 {/* Verification badges */}
@@ -502,16 +577,10 @@ export function DetailPage({
                     {verified.map((v) => {
                       const config = VERIFICATION_CONFIG[v]
                       const Icon = config.icon
-                      const colorMap: Record<string, string> = {
-                        phone: "bg-blue-100 text-blue-700",
-                        email: "bg-purple-100 text-purple-700",
-                        id: "bg-green-100 text-green-700",
-                        credit: "bg-amber-100 text-amber-700",
-                      }
                       return (
                         <span
                           key={v}
-                          className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${colorMap[v]}`}
+                          className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${VERIFICATION_COLORS[v]}`}
                         >
                           <Icon className="size-2.5" />
                           {config.label}
@@ -586,7 +655,7 @@ export function DetailPage({
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {galleryPhotos.map((photo, i) => (
                     <div
-                      key={i}
+                      key={`${photo}-${i}`}
                       className="group relative overflow-hidden rounded-xl"
                     >
                       <img
