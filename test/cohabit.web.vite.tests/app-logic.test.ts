@@ -65,6 +65,17 @@ describe("FEATURED_PROFILES data integrity", () => {
       }
     }
   })
+
+  it("has at least one featured listing", () => {
+    expect(FEATURED_PROFILES.some((p) => p.featured === true)).toBe(true)
+  })
+
+  it("features listings across more than one province", () => {
+    const featuredProvinces = new Set(
+      FEATURED_PROFILES.filter((p) => p.featured).map((p) => p.province)
+    )
+    expect(featuredProvinces.size).toBeGreaterThan(1)
+  })
 })
 
 describe("FEATURED_PROFILES filtering invariants", () => {

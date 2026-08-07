@@ -15,7 +15,7 @@ export interface DockItem {
   /** Optional Tailwind classes applied to the item container. */
   className?: string
   /** Optional total count shown as a badge on the icon. */
-  badge?: number
+  badge?: number | string
   /** Optional unread count shown as a red badge on the icon. */
   unread?: number
 }

@@ -23,6 +23,7 @@
   },
   "registries": {
     "@react-bits": "https://reactbits.dev/r/{name}.json",
-    "@loading-ui": "https://loading-ui.com/r/{name}.json"
+    "@loading-ui": "https://loading-ui.com/r/{name}.json",
+    "@watermelon": "https://registry.watermelon.sh/r/{name}.json"
   }
 }
