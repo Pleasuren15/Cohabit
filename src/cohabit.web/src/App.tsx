@@ -1105,7 +1105,7 @@ function MainApp({ province: initialProvince }: { province: string }) {
 
       <AppShell>
         <main
-          className={`flex-1 overflow-y-auto px-6 pb-28 ${activeTab === "Home" ? "pt-32" : "pt-6"}`}
+          className={`flex-1 overflow-y-auto px-6 pb-28 ${activeTab === "Home" ? "pt-40" : "pt-6"}`}
         >
           <div className="mx-auto max-w-md">
             {activeTab === "Home" && (
