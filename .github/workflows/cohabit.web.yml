@@ -100,6 +100,12 @@ jobs:
         working-directory: src/cohabit.story
         run: npm install
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('src/cohabit.story/package.json') }}
+
       - name: Install Playwright browser
         working-directory: src/cohabit.story
         run: npx playwright install chromium --with-deps

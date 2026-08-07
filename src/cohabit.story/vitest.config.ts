@@ -26,12 +26,28 @@ export default defineConfig({
         ],
         test: {
           name: 'storybook',
+          // GitHub Actions runners cannot launch the Chromium sandbox (no
+          // unprivileged user namespaces), so disable it on CI. --disable-dev-shm-usage
+          // avoids shared-memory exhaustion on constrained runners.
           browser: {
             enabled: true,
             headless: true,
-            provider: playwright({}),
+            provider: playwright(
+              process.env.CI
+                ? {
+                    launchOptions: {
+                      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+                    },
+                  }
+                : {},
+            ),
             instances: [{ browser: 'chromium' }],
           },
+          // Retry file-import/runner races seen in CI (vitest-dev/vitest#9509,
+          // #9635). Keeps the run green when a module import flakily fails.
+          retry: process.env.CI ? 2 : 0,
+          testTimeout: process.env.CI ? 30_000 : 10_000,
+          hookTimeout: process.env.CI ? 30_000 : 10_000,
         },
       },
     ],
