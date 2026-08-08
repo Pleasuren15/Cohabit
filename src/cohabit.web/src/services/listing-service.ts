@@ -1,12 +1,20 @@
 /**
  * Listing data-access layer.
  *
- * The UI talks to this service (never to the mock array directly). Today it is
- * backed by static mock data passed in by the caller; later it will be swapped
- * for an implementation that calls the paginated /api/listings endpoints
- * (PagedResult + ListingQuery already exist server-side). Swapping requires
- * only a new implementation of `ListingService` — no UI changes.
+ * The UI talks to this service (never to the mock array directly). Two
+ * implementations exist and are selected at boot time via `VITE_USE_MOCK_DATA`:
+ *
+ * - `MockListingService`  — filters + paginates the in-memory FEATURED_PROFILES
+ *   dataset (flag ON).
+ * - `HttpListingService`  — calls the paginated `/api/listings` endpoints
+ *   (PagedResult + ListingQuery already exist server-side) (flag OFF/default).
+ *
+ * The UI depends only on the `ListingService` interface, so either
+ * implementation can be swapped in without UI changes.
  */
+
+import { API_BASE_URL, USE_MOCK_DATA } from "@/services/config"
+import { PROVINCES } from "@/lib/provinces"
 
 export type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -99,7 +107,214 @@ class MockListingService implements ListingService {
   }
 }
 
-export const listingService: ListingService = new MockListingService()
+/* ------------------------------------------------------------------ */
+/* Real API implementation.                                             */
+/* ------------------------------------------------------------------ */
+
+/** Wire shapes of the Cohabit API DTOs (camelCase JSON). */
+
+export interface ProvinceDto {
+  id: number
+  name: string
+}
+
+export interface ListingOwnerDto {
+  id: string
+  firstName: string
+  lastName: string
+  avatarUrl: string | null
+}
+
+export interface ListingAddressDto {
+  suburb: string
+  postalCode: string
+  province: ProvinceDto
+}
+
+export interface ListingSummaryDto {
+  id: string
+  title: string
+  description: string
+  typeId: number
+  type: string
+  price: number
+  deposit: number
+  beds: number
+  baths: number
+  availableFrom: string
+  responseTime: string
+  primaryImageUrl: string | null
+  owner: ListingOwnerDto
+  address: ListingAddressDto
+}
+
+export interface ListingDetailDto extends ListingSummaryDto {
+  images: string[]
+  amenities: string[]
+  rules: string[]
+  ownerVerifications: { typeId: number; name: string; isVerified: boolean }[]
+}
+
+export interface PagedResult<T> {
+  items: T[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+}
+
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=1000"
+
+const PROVINCE_CODE_BY_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(PROVINCES).map(([code, name]) => [name, code])
+)
+
+const VERIFICATION_CODE_BY_NAME: Record<string, VerificationType> = {
+  "Phone Number": "phone",
+  Email: "email",
+  "Identity Document": "id",
+}
+
+/** The backend treats "Room" listings as roommate matches; the rest are rentals. */
+function mapListingType(name: string): FeaturedProfile["type"] {
+  return name === "Room" ? "roommate" : "rentals"
+}
+
+/** "2026-09-01" -> "1 Sep 2026" (mock data uses this display format). */
+function formatAvailableFrom(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return value
+  const date = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  )
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+}
+
+export function fromSummary(dto: ListingSummaryDto): FeaturedProfile {
+  const name = [dto.owner.firstName, dto.owner.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim()
+
+  return {
+    id: dto.id,
+    imageSrc: dto.primaryImageUrl ?? FALLBACK_IMAGE,
+    name: name || dto.title,
+    location: dto.address.suburb,
+    mapAddress: [
+      dto.address.suburb,
+      dto.address.province.name,
+      "South Africa",
+    ]
+      .filter(Boolean)
+      .join(", "),
+    bio: dto.description,
+    photoCount: 0,
+    verified: [],
+    province: PROVINCE_CODE_BY_NAME[dto.address.province.name] ?? "",
+    type: mapListingType(dto.type),
+    userId: dto.owner.id,
+    price: dto.price,
+    deposit: dto.deposit,
+    beds: dto.beds,
+    baths: dto.baths,
+    availableFrom: formatAvailableFrom(dto.availableFrom),
+    responseTime: dto.responseTime,
+    rules: [],
+    amenities: [],
+  }
+}
+
+function fromDetail(dto: ListingDetailDto): FeaturedProfile {
+  return {
+    ...fromSummary(dto),
+    photoCount: dto.images.length,
+    imageSrc: dto.primaryImageUrl ?? dto.images[0] ?? FALLBACK_IMAGE,
+    verified: dto.ownerVerifications
+      .filter((v) => v.isVerified)
+      .map((v) => VERIFICATION_CODE_BY_NAME[v.name])
+      .filter((v): v is VerificationType => v !== undefined),
+    amenities: dto.amenities,
+    rules: dto.rules,
+  }
+}
+
+const GUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Calls the live Cohabit API (/api/listings, /api/listings/{id}). */
+class HttpListingService implements ListingService {
+  private provinceIdsByCode: Record<string, number> | null = null
+
+  private async loadProvinceIds(): Promise<Record<string, number>> {
+    if (this.provinceIdsByCode) return this.provinceIdsByCode
+
+    const res = await fetch(`${API_BASE_URL}/api/provinces`)
+    if (!res.ok) throw new Error(`Failed to load provinces (${res.status})`)
+    const provinces: ProvinceDto[] = await res.json()
+
+    this.provinceIdsByCode = Object.fromEntries(
+      provinces
+        .filter((p) => PROVINCE_CODE_BY_NAME[p.name])
+        .map((p) => [PROVINCE_CODE_BY_NAME[p.name], p.id])
+    )
+    return this.provinceIdsByCode
+  }
+
+  async getListings(
+    query: ListingQuery,
+    _all: FeaturedProfile[]
+  ): Promise<PagedListings> {
+    const params = new URLSearchParams()
+    if (query.province) {
+      const ids = await this.loadProvinceIds()
+      const provinceId = ids[query.province]
+      if (provinceId !== undefined) params.set("provinceId", String(provinceId))
+    }
+    if (query.type !== "all") params.set("type", query.type)
+    if (query.q.trim()) params.set("q", query.q.trim())
+    params.set("page", String(query.page))
+    params.set("pageSize", String(query.pageSize))
+
+    const res = await fetch(`${API_BASE_URL}/api/listings?${params.toString()}`)
+    if (!res.ok) throw new Error(`Failed to load listings (${res.status})`)
+    const data: PagedResult<ListingSummaryDto> = await res.json()
+
+    return {
+      items: data.items.map(fromSummary),
+      page: data.page,
+      pageSize: data.pageSize,
+      totalCount: data.totalCount,
+      totalPages: data.totalPages,
+    }
+  }
+
+  async getListingById(
+    id: string,
+    _all: FeaturedProfile[]
+  ): Promise<FeaturedProfile | null> {
+    if (!GUID_PATTERN.test(id)) return null
+
+    const res = await fetch(`${API_BASE_URL}/api/listings/${id}`)
+    if (res.status === 404) return null
+    if (!res.ok) throw new Error(`Failed to load listing (${res.status})`)
+    const data: ListingDetailDto = await res.json()
+    return fromDetail(data)
+  }
+}
+
+/** Picks the implementation backing the app at boot time. */
+export function createListingService(): ListingService {
+  return USE_MOCK_DATA ? new MockListingService() : new HttpListingService()
+}
+
+export const listingService: ListingService = createListingService()
 
 /* ------------------------------------------------------------------ */
 /* Static demo dataset (mock source of truth).                         */

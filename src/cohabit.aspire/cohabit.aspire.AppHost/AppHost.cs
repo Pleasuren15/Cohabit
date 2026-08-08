@@ -26,8 +26,8 @@ var cohabitWeb = builder.AddExecutable(
         name: "cohabit-web",
         command: "npm",
         workingDirectory: "../../cohabit.web",
-        args: ["run", "dev", "--", "--port", "5173", "--strictPort"])
-    .WithHttpEndpoint(port: 5173, name: "http")
+        args: ["run", "dev"])
+    .WithHttpEndpoint(port: 5173, name: "http", env: "PORT")
     .WithEnvironment("VITE_API_URL", cohabitApi.GetEndpoint("http"))
     .WithReference(cohabitApi);
 

@@ -34,11 +34,12 @@ public sealed class User
         DateOnly dateOfBirth,
         char gender,
         string? bio,
-        Guid addressId)
+        Guid addressId,
+        Guid? id = null)
     {
         return new User
         {
-            Id = Guid.NewGuid(),
+            Id = id ?? Guid.NewGuid(),
             FirstName = firstName,
             LastName = lastName,
             Cellphone = cellphone,

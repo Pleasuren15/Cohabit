@@ -59,6 +59,8 @@ import {
   type ListingQuery,
   type VerificationType,
 } from "@/services/listing-service"
+import { USE_MOCK_DATA } from "@/services/config"
+import { DEMO_USER_ID } from "@/services/favorites-service"
 import { Routes, Route, useNavigate, useParams } from "react-router-dom"
 import { AppProvider, useApp } from "@/context/app-context"
 
@@ -473,6 +475,7 @@ function MainApp({
     setActiveTab,
     favorites,
     toggleFavorite,
+    favoriteProfiles,
     promotedIds,
     addListing,
     allListings,
@@ -526,6 +529,11 @@ function MainApp({
         if (cancelled) return
         setResult({ listings: res.items, totalCount: res.totalCount })
       })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        console.error("Failed to load listings", err)
+        setResult({ listings: [], totalCount: 0 })
+      })
     return () => {
       cancelled = true
     }
@@ -541,7 +549,7 @@ function MainApp({
 
   const watchlistCards: CarouselCard[] = useMemo(
     () =>
-      allListings
+      (USE_MOCK_DATA ? allListings : favoriteProfiles)
         .filter((p) => favorites.has(p.id))
         .map((p, i) => ({
           id: p.id,
@@ -550,7 +558,7 @@ function MainApp({
           color: WATCHLIST_GRADIENTS[i % WATCHLIST_GRADIENTS.length],
           imageSrc: p.imageSrc,
         })),
-    [allListings, favorites]
+    [allListings, favorites, favoriteProfiles]
   )
 
   const dockItems: DockItem[] = [
@@ -1188,7 +1196,9 @@ function MainApp({
 
 export function App() {
   return (
-    <AppProvider initialListings={FEATURED_PROFILES}>
+    <AppProvider
+      initialListings={USE_MOCK_DATA ? FEATURED_PROFILES : []}
+    >
       <AppFrame />
     </AppProvider>
   )
@@ -1201,7 +1211,9 @@ function AppFrame() {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
 
   const handleAuthenticated = () => {
-    setCurrentUser(MOCK_USER)
+    setCurrentUser(
+      USE_MOCK_DATA ? MOCK_USER : { ...MOCK_USER, id: DEMO_USER_ID }
+    )
     setShowAuth(false)
     setActiveTab("Profile")
   }
@@ -1313,10 +1325,16 @@ function ListingDetailPage() {
 
   useEffect(() => {
     let cancelled = false
-    getListingById(id ?? "").then((l) => {
-      if (cancelled) return
-      setResult({ id: id ?? "", listing: l })
-    })
+    getListingById(id ?? "")
+      .then((l) => {
+        if (cancelled) return
+        setResult({ id: id ?? "", listing: l })
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        console.error("Failed to load listing", err)
+        setResult({ id: id ?? "", listing: null })
+      })
     return () => {
       cancelled = true
     }
