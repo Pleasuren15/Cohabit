@@ -24,6 +24,14 @@ export default defineConfig({
     host: true,
     port: Number(process.env.PORT) || 5173,
     strictPort: true,
+    proxy: {
+      // Used only when VITE_API_URL is unset: forwards same-origin /api calls
+      // to the Cohabit API. Defaults to the Aspire-fixed port 5001.
+      "/api": {
+        target: process.env.VITE_API_URL || "http://localhost:5001",
+        changeOrigin: true,
+      },
+    },
     fs: {
       allow: ["../..", "../../../test"],
     },

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useId, type FormEvent } from "react"
+import { useState, useCallback, useEffect, useRef, useId, type FormEvent } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
   User,
@@ -21,7 +21,11 @@ import {
   Building2,
 } from "lucide-react"
 import type { FeaturedProfile } from "@/App"
-import { AMENITIES } from "@/lib/amenities"
+import {
+  amenityNameToId,
+  ruleNameToId,
+} from "@/services/listing-service"
+import { AMENITIES, AMENITY_NAMES } from "@/lib/amenities"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 import { EditProfile, type ProfileData } from "./edit-profile"
 import { FileUpload, type FileItem, type FileStatus } from "./file-upload-2"
@@ -69,7 +73,13 @@ const LISTING_GRADIENTS = [
   "bg-gradient-to-br from-orange-500 to-red-600",
 ]
 
-interface NewListingData {
+/** API amenity names -> the labels shown in the add/edit form. */
+const DB_TO_WEB_AMENITY: Record<string, string> = {
+  "High Speed WiFi": "Wi-Fi",
+  "Air Conditioning": "Air conditioning",
+}
+
+export interface NewListingData {
   name: string
   location: string
   address: string
@@ -81,6 +91,9 @@ interface NewListingData {
   baths: number
   availableFrom: string
   amenities: string[]
+  files: File[]
+  amenityIds: number[]
+  ruleIds: number[]
 }
 
 interface UserProfileProps {
@@ -91,7 +104,9 @@ interface UserProfileProps {
   onUpdateUser?: (user: UserData) => void
   onToggleFavorite: (id: string) => void
   onViewListing: (id: string) => void
-  onAddListing?: (data: NewListingData) => void
+  onAddListing?: (data: NewListingData) => Promise<void>
+  onUpdateListing?: (id: string, data: NewListingData) => Promise<void>
+  getListingDetail?: (id: string) => Promise<FeaturedProfile | null>
 }
 
 export function UserProfile({
@@ -103,11 +118,16 @@ export function UserProfile({
   onToggleFavorite,
   onViewListing,
   onAddListing,
+  onUpdateListing,
+  getListingDetail,
 }: UserProfileProps) {
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false)
   const [showNewListing, setShowNewListing] = useState(false)
   const [listingStep, setListingStep] = useState(1)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const originalAmenitiesRef = useRef<number[]>([])
+  const originalRulesRef = useRef<number[]>([])
   const [newListingType, setNewListingType] = useState<"roommate" | "rentals">("roommate")
   const [newListingName, setNewListingName] = useState("")
   const [newListingLocation, setNewListingLocation] = useState("")
@@ -136,10 +156,42 @@ export function UserProfile({
     setNewListingAvailable("")
     setNewListingAmenities([])
     setUploadedFiles([])
+    setEditingId(null)
+    originalAmenitiesRef.current = []
+    originalRulesRef.current = []
   }
 
   const openNewListing = () => {
     resetNewListing()
+    setShowNewListing(true)
+  }
+
+  const openEditListing = async (profile: FeaturedProfile) => {
+    const detail = (await getListingDetail?.(profile.id)) ?? profile
+    originalAmenitiesRef.current = (detail.amenities ?? [])
+      .map((name) => amenityNameToId(name))
+      .filter((n): n is number => n !== undefined)
+    originalRulesRef.current = (detail.rules ?? [])
+      .map((name) => ruleNameToId(name))
+      .filter((n): n is number => n !== undefined)
+    setEditingId(profile.id)
+    setNewListingType(profile.type)
+    setNewListingName(profile.title ?? profile.name)
+    setNewListingLocation(profile.location)
+    setNewListingAddress(detail.addressLine1 ?? "")
+    setNewListingPrice(String(profile.price))
+    setNewListingDeposit(String(profile.deposit))
+    setNewListingBeds(String(profile.beds))
+    setNewListingBaths(String(profile.baths))
+    setNewListingAvailable(profile.availableFrom)
+    setNewListingAmenities(
+      (detail.amenities ?? [])
+        .map((name) => DB_TO_WEB_AMENITY[name] ?? name)
+        .filter((name) => AMENITY_NAMES.includes(name))
+    )
+    setNewListingBio(profile.bio)
+    setUploadedFiles([])
+    setListingStep(1)
     setShowNewListing(true)
   }
 
@@ -177,11 +229,16 @@ export function UserProfile({
     )
   }
 
-  const handleNewListing = (e: FormEvent) => {
+  const handleNewListing = async (e: FormEvent) => {
     e.preventDefault()
     if (listingStep < LISTING_STEPS.length) return
     if (!newListingName.trim() || !newListingLocation.trim()) return
-    onAddListing?.({
+
+    const selectedAmenityIds = newListingAmenities
+      .map((name) => amenityNameToId(name))
+      .filter((n): n is number => n !== undefined)
+
+    const data: NewListingData = {
       name: newListingName.trim(),
       location: newListingLocation.trim(),
       address: newListingAddress.trim(),
@@ -193,12 +250,27 @@ export function UserProfile({
       baths: parseInt(newListingBaths, 10) || 1,
       availableFrom: newListingAvailable.trim() || "Flexible",
       amenities: newListingAmenities,
-    })
-    resetNewListing()
-    setShowNewListing(false)
+      files: uploadedFiles.map((f) => f.file),
+      amenityIds: editingId
+        ? [...new Set([...originalAmenitiesRef.current, ...selectedAmenityIds])]
+        : selectedAmenityIds,
+      ruleIds: originalRulesRef.current,
+    }
+
+    try {
+      if (editingId) {
+        await onUpdateListing?.(editingId, data)
+      } else {
+        await onAddListing?.(data)
+      }
+      resetNewListing()
+      setShowNewListing(false)
+    } catch {
+      // Keep the dialog open; the caller has already surfaced the error.
+    }
   }
 
-  const handleSaveProfile = (data: ProfileData) => {
+  const handleSaveProfile = async (data: ProfileData) => {
     const parts = data.fullName.split(" ")
     const updated: UserData = {
       ...user,
@@ -211,8 +283,12 @@ export function UserProfile({
       bio: data.title,
       avatarUrl: data.avatarUrl || user.avatarUrl,
     }
-    onUpdateUser?.(updated)
-    setShowEditProfile(false)
+    try {
+      await onUpdateUser?.(updated)
+      setShowEditProfile(false)
+    } catch {
+      // Keep the dialog open; the caller has already surfaced the error.
+    }
   }
 
   const canProceedStep =
@@ -239,7 +315,7 @@ export function UserProfile({
 
   const listingCards: CarouselCard[] = userListings.map((p, i) => ({
     id: p.id,
-    title: p.name,
+    title: p.title ?? p.name,
     value: p.location,
     color: LISTING_GRADIENTS[i % LISTING_GRADIENTS.length],
     imageSrc: p.imageSrc,
@@ -300,7 +376,16 @@ export function UserProfile({
             label="Gender"
             value={user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}
           />
-          <DetailRow icon={MapPin} label="Location" value="South Africa" />
+          <DetailRow
+            icon={MapPin}
+            label="Location"
+            valueNode={
+              <span className="inline-flex items-center gap-1.5">
+                <SouthAfricaFlag className="h-3 w-auto rounded-[1px] ring-1 ring-black/10" />
+                South Africa
+              </span>
+            }
+          />
           <DetailRow icon={Clock} label="Member since" value={user.timestamp || "July 2025"} />
         </div>
       </div>
@@ -366,6 +451,10 @@ export function UserProfile({
             cards={listingCards}
             onFavoriteToggle={(card) => onToggleFavorite(card.id)}
             onViewListing={(card) => onViewListing(card.id)}
+            onEditListing={(card) => {
+              const profile = userListings.find((p) => p.id === card.id)
+              if (profile && onUpdateListing) void openEditListing(profile)
+            }}
           />
         ) : (
           <div className="rounded-xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
@@ -396,7 +485,9 @@ export function UserProfile({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-base font-semibold">New Listing</h2>
+                <h2 className="text-base font-semibold">
+                  {editingId ? "Edit Listing" : "New Listing"}
+                </h2>
                 <button
                   type="button"
                   onClick={() => setShowNewListing(false)}
@@ -698,7 +789,7 @@ export function UserProfile({
                       type="submit"
                       className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
                     >
-                      Create listing
+                      {editingId ? "Save changes" : "Create listing"}
                     </button>
                   )}
                 </div>
@@ -797,20 +888,57 @@ export function UserProfile({
   )
 }
 
+function SouthAfricaFlag({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 900 600"
+      className={className}
+      role="img"
+      aria-label="Flag of South Africa"
+    >
+      {/* red top / blue bottom */}
+      <rect width="900" height="300" fill="#DE3831" />
+      <rect y="300" width="900" height="300" fill="#002395" />
+      {/* white fimbriation, then green Y (pall) on top */}
+      <g fill="none" strokeLinejoin="miter">
+        <path
+          d="M0,0 L300,300 L900,300 M0,600 L300,300"
+          stroke="#fff"
+          strokeWidth="180"
+        />
+        <path
+          d="M0,0 L300,300 L900,300 M0,600 L300,300"
+          stroke="#007A4D"
+          strokeWidth="120"
+        />
+      </g>
+      {/* gold-bordered black triangle at the hoist */}
+      <path d="M0,80 L265,300 L0,520 Z" fill="#FFB612" />
+      <path d="M0,120 L230,300 L0,480 Z" fill="#000000" />
+    </svg>
+  )
+}
+
 function DetailRow({
   icon: Icon,
   label,
   value,
+  valueNode,
 }: {
   icon: React.ComponentType<{ className?: string }>
   label: string
-  value: string
+  value?: string
+  valueNode?: React.ReactNode
 }) {
   return (
     <div className="flex items-center gap-3 py-3">
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
-      <span className="text-xs text-muted-foreground w-24 shrink-0">{label}</span>
-      <span className="text-sm font-medium truncate">{value}</span>
+      <Icon className="size-4 shrink-0 text-accent" />
+      <span className="min-w-0 text-sm font-medium truncate">
+        {valueNode ?? value}
+      </span>
+      <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+        {label}
+      </span>
     </div>
   )
 }

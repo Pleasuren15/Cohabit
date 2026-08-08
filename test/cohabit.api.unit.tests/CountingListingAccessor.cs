@@ -28,10 +28,15 @@ internal sealed class CountingListingAccessor(IListingAccessor inner) : IListing
         return await inner.GetByIdAsync(id, ct);
     }
 
-    public async Task<IReadOnlyList<Listing>> GetUserListingsAsync(Guid userId, CancellationToken ct = default)
+    public Task<int> GetPriceAsync(Guid id, CancellationToken ct = default)
+    {
+        return inner.GetPriceAsync(id, ct);
+    }
+
+    public Task<IReadOnlyList<Listing>> GetUserListingsAsync(Guid userId, CancellationToken ct = default)
     {
         UserListingsCalls++;
-        return await inner.GetUserListingsAsync(userId, ct);
+        return inner.GetUserListingsAsync(userId, ct);
     }
 
     public async Task<Listing> UpdateAsync(

@@ -9,7 +9,8 @@ namespace cohabit.api.Controllers;
 public class UsersController(
     IListingService listingService,
     IUserService userService,
-    IWatchListService watchListService) : ControllerBase
+    IWatchListService watchListService,
+    ISystemMessagingService messagingService) : ControllerBase
 {
     /// <summary>
     ///     Create a user with a full profile. Email and cellphone must be unique.
@@ -137,6 +138,31 @@ public class UsersController(
     public async Task<IActionResult> RemoveFavorite(Guid userId, Guid listingId, CancellationToken ct = default)
     {
         await watchListService.RemoveAsync(userId, listingId, ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     List the user's in-app system notifications, newest first.
+    /// </summary>
+    [HttpGet("{userId:guid}/messages")]
+    public async Task<ActionResult<IReadOnlyList<SystemMessageDto>>> GetMessages(
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        var messages = await messagingService.GetForUserAsync(userId, ct);
+        return Ok(messages);
+    }
+
+    /// <summary>
+    ///     Mark an in-app system notification as read.
+    /// </summary>
+    [HttpPatch("{userId:guid}/messages/{messageId:guid}/read")]
+    public async Task<IActionResult> MarkMessageRead(
+        Guid userId,
+        Guid messageId,
+        CancellationToken ct = default)
+    {
+        await messagingService.MarkReadAsync(userId, messageId, ct);
         return NoContent();
     }
 }

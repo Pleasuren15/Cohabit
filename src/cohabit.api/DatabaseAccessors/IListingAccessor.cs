@@ -11,6 +11,8 @@ public interface IListingAccessor
 
     Task<Listing?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
+    Task<int> GetPriceAsync(Guid id, CancellationToken ct = default);
+
     Task<IReadOnlyList<Listing>> GetUserListingsAsync(Guid userId, CancellationToken ct = default);
 
     Task<Listing> UpdateAsync(

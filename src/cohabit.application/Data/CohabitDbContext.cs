@@ -248,7 +248,7 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.ToTable("conversations", "messaging");
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Id).HasColumnName("id");
-            entity.Property(c => c.ListingId).HasColumnName("listing_id").IsRequired();
+            entity.Property(c => c.ListingId).HasColumnName("listing_id");
             entity.Property(c => c.OwnerUserId).HasColumnName("owner_user_id").IsRequired();
             entity.Property(c => c.TenantUserId).HasColumnName("tenant_user_id").IsRequired();
             entity.Property(c => c.CreatedAt).HasColumnName("created_at").IsRequired();
@@ -256,7 +256,8 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.HasOne(c => c.Listing)
                 .WithMany(l => l.Conversations)
                 .HasForeignKey(c => c.ListingId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Message>(entity =>
@@ -266,6 +267,7 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.Property(m => m.Id).HasColumnName("id");
             entity.Property(m => m.ConversationId).HasColumnName("conversation_id").IsRequired();
             entity.Property(m => m.SenderUserId).HasColumnName("sender_user_id").IsRequired();
+            entity.Property(m => m.Title).HasColumnName("title").IsRequired();
             entity.Property(m => m.Content).HasColumnName("content").IsRequired();
             entity.Property(m => m.IsRead).HasColumnName("is_read");
             entity.Property(m => m.Timestamp).HasColumnName("timestamp");

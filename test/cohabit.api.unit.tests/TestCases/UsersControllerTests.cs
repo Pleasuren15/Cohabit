@@ -437,17 +437,25 @@ public class UsersControllerTests
             new ListingAccessor(db),
             cache,
             storage,
+            new FakeSystemMessagingService(),
             NullLogger<ListingService>.Instance);
         var userService = new UserService(
             new UserAccessor(db),
             cache,
+            new FakeSystemMessagingService(),
             NullLogger<UserService>.Instance);
         var watchListService = new WatchListService(
             new WatchListAccessor(db),
+            new FakeMessagingAccessor(),
             cache,
+            new FakeSystemMessagingService(),
             NullLogger<WatchListService>.Instance);
 
-        return (new UsersController(service, userService, watchListService), db, data, storage);
+        return (new UsersController(
+            service,
+            userService,
+            watchListService,
+            new FakeSystemMessagingService()), db, data, storage);
     }
 
     private static (UserService Service, CountingUserAccessor Accessor, TestData Data) CreateUserServiceUnderTestAsync()
@@ -460,6 +468,7 @@ public class UsersControllerTests
         var service = new UserService(
             accessor,
             new InMemoryCache(new MemoryCache(new MemoryCacheOptions())),
+            new FakeSystemMessagingService(),
             NullLogger<UserService>.Instance);
 
         return (service, accessor, data);
@@ -502,6 +511,7 @@ public class UsersControllerTests
             accessor,
             new InMemoryCache(new MemoryCache(new MemoryCacheOptions())),
             new FakeImageStorage(),
+            new FakeSystemMessagingService(),
             NullLogger<ListingService>.Instance);
 
         return (service, accessor, data);

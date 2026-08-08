@@ -1,6 +1,6 @@
 import { useState, useEffect, useId } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X } from "lucide-react";
+import { X, User, Mail, Phone, Calendar, Venus, PenLine, Image } from "lucide-react";
 
 export interface ProfileData {
     fullName: string;
@@ -24,6 +24,9 @@ const fieldClass =
     "bg-white border-[#DFDDE6] text-[#131313] focus:border-black " +
     "focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none " +
     "dark:bg-[#3A3A3C] dark:border-[#48484A] dark:text-white dark:focus:border-blue-500";
+
+const labelClass =
+    "flex items-center gap-2 text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]";
 
 export function EditProfile({ isOpen, onClose, initialData, onSave }: EditProfileProps) {
     useEffect(() => {
@@ -59,6 +62,7 @@ function EditProfileForm({
     onSave: (data: ProfileData) => void;
 }) {
     const [formData, setFormData] = useState<ProfileData>(initialData);
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
     const fullNameId = useId();
     const emailId = useId();
     const cellphoneId = useId();
@@ -118,7 +122,10 @@ function EditProfileForm({
                                 {/* Form Section */}
                                 <div className="flex-1 p-4 md:p-6 space-y-4">
                                     <div className="space-y-1.5">
-                                        <label htmlFor={fullNameId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Full name</label>
+                                        <label htmlFor={fullNameId} className={labelClass}>
+                                            <User className="size-4 shrink-0" />
+                                            Full name
+                                        </label>
                                         <input
                                             id={fullNameId}
                                             name="fullName"
@@ -130,7 +137,10 @@ function EditProfileForm({
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label htmlFor={emailId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Email</label>
+                                        <label htmlFor={emailId} className={labelClass}>
+                                            <Mail className="size-4 shrink-0" />
+                                            Email
+                                        </label>
                                         <input
                                             id={emailId}
                                             name="email"
@@ -143,7 +153,10 @@ function EditProfileForm({
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label htmlFor={cellphoneId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Cellphone</label>
+                                        <label htmlFor={cellphoneId} className={labelClass}>
+                                            <Phone className="size-4 shrink-0" />
+                                            Cellphone
+                                        </label>
                                         <input
                                             id={cellphoneId}
                                             name="cellphone"
@@ -155,7 +168,10 @@ function EditProfileForm({
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label htmlFor={dateOfBirthId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Date of birth</label>
+                                        <label htmlFor={dateOfBirthId} className={labelClass}>
+                                            <Calendar className="size-4 shrink-0" />
+                                            Date of birth
+                                        </label>
                                         <input
                                             id={dateOfBirthId}
                                             name="dateOfBirth"
@@ -167,7 +183,10 @@ function EditProfileForm({
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label htmlFor={genderId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Gender</label>
+                                        <label htmlFor={genderId} className={labelClass}>
+                                            <Venus className="size-4 shrink-0" />
+                                            Gender
+                                        </label>
                                         <div className="relative">
                                             <select
                                                 id={genderId}
@@ -185,7 +204,10 @@ function EditProfileForm({
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label htmlFor={titleId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Bio</label>
+                                        <label htmlFor={titleId} className={labelClass}>
+                                            <PenLine className="size-4 shrink-0" />
+                                            Bio
+                                        </label>
                                         <textarea
                                             id={titleId}
                                             name="title"
@@ -198,7 +220,10 @@ function EditProfileForm({
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label htmlFor={avatarUrlId} className="text-[14px] font-medium text-[#706f6f] dark:text-[#A1A1A6]">Avatar URL</label>
+                                        <label htmlFor={avatarUrlId} className={labelClass}>
+                                            <Image className="size-4 shrink-0" />
+                                            Avatar URL
+                                        </label>
                                         <input
                                             id={avatarUrlId}
                                             name="avatarUrl"
@@ -230,9 +255,11 @@ function EditProfileForm({
                                     <button
                                         type="button"
                                         onClick={() => onSave(formData)}
+                                        disabled={!isDirty}
                                         className="flex-1 sm:flex-none px-5 py-2 rounded-full text-[13px] font-bold transition-colors shadow-lg shadow-black/10
                                                  bg-[#0F0F0F] text-white hover:bg-[#222]
-                                                 dark:bg-white dark:text-black dark:hover:bg-[#E5E5E7]"
+                                                 dark:bg-white dark:text-black dark:hover:bg-[#E5E5E7]
+                                                 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#0F0F0F] disabled:dark:hover:bg-white"
                                     >
                                         Save changes
                                     </button>

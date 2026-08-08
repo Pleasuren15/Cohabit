@@ -67,6 +67,19 @@ public sealed class ListingAccessor(CohabitDbContext dbContext) : IListingAccess
             .FirstOrDefaultAsync(l => l.Id == id, ct);
     }
 
+    public async Task<int> GetPriceAsync(Guid id, CancellationToken ct = default)
+    {
+        var price = await dbContext.Listings
+            .AsNoTracking()
+            .Where(l => l.Id == id)
+            .Select(l => (int?)l.Price)
+            .FirstOrDefaultAsync(ct);
+        if (price is null)
+            throw new NotFoundException("listing_not_found", $"Listing '{id}' was not found.");
+
+        return price.Value;
+    }
+
     public async Task<IReadOnlyList<Listing>> GetUserListingsAsync(Guid userId, CancellationToken ct = default)
     {
         var userExists = await dbContext.Users.AnyAsync(u => u.Id == userId, ct);
@@ -131,10 +144,10 @@ public sealed class ListingAccessor(CohabitDbContext dbContext) : IListingAccess
             request.ResponseTime);
 
         listing.Address.Update(
-            request.AddressLine1,
+            request.AddressLine1 ?? string.Empty,
             request.AddressLine2 ?? string.Empty,
             request.Suburb,
-            request.PostalCode,
+            request.PostalCode ?? string.Empty,
             request.ProvinceId);
 
         dbContext.ListingAmenities.RemoveRange(
@@ -219,10 +232,10 @@ public sealed class ListingAccessor(CohabitDbContext dbContext) : IListingAccess
         }
 
         var address = Address.Create(
-            request.AddressLine1,
+            request.AddressLine1 ?? string.Empty,
             request.AddressLine2 ?? string.Empty,
             request.Suburb,
-            request.PostalCode,
+            request.PostalCode ?? string.Empty,
             request.ProvinceId);
 
         var listing = Listing.Create(
