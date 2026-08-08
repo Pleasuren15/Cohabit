@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
-using cohabit.comms.api.Features.BulkSms;
+using cohabit.comms.api.Features.Messaging.Sms;
 using cohabit.comms.api.Features.Otp;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -143,21 +143,14 @@ public class OtpRequestIntegrationTests
             .WithWebHostBuilder(builder =>
                 builder.ConfigureServices(services =>
                 {
-                    services.RemoveAll<IBulkSmsClient>();
-                    services.AddSingleton<IBulkSmsClient, StubBulkSmsClient>();
+                    services.RemoveAll<ISmsProvider>();
+                    services.AddSingleton<ISmsProvider, StubSmsProvider>();
                 }));
     }
 
-    private sealed class StubBulkSmsClient : IBulkSmsClient
+    private sealed class StubSmsProvider : ISmsProvider
     {
-        public Task<BulkSmsMessageDto> SendAsync(SendSmsRequest request, CancellationToken ct = default)
-            => Task.FromResult(new BulkSmsMessageDto(
-                "msg-id", "sms", null, request.To, request.Body, null, null, null, null, null, null, null, null, null));
-
-        public Task<IReadOnlyList<BulkSmsMessageDto>> GetAllAsync(CancellationToken ct = default)
-            => Task.FromResult<IReadOnlyList<BulkSmsMessageDto>>(Array.Empty<BulkSmsMessageDto>());
-
-        public Task<BulkSmsMessageDto?> GetByIdAsync(string id, CancellationToken ct = default)
-            => Task.FromResult<BulkSmsMessageDto?>(null);
+        public Task SendAsync(SmsMessage message, CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 }

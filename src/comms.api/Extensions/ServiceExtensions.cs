@@ -1,19 +1,17 @@
-using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
-using cohabit.comms.api.Features.BulkSms;
-using cohabit.comms.api.Features.BulkSms.Infrastructure;
-using cohabit.comms.api.Features.BulkSms.Messages;
-using cohabit.comms.api.Features.BulkSms.Send;
+using cohabit.comms.api.Features.Messaging.Sms;
 using cohabit.comms.api.Features.Otp;
 using cohabit.comms.api.Features.Otp.Dispatchers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Resend;
+using RestSharp;
 
 namespace cohabit.comms.api.Extensions;
 
@@ -79,22 +77,15 @@ public static class ServiceExtensions
 
         services.AddScoped<IOtpCodeStore, InMemoryOtpCodeStore>();
         services.AddScoped<IOtpCodeGenerator, RandomOtpCodeGenerator>();
-        services.AddScoped<IMessageDispatcher, SmsMessageDispatcher>();
-        services.AddScoped<IMessageDispatcher, EmailMessageDispatcher>();
-        services.AddScoped<MessageDispatcherFactory>();
+        services.AddScoped<ISmsProvider, SmsPortalSmsProvider>();
+        services.AddScoped<SmsMessageDispatcher>();
+        services.AddScoped<EmailMessageDispatcher>();
         services.AddScoped<IOtpService, OtpService>();
 
-        services.AddHttpClient<IBulkSmsClient, BulkSmsClient>(client =>
-        {
-            var config = configuration.GetSection("BulkSms");
-            var baseUrl = (config["BaseUrl"] ?? "https://api.bulksms.com/v1").TrimEnd('/') + "/";
-            client.BaseAddress = new Uri(baseUrl);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", config["AuthKey"]);
-        });
-
-        services.AddScoped<SendSmsHandler>();
-        services.AddScoped<GetAllMessagesHandler>();
-        services.AddScoped<GetMessageByIdHandler>();
+        services.Configure<SmsPortalOptions>(configuration.GetSection(SmsPortalOptions.SectionName));
+        services.AddSingleton(sp =>
+            new RestClient(new RestClientOptions(
+                sp.GetRequiredService<IOptions<SmsPortalOptions>>().Value.BaseUrl)));
 
         services.AddResend(options =>
             options.ApiToken = configuration["Resend:ApiKey"] ?? string.Empty);

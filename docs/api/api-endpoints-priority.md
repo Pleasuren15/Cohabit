@@ -19,9 +19,6 @@ tables it touches so the wiring work can be planned and parallelised.
 | GET | `/files` | `cohabit.api` | List blob files |
 | GET | `/files/{name}` | `cohabit.api` | Download a blob |
 | POST | `/files` | `cohabit.api` | Upload a blob (image uploads) |
-| GET | `/messages` | `comms.api` | BulkSMS messages |
-| GET | `/messages/{id}` | `comms.api` | BulkSMS message by id |
-| POST | `/send` | `comms.api` | Send an SMS via BulkSMS |
 | POST | `/api/otp/request` | `comms.api` | Dispatch an OTP (SMS or email) to the JWT user; destination taken from token, code cached 5 min (SHA-256 keyed); model-validated (400 on out-of-range channel); rate-limited to 2 requests/user/15 min (429) |
 | POST | `/api/otp/verify` | `comms.api` | Verify a received OTP for the JWT user; code consumed on first use (one-time), wrong/missing code returns `IsValid=false`; model-validated (400 on malformed code) |
 
@@ -183,7 +180,7 @@ Feeds the "Verification Badges" section in Profile and the Info tab.
 - **Auth:** required.
 
 ### 22. `POST /api/auth/otp/request` — Request phone OTP
-- **Powers:** Phone verification (proxies to `comms.api` `POST /api/otp/request`, which picks the SMS or email dispatcher via a factory and stores the code with a 5 minute TTL).
+- **Powers:** Phone verification (proxies to `comms.api` `POST /api/otp/request`, which picks the SMS or email dispatcher and stores the code with a 5 minute TTL). SMS is delivered via the single SMS Portal provider; email via Resend.
 - **Tables:** `users` (cellphone), `user_verifications`.
 - **Auth:** required.
 - **Backend:** `comms.api` applies a sliding-window rate limit (2 requests per user per 15 min, keyed on the JWT `sub`); the 3rd request in the window returns `429` with a `ProblemDetails` body.

@@ -15,7 +15,7 @@ Create a reliable integration test suite that:
 
 - boots the real application with `WebApplicationFactory`,
 - runs real infrastructure (PostgreSQL, Azurite blob storage) via **TestContainers**,
-- stubs external APIs (e.g. BulkSMS) with **WireMock**,
+- stubs external APIs (e.g. the comms SMS provider) with **WireMock**,
 - names every test with **Given_When_Then** syntax,
 - structures each test with `// Arrange`, `// Act`, `// Assert` sections,
 - asserts with **AwesomeAssertions**,
@@ -46,14 +46,14 @@ test/cohabit.api.integration.tests/
 test/comms.api.integration.tests/
   Infrastructure/
     PostgresContainer.cs
-    WireMockServer.cs      # Stands in for the BulkSMS external API
+    WireMockServer.cs      # Stands in for the SMS Portal external API
     IntegrationTestFixture.cs
     CommsWebApplicationFactory.cs
   Helpers/
-    BulkSmsStubBuilder.cs
+    SmsPortalStubBuilder.cs
     HttpClientExtensions.cs
   TestCases/
-    BulkSmsEndpointsTests.cs
+    OtpRequestIntegrationTests.cs
 ```
 
 - **`Infrastructure/`** — everything needed to boot and host the app under test: containers, the fixture, the factory. Nothing test-case specific lives here.
@@ -67,13 +67,13 @@ Name every test with the `Given_<State>_When_<Action>_Then_<ExpectedOutcome>` pa
 ```
 Given_SeededProvinces_When_GetAllIsInvoked_Then_ReturnsOkResultWithAllProvinces()
 Given_UnknownListingId_When_GetByIdIsInvoked_Then_ReturnsNotFound()
-Given_WireMockReturnsError_When_SendIsInvoked_Then_ReturnsBadGateway()
+Given_WireMockReturnsError_When_RequestOtpIsInvoked_Then_ReturnsBadGateway()
 ```
 
 Rules:
 
 - `Given_` describes the precondition/state (data seeded, external stub configured, auth token present).
-- `When_` describes the HTTP action being taken (`GET /api/provinces`, `POST /send`).
+- `When_` describes the HTTP action being taken (`GET /api/provinces`, `POST /api/otp/request`).
 - `Then_` describes the observable outcome (status code, body shape, side effect).
 - One behaviour per test. If a test needs more than one `Then_`, split it.
 
@@ -129,7 +129,7 @@ Each file in `TestCases/` targets exactly one controller or endpoint group and i
 | `TestCases/ProvincesControllerTests.cs` | `cohabit.api.Controllers.ProvincesController` |
 | `TestCases/ListingsControllerTests.cs` | `cohabit.api.Controllers.ListingsController` |
 | `TestCases/UsersControllerTests.cs` | `cohabit.api.Controllers.UsersController` |
-| `TestCases/BulkSmsEndpointsTests.cs` | `cohabit.comms.api.Features.BulkSms` endpoints |
+| `TestCases/OtpRequestIntegrationTests.cs` | `cohabit.comms.api` OTP endpoints |
 
 A test file only calls the HTTP routes owned by its controller. Test all routes of that controller in one file.
 
@@ -215,7 +215,7 @@ public async Task SetUp()
 
 ## Infrastructure: WireMock for external APIs
 
-Any external API the app calls (e.g. BulkSMS in `comms.api`) is stubbed with **WireMock.Net** (`WireMock.Net` NuGet package). Do not hit real third-party services.
+Any external API the app calls (e.g. the SMS Portal provider in `comms.api`) is stubbed with **WireMock.Net** (`WireMock.Net` NuGet package). Do not hit real third-party services.
 
 Start a WireMock server alongside the app and point the external API base URL at it:
 
@@ -228,15 +228,14 @@ public sealed class WireMockServer : IAsyncDisposable
 }
 ```
 
-Register the stub server's address in the app configuration so the typed `HttpClient` (`BulkSmsClient`) targets it instead of the real provider:
+Register the stub server's address in the app configuration so the SMS Portal `RestClient` targets it instead of the real provider:
 
 ```csharp
 builder.ConfigureAppConfiguration((_, config) =>
 {
     config.AddInMemoryCollection(new Dictionary<string, string?>
     {
-        ["BulkSms:BaseUrl"] = wireMock.Server.Url!,
-        ["BulkSms:AuthKey"] = "test-auth-key"
+        ["SmsPortal:BaseUrl"] = wireMock.Server.Url!
     });
 });
 ```
@@ -245,19 +244,17 @@ Stub the upstream responses in the test's `// Arrange`:
 
 ```csharp
 // Arrange
-wireMock.Server.Given(Request.Create().WithPath("/messages").UsingPost())
+wireMock.Server.Given(Request.Create().WithPath("/BulkMessages").UsingPost())
     .RespondWith(Response.Create()
-        .WithStatusCode(200)
-        .WithHeader("Content-Type", "application/json")
-        .WithBody("""[{"id":"msg-1","type":"SMS","to":"+27123456789"}]"""));
+        .WithStatusCode(200));
 ```
 
-Keep WireMock stub builders in `Helpers/` (e.g. `BulkSmsStubBuilder`) so the JSON payloads and route conventions live in one place:
+Keep WireMock stub builders in `Helpers/` (e.g. `SmsPortalStubBuilder`) so the JSON payloads and route conventions live in one place:
 
 ```csharp
-public static class BulkSmsStubBuilder
+public static class SmsPortalStubBuilder
 {
-    public static void RespondWithMessage(WireMockServer server, string id) { /* ... */ }
+    public static void RespondWithSuccess(WireMockServer server) { /* ... */ }
     public static void RespondWithError(WireMockServer server, int statusCode) { /* ... */ }
 }
 ```
@@ -271,7 +268,7 @@ public static class BulkSmsStubBuilder
 2. **Identify the real dependencies the route touches**
    - Database tables (`CohabitDbContext` via the Postgres container).
    - Blob storage (`BlobImageStorage` via the Azurite container).
-   - External APIs (`BulkSmsClient` via WireMock).
+   - External APIs (the SMS Portal `RestClient` via WireMock).
 
 3. **Configure the container/fixture**
    - Ensure the needed container is started in the fixture.
@@ -327,4 +324,4 @@ Use `Microsoft.AspNetCore.Mvc.Testing`'s `WebApplicationFactory<T>` where `T` is
 ## Example prompt to trigger this workflow
 
 - "Create integration tests for the ProvincesController using the api-integration-test-workflow."
-- "Add an integration test that boots the app with Testcontainers and stubs the BulkSMS API with WireMock."
+- "Add an integration test that boots the app with Testcontainers and stubs the SMS Portal API with WireMock."

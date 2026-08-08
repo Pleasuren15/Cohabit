@@ -568,53 +568,6 @@
               "response": []
             }
           ]
-        },
-        {
-          "name": "BulkSMS",
-          "item": [
-            {
-              "name": "List messages",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": "{{commsBaseUrl}}/messages"
-              },
-              "response": []
-            },
-            {
-              "name": "Get message by id",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": "{{commsBaseUrl}}/messages/{{messageId}}"
-              },
-              "response": []
-            },
-            {
-              "name": "Send SMS",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "url": "{{commsBaseUrl}}/send",
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"to\": \"+27821234567\",\n  \"body\": \"Cohabit > Your OTP is 123456\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "description": "Sends an SMS via BulkSMS. `body` is optional; when omitted the client sends the default OTP text."
-              },
-              "response": []
-            }
-          ]
         }
       ]
     }

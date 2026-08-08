@@ -1,5 +1,4 @@
 using cohabit.comms.api.Extensions;
-using cohabit.comms.api.Features.BulkSms;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +18,6 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
-app.MapBulkSmsEndpoints();
 
 app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
 

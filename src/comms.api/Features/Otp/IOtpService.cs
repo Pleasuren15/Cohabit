@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using cohabit.comms.api.Features.Otp.Dispatchers;
 
 namespace cohabit.comms.api.Features.Otp;
 
@@ -12,11 +13,12 @@ public interface IOtpService
 }
 
 /// <summary>
-/// Picks the message dispatcher for the requested channel via the factory pattern,
-/// generates the code, dispatches it and stores it in the in-memory OTP store.
+/// Generates the code, dispatches it through the channel's dispatcher and stores
+/// it in the in-memory OTP store. One dispatcher per channel is wired in directly.
 /// </summary>
 public sealed class OtpService(
-    MessageDispatcherFactory dispatcherFactory,
+    SmsMessageDispatcher smsDispatcher,
+    EmailMessageDispatcher emailDispatcher,
     IOtpCodeGenerator codeGenerator,
     IOtpCodeStore codeStore,
     ILogger<OtpService> logger) : IOtpService
@@ -24,7 +26,7 @@ public sealed class OtpService(
     public async Task<SendOtpResponse> SendAsync(OtpChannel channel, string destination, Guid userId, CancellationToken ct = default)
     {
         var code = codeGenerator.Generate();
-        var dispatcher = dispatcherFactory.GetFor(channel);
+        var dispatcher = GetDispatcher(channel);
 
         await dispatcher.DispatchAsync(new OtpDispatchContext(destination, code), ct);
         codeStore.Save(userId, channel, code);
@@ -33,6 +35,13 @@ public sealed class OtpService(
 
         return new SendOtpResponse(channel, MaskDestination(destination));
     }
+
+    private IMessageDispatcher GetDispatcher(OtpChannel channel) => channel switch
+    {
+        OtpChannel.Sms => smsDispatcher,
+        OtpChannel.Email => emailDispatcher,
+        _ => throw new InvalidOperationException($"No message dispatcher registered for channel '{channel}'.")
+    };
 
     public Task<bool> VerifyAsync(OtpChannel channel, string code, Guid userId, CancellationToken ct = default)
     {
