@@ -6,7 +6,9 @@ namespace cohabit.api.Services;
 
 public sealed class WatchListService(
     IWatchListAccessor watchListAccessor,
+    IMessagingAccessor messagingAccessor,
     ICache cache,
+    ISystemMessagingService messagingService,
     ILogger<WatchListService> logger) : IWatchListService
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
@@ -15,6 +17,19 @@ public sealed class WatchListService(
     {
         var watchList = await watchListAccessor.AddAsync(userId, listingId, ct);
         logger.LogInformation("User {UserId} favorited listing {ListingId}", userId, listingId);
+
+        var favoriterName = await messagingAccessor.GetUserDisplayNameAsync(userId, ct);
+        var listingTitle = await messagingAccessor.GetListingTitleAsync(listingId, ct);
+
+        await messagingService.SendToListingOwnerAsync(
+            listingId,
+            "Listing Liked",
+            $"{favoriterName} saved \"{listingTitle}\" to their watchlist.");
+        await messagingService.SendAsync(
+            userId,
+            "Added to WatchList",
+            $"You saved \"{listingTitle}\" to your watchlist.",
+            listingId);
 
         cache.Remove(CacheKeys.UserFavorites(userId));
 

@@ -5,7 +5,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react"
@@ -27,8 +26,6 @@ export interface AppContextValue {
   favoriteProfiles: FeaturedProfile[]
   promotedIds: Set<string>
   promoteListing: (id: string) => void
-  extraListings: FeaturedProfile[]
-  addListing: (listing: FeaturedProfile) => void
   allListings: FeaturedProfile[]
   getListingById: (id: string) => Promise<FeaturedProfile | null>
 }
@@ -54,7 +51,6 @@ export function AppProvider({
   })
   const [favoriteProfiles, setFavoriteProfiles] = useState<FeaturedProfile[]>([])
   const [promotedIds, setPromotedIds] = useState<Set<string>>(() => new Set())
-  const [extraListings, setExtraListings] = useState<FeaturedProfile[]>([])
 
   useEffect(() => {
     if (USE_MOCK_DATA) return
@@ -75,10 +71,7 @@ export function AppProvider({
     }
   }, [])
 
-  const allListings = useMemo(
-    () => [...initialListings, ...extraListings],
-    [initialListings, extraListings]
-  )
+  const allListings = initialListings
 
   const toggleFavorite = useCallback(
     async (id: string) => {
@@ -127,10 +120,6 @@ export function AppProvider({
     })
   }, [])
 
-  const addListing = useCallback((listing: FeaturedProfile) => {
-    setExtraListings((prev) => [...prev, listing])
-  }, [])
-
   const getListingById = useCallback(
     (id: string) => listingService.getListingById(id, allListings),
     [allListings]
@@ -146,8 +135,6 @@ export function AppProvider({
     favoriteProfiles,
     promotedIds,
     promoteListing,
-    extraListings,
-    addListing,
     allListings,
     getListingById,
   }

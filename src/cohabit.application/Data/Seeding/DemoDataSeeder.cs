@@ -10,6 +10,7 @@ public sealed class DemoDataSeeder : ILookupSeeder
 
     public async Task SeedAsync(CohabitDbContext dbContext, CancellationToken cancellationToken = default)
     {
+        await EnsureSystemUserAsync(dbContext, cancellationToken);
         await EnsureDemoUserAsync(dbContext, cancellationToken);
 
         if (await dbContext.Listings.AnyAsync(cancellationToken))
@@ -69,6 +70,38 @@ public sealed class DemoDataSeeder : ILookupSeeder
             foreach (var rule in demo.Rules)
                 dbContext.ListingRules.Add(ListingRule.Create(listing.Id, ruleIds[rule]));
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task EnsureSystemUserAsync(CohabitDbContext dbContext, CancellationToken cancellationToken)
+    {
+        if (await dbContext.Users.AnyAsync(u => u.Id == SystemUser.Id, cancellationToken))
+            return;
+
+        var provinceId = (await dbContext.Provinces
+                .FirstOrDefaultAsync(p => p.Name == "Gauteng", cancellationToken))
+            ?.Id ?? 1;
+
+        var address = Address.Create(
+            "1 System Lane",
+            "",
+            "Sandton",
+            "2196",
+            provinceId);
+        dbContext.Addresses.Add(address);
+
+        var user = User.Create(
+            "Cohabit",
+            "System",
+            "+27 00 000 0000",
+            "system@cohabit.local",
+            new DateOnly(2000, 1, 1),
+            'U',
+            "Cohabit system notifications.",
+            address.Id,
+            SystemUser.Id);
+        dbContext.Users.Add(user);
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }

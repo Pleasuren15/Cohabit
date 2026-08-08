@@ -252,17 +252,25 @@ public class FavoritesControllerTests
             new ListingAccessor(db),
             cache,
             new FakeImageStorage(),
+            new FakeSystemMessagingService(),
             NullLogger<ListingService>.Instance);
         var userService = new UserService(
             new UserAccessor(db),
             cache,
+            new FakeSystemMessagingService(),
             NullLogger<UserService>.Instance);
         var watchListService = new WatchListService(
             new WatchListAccessor(db),
+            new FakeMessagingAccessor(),
             cache,
+            new FakeSystemMessagingService(),
             NullLogger<WatchListService>.Instance);
 
-        return (new UsersController(listingService, userService, watchListService), db, data);
+        return (new UsersController(
+            listingService,
+            userService,
+            watchListService,
+            new FakeSystemMessagingService()), db, data);
     }
 
     private static (WatchListService Service, CountingWatchListAccessor Accessor, TestData Data) CreateServiceUnderTestAsync()
@@ -274,7 +282,9 @@ public class FavoritesControllerTests
         var accessor = new CountingWatchListAccessor(new WatchListAccessor(db));
         var service = new WatchListService(
             accessor,
+            new FakeMessagingAccessor(),
             new InMemoryCache(new MemoryCache(new MemoryCacheOptions())),
+            new FakeSystemMessagingService(),
             NullLogger<WatchListService>.Instance);
 
         return (service, accessor, data);

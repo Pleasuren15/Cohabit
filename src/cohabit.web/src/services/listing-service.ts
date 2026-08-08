@@ -22,6 +22,7 @@ export interface FeaturedProfile {
   id: string
   imageSrc: string
   name: string
+  title?: string
   location: string
   mapAddress: string
   bio: string
@@ -29,6 +30,7 @@ export interface FeaturedProfile {
   verified: VerificationType[]
   province: string
   type: "roommate" | "rentals"
+  typeId?: number
   userId: string
   price: number
   deposit: number
@@ -38,6 +40,9 @@ export interface FeaturedProfile {
   responseTime: string
   rules: string[]
   amenities?: string[]
+  addressLine1?: string
+  addressLine2?: string
+  postalCode?: string
   featured?: boolean
 }
 
@@ -59,9 +64,112 @@ export interface PagedListings {
   totalPages: number
 }
 
+/** Payload used to create/update a listing (mapped to the API request shapes). */
+export interface ListingMutationInput {
+  title: string
+  description: string
+  typeId: number
+  price: number
+  deposit: number
+  beds: number
+  baths: number
+  /** ISO date `YYYY-MM-DD`. */
+  availableFrom: string
+  responseTime: string
+  addressLine1: string
+  addressLine2: string
+  suburb: string
+  postalCode: string
+  provinceId: number
+  amenityIds: number[]
+  ruleIds: number[]
+}
+
 export interface ListingService {
   getListings(query: ListingQuery, all: FeaturedProfile[]): Promise<PagedListings>
   getListingById(id: string, all: FeaturedProfile[]): Promise<FeaturedProfile | null>
+  getUserListings(userId: string, all: FeaturedProfile[]): Promise<FeaturedProfile[]>
+  createListing(
+    userId: string,
+    input: ListingMutationInput,
+    images: File[]
+  ): Promise<FeaturedProfile>
+  updateListing(
+    userId: string,
+    listingId: string,
+    input: ListingMutationInput
+  ): Promise<FeaturedProfile>
+  resolveProvinceId(code: string): Promise<number | undefined>
+}
+
+/** `"1 Sep 2026"` / `"Flexible"` -> `"YYYY-MM-DD"` (used by the API). */
+export function toIsoAvailableFrom(value: string): string {
+  const trimmed = value.trim()
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed)
+  if (match) return trimmed
+
+  const parsed = new Date(`${trimmed} 12:00:00`)
+  if (!Number.isNaN(parsed.getTime())) {
+    const local = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60_000)
+    return local.toISOString().slice(0, 10)
+  }
+
+  return new Date().toISOString().slice(0, 10)
+}
+
+/** Tolerant lookup of a listing amenity name -> API amenity id. */
+export function amenityNameToId(name: string): number | undefined {
+  const key = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+  return AMENITY_ID_BY_KEY[key]
+}
+
+/** Tolerant lookup of a listing rule name -> API rule id. */
+export function ruleNameToId(name: string): number | undefined {
+  const key = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+  return RULE_ID_BY_KEY[key]
+}
+
+const AMENITY_ID_BY_KEY: Record<string, number> = {
+  highspeedwifi: 1,
+  wifi: 1,
+  parking: 2,
+  swimmingpool: 3,
+  pool: 3,
+  gym: 4,
+  laundry: 5,
+  washingmachine: 5,
+  furnished: 6,
+  airconditioning: 7,
+  airconditioner: 7,
+  balcony: 8,
+  security: 9,
+  petfriendly: 10,
+  petswelcome: 10,
+  cleaningservice: 11,
+  solarpower: 12,
+}
+
+const RULE_ID_BY_KEY: Record<string, number> = {
+  nosmoking: 1,
+  nopets: 2,
+  noparties: 3,
+  noalcohol: 4,
+  nodrugs: 5,
+  quiethours: 6,
+  noguests: 7,
+  visitorsallowed: 8,
+}
+
+const ROOMMATE_TYPE_ID = 1
+const RENTALS_TYPE_ID = 3
+
+/** Maps the UI kind to the API listing type id. */
+export function typeToId(type: FeaturedProfile["type"]): number {
+  return type === "roommate" ? ROOMMATE_TYPE_ID : RENTALS_TYPE_ID
 }
 
 /** Mock implementation: filters + paginates the in-memory dataset. */
@@ -105,6 +213,63 @@ class MockListingService implements ListingService {
   ): Promise<FeaturedProfile | null> {
     return all.find((p) => p.id === id) ?? null
   }
+
+  async getUserListings(
+    userId: string,
+    all: FeaturedProfile[]
+  ): Promise<FeaturedProfile[]> {
+    return all.filter((p) => p.userId === userId)
+  }
+
+  async createListing(
+    userId: string,
+    input: ListingMutationInput,
+    images: File[]
+  ): Promise<FeaturedProfile> {
+    return {
+      id: `mock-listing-${Date.now()}`,
+      imageSrc: images[0]
+        ? URL.createObjectURL(images[0])
+        : FALLBACK_IMAGE,
+      name: "You",
+      title: input.title,
+      location: input.suburb,
+      mapAddress: input.suburb,
+      bio: input.description,
+      photoCount: images.length,
+      verified: [],
+      province: "",
+      type: input.typeId === ROOMMATE_TYPE_ID ? "roommate" : "rentals",
+      typeId: input.typeId,
+      userId,
+      price: input.price,
+      deposit: input.deposit,
+      beds: input.beds,
+      baths: input.baths,
+      availableFrom: input.availableFrom,
+      responseTime: input.responseTime,
+      rules: [],
+      amenities: [],
+      addressLine1: input.addressLine1,
+      addressLine2: input.addressLine2,
+      postalCode: input.postalCode,
+    }
+  }
+
+  async updateListing(
+    userId: string,
+    listingId: string,
+    input: ListingMutationInput
+  ): Promise<FeaturedProfile> {
+    return this.createListing(userId, input, []).then((p) => ({
+      ...p,
+      id: listingId,
+    }))
+  }
+
+  async resolveProvinceId(_code: string): Promise<number | undefined> {
+    return 1
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -126,6 +291,8 @@ export interface ListingOwnerDto {
 }
 
 export interface ListingAddressDto {
+  addressLine1: string
+  addressLine2: string
   suburb: string
   postalCode: string
   province: ProvinceDto
@@ -206,6 +373,7 @@ export function fromSummary(dto: ListingSummaryDto): FeaturedProfile {
     id: dto.id,
     imageSrc: dto.primaryImageUrl ?? FALLBACK_IMAGE,
     name: name || dto.title,
+    title: dto.title,
     location: dto.address.suburb,
     mapAddress: [
       dto.address.suburb,
@@ -219,6 +387,7 @@ export function fromSummary(dto: ListingSummaryDto): FeaturedProfile {
     verified: [],
     province: PROVINCE_CODE_BY_NAME[dto.address.province.name] ?? "",
     type: mapListingType(dto.type),
+    typeId: dto.typeId,
     userId: dto.owner.id,
     price: dto.price,
     deposit: dto.deposit,
@@ -228,6 +397,9 @@ export function fromSummary(dto: ListingSummaryDto): FeaturedProfile {
     responseTime: dto.responseTime,
     rules: [],
     amenities: [],
+    addressLine1: dto.address.addressLine1,
+    addressLine2: dto.address.addressLine2,
+    postalCode: dto.address.postalCode,
   }
 }
 
@@ -306,6 +478,93 @@ class HttpListingService implements ListingService {
     if (!res.ok) throw new Error(`Failed to load listing (${res.status})`)
     const data: ListingDetailDto = await res.json()
     return fromDetail(data)
+  }
+
+  async getUserListings(
+    userId: string,
+    _all: FeaturedProfile[]
+  ): Promise<FeaturedProfile[]> {
+    const res = await fetch(`${API_BASE_URL}/api/users/${userId}/listings`)
+    if (!res.ok) throw new Error(`Failed to load listings (${res.status})`)
+    const data: ListingSummaryDto[] = await res.json()
+    return data.map(fromSummary)
+  }
+
+  async createListing(
+    userId: string,
+    input: ListingMutationInput,
+    images: File[]
+  ): Promise<FeaturedProfile> {
+    const form = new FormData()
+    form.append("userId", userId)
+    form.append("title", input.title)
+    form.append("description", input.description)
+    form.append("typeId", String(input.typeId))
+    form.append("price", String(input.price))
+    form.append("deposit", String(input.deposit))
+    form.append("beds", String(input.beds))
+    form.append("baths", String(input.baths))
+    form.append("availableFrom", input.availableFrom)
+    form.append("responseTime", input.responseTime)
+    form.append("addressLine1", input.addressLine1)
+    form.append("addressLine2", input.addressLine2)
+    form.append("suburb", input.suburb)
+    form.append("postalCode", input.postalCode)
+    form.append("provinceId", String(input.provinceId))
+    if (input.amenityIds.length > 0)
+      form.append("amenityIds", input.amenityIds.join(","))
+    if (input.ruleIds.length > 0)
+      form.append("ruleIds", input.ruleIds.join(","))
+    form.append("primaryImageIndex", "0")
+    images.forEach((file) => form.append("images", file))
+
+    const res = await fetch(`${API_BASE_URL}/api/listings`, {
+      method: "POST",
+      body: form,
+    })
+    if (!res.ok) throw new Error(`Failed to create listing (${res.status})`)
+    const data: ListingDetailDto = await res.json()
+    return fromDetail(data)
+  }
+
+  async updateListing(
+    userId: string,
+    listingId: string,
+    input: ListingMutationInput
+  ): Promise<FeaturedProfile> {
+    const res = await fetch(
+      `${API_BASE_URL}/api/users/${userId}/listings/${listingId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: input.title,
+          description: input.description,
+          typeId: input.typeId,
+          price: input.price,
+          deposit: input.deposit,
+          beds: input.beds,
+          baths: input.baths,
+          availableFrom: input.availableFrom,
+          responseTime: input.responseTime,
+          addressLine1: input.addressLine1,
+          addressLine2: input.addressLine2,
+          suburb: input.suburb,
+          postalCode: input.postalCode,
+          provinceId: input.provinceId,
+          amenityIds: input.amenityIds,
+          ruleIds: input.ruleIds,
+        }),
+      }
+    )
+    if (!res.ok) throw new Error(`Failed to update listing (${res.status})`)
+    const data: ListingDetailDto = await res.json()
+    return fromDetail(data)
+  }
+
+  async resolveProvinceId(code: string): Promise<number | undefined> {
+    const ids = await this.loadProvinceIds()
+    return ids[code]
   }
 }
 

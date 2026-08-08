@@ -101,7 +101,7 @@ export function OnboardingDialog({
                     Get started
                   </span>
                   <h2 className="text-lg font-semibold tracking-tight">
-                    Welcome to Cohabit
+                    Welcome to <span className="text-accent">Cohabit</span>
                   </h2>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     How would you like to get started?

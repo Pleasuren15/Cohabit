@@ -51,11 +51,13 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IUserAccessor, UserAccessor>();
         builder.Services.AddScoped<IAddressAccessor, AddressAccessor>();
         builder.Services.AddScoped<IWatchListAccessor, WatchListAccessor>();
+        builder.Services.AddScoped<IMessagingAccessor, MessagingAccessor>();
         builder.Services.AddScoped<IListingService, ListingService>();
         builder.Services.AddScoped<IProvinceService, ProvinceService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IAddressService, AddressService>();
         builder.Services.AddScoped<IWatchListService, WatchListService>();
+        builder.Services.AddScoped<ISystemMessagingService, SystemMessagingService>();
 
         builder.Services.AddScoped<ILookupSeeder, ProvinceSeeder>();
         builder.Services.AddScoped<ILookupSeeder, ListingTypeSeeder>();

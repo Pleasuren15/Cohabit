@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Heart } from "lucide-react"
+import { Heart, Pencil } from "lucide-react"
 
 /* --- Types --- */
 export interface CarouselCard {
@@ -17,12 +17,14 @@ interface MinimalCarouselProps {
   cards: CarouselCard[]
   onFavoriteToggle?: (card: CarouselCard) => void
   onViewListing?: (card: CarouselCard) => void
+  onEditListing?: (card: CarouselCard) => void
 }
 
 export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
   cards,
   onFavoriteToggle,
   onViewListing,
+  onEditListing,
 }) => {
   // Default-select the first card
   const [activeId, setActiveId] = useState<string | null>(
@@ -119,6 +121,20 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                       {activeCard.value}
                     </p>
                   </div>
+
+                  {onEditListing && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEditListing(activeCard)
+                      }}
+                      className="absolute bottom-3 right-3 z-10 flex size-8 items-center justify-center rounded-full bg-white/15 text-white/90 backdrop-blur-md transition-colors hover:bg-white/30"
+                      aria-label={`Edit ${activeCard.title}`}
+                    >
+                      <Pencil className="size-3.5" />
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -166,6 +182,20 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                   >
                     View
                   </button>
+
+                  {onEditListing && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEditListing(card)
+                      }}
+                      className="absolute top-2 left-2 z-10 flex size-6 cursor-pointer items-center justify-center rounded-full bg-black/30 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/50"
+                      aria-label={`Edit ${card.title}`}
+                    >
+                      <Pencil className="size-3" />
+                    </button>
+                  )}
 
                   <div className="relative z-10 overflow-hidden">
                     <h4

@@ -145,7 +145,7 @@ export function Auth3({
           <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-accent/10">
             <Home className="size-6 text-accent" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Cohabit</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-accent">Cohabit</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Shared living, made simple
           </p>

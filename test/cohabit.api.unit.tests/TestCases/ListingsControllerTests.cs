@@ -460,6 +460,7 @@ public class ListingsControllerTests
             new ListingAccessor(db),
             Substitute.For<ICache>(),
             storage,
+            new FakeSystemMessagingService(),
             NullLogger<ListingService>.Instance);
 
         return (new ListingsController(service), db, data, storage);
@@ -515,6 +516,7 @@ public class ListingsControllerTests
             new ListingAccessor(db),
             cache,
             new FakeImageStorage(),
+            new FakeSystemMessagingService(),
             NullLogger<ListingService>.Instance);
 
         return (new ListingsController(service), data, cache);
@@ -531,6 +533,7 @@ public class ListingsControllerTests
             accessor,
             new InMemoryCache(new MemoryCache(new MemoryCacheOptions())),
             new FakeImageStorage(),
+            new FakeSystemMessagingService(),
             NullLogger<ListingService>.Instance);
 
         return (service, accessor, data);

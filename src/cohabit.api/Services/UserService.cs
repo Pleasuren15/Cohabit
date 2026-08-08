@@ -8,6 +8,7 @@ namespace cohabit.api.Services;
 public sealed class UserService(
     IUserAccessor userAccessor,
     ICache cache,
+    ISystemMessagingService messagingService,
     ILogger<UserService> logger) : IUserService
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
@@ -25,6 +26,11 @@ public sealed class UserService(
     {
         var user = await userAccessor.CreateAsync(request, ct);
         logger.LogInformation("Created user {UserId} ({Email})", user.Id, user.Email);
+
+        await messagingService.SendAsync(
+            user.Id,
+            "Welcome to Cohabit",
+            "Your account has been created successfully. Start exploring shared living spaces near you!");
 
         cache.Remove(CacheKeys.UsersList);
 

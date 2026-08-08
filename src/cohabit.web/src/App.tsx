@@ -22,10 +22,18 @@ import {
   Flag,
   Lock,
   AlertTriangle,
+  ArrowLeft,
   type LucideIcon,
 } from "lucide-react"
 import { FlipText } from "@/components/ui/flip-text"
 import Select33 from "@/components/ui/select-33"
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageGroup,
+  MessageHeader,
+} from "@/components/ui/message"
 import MeshBackground from "@/components/MeshBackground"
 import { ListingFilter } from "@/components/listing-filter"
 import { PROVINCE_SHAPES } from "@/lib/province-shapes"
@@ -48,19 +56,34 @@ import {
   MinimalCarousel,
   type CarouselCard,
 } from "@/components/ui/minimal-carousel"
-import { UserProfile, type UserData } from "@/components/ui/user-profile"
+import {
+  UserProfile,
+  type NewListingData,
+  type UserData,
+} from "@/components/ui/user-profile"
 import { OnboardingDialog } from "@/components/ui/onboarding-dialog"
 import StatsCounter from "@/components/ui/stats-counter"
-import { Toaster } from "sonner"
+import { Toaster, toast } from "sonner"
 import {
   FEATURED_PROFILES,
   listingService,
+  toIsoAvailableFrom,
+  typeToId,
   type FeaturedProfile,
+  type ListingMutationInput,
   type ListingQuery,
   type VerificationType,
 } from "@/services/listing-service"
 import { USE_MOCK_DATA } from "@/services/config"
 import { DEMO_USER_ID } from "@/services/favorites-service"
+import { userService } from "@/services/user-service"
+import {
+  MOCK_MESSAGES,
+  groupMessages,
+  messagesService,
+  type MessageThread,
+  type SystemMessageDto,
+} from "@/services/messages-service"
 import { Routes, Route, useNavigate, useParams } from "react-router-dom"
 import { AppProvider, useApp } from "@/context/app-context"
 
@@ -150,75 +173,40 @@ const HOUSING_FAQS: FaqItem[] = [
   },
 ]
 
-const MESSAGE_THREADS: PlaceItem[] = [
-  {
-    id: 1,
-    name: "Welcome to Cohabit",
-    type: "Today",
-    status:
-      "Your account has been created successfully. Start exploring shared living spaces near you!",
-    pinned: false,
-    unread: true,
-  },
-  {
-    id: 2,
-    name: "New Property Alert",
-    type: "Today",
-    status:
-      "A new shared home in Sea Point has been listed that matches your preferences.",
-    pinned: false,
-    unread: true,
-  },
-  {
-    id: 3,
-    name: "Listing Liked",
-    type: "Yesterday",
-    status:
-      'Sarah liked your property "Cozy flat in Observatory". View their profile to connect.',
-    pinned: true,
-  },
-  {
-    id: 4,
-    name: "Price Drop",
-    type: "Yesterday",
-    status:
-      'Great news! "Spacious room in Gardens" has dropped in price by R1,500/month.',
-    pinned: false,
-  },
-  {
-    id: 5,
-    name: "Profile Views",
-    type: "Jul 20",
-    status:
-      "Your listing was viewed 24 times this week. Keep your profile updated to attract more interest.",
-    pinned: false,
-  },
-  {
-    id: 6,
-    name: "Verification Approved",
-    type: "Jul 18",
-    status:
-      "Your phone number has been verified. Complete ID verification to unlock more features.",
-    pinned: false,
-  },
-  {
-    id: 7,
-    name: "New Matches",
-    type: "Jul 16",
-    status:
-      "We found 3 potential roommates based on your preferences. Check them out!",
-    pinned: true,
-    unread: true,
-  },
-  {
-    id: 8,
-    name: "Weekly Digest",
-    type: "Jul 14",
-    status:
-      "5 new listings this week in your area. Don't miss out on your perfect shared home.",
-    pinned: false,
-  },
-]
+/** Relative label used for the message date column ("Today", "Yesterday", "Jul 20"). */
+function formatMessageDate(iso: string): string {
+  const date = new Date(iso)
+  const now = new Date()
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const days = Math.round((startOfDay(now) - startOfDay(date)) / 86400000)
+  if (days <= 0) return "Today"
+  if (days === 1) return "Yesterday"
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
+
+/** Day divider label used inside a thread ("Today", "Yesterday", "Wed, Aug 5"). */
+function messageDay(iso: string): string {
+  const date = new Date(iso)
+  const now = new Date()
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const days = Math.round((startOfDay(now) - startOfDay(date)) / 86400000)
+  if (days <= 0) return "Today"
+  if (days === 1) return "Yesterday"
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  })
+}
+
+function formatMessageTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
 
 /** Inline SVG of the South African flag (emoji flags don't render on Windows). */
 function SouthAfricaFlag({ className }: { className?: string }) {
@@ -325,7 +313,7 @@ function LandingShell({ children }: { children: ReactNode }) {
       {children}
 
       <footer className="px-6 pb-6 text-center text-xs text-muted-foreground/50">
-        © 2026 Cohabit
+        © 2026 <span className="text-accent">Cohabit</span>
       </footer>
     </AppShell>
   )
@@ -431,8 +419,8 @@ function PageHeader({
   iconClassName,
 }: {
   icon: LucideIcon
-  title: string
-  subtitle?: string
+  title: ReactNode
+  subtitle?: ReactNode
   iconClassName?: string
 }) {
   return (
@@ -477,26 +465,178 @@ function MainApp({
     toggleFavorite,
     favoriteProfiles,
     promotedIds,
-    addListing,
     allListings,
   } = useApp()
   const [listingFilter, setListingFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
   const [showProvincePicker, setShowProvincePicker] = useState(false)
-  const [messageThreads, setMessageThreads] =
-    useState<PlaceItem[]>(MESSAGE_THREADS)
+  const [messages, setMessages] = useState<SystemMessageDto[]>([])
+  const [userListings, setUserListings] = useState<FeaturedProfile[]>([])
 
-  const messageTotal = messageThreads.length
-  const messageUnread = messageThreads.filter((t) => t.unread).length
+  const handleUpdateUser = useCallback(
+    async (updated: UserData) => {
+      try {
+        const saved = await userService.updateUser(updated)
+        setCurrentUser(saved)
+        toast.success("Profile updated", {
+          description: "Your profile has been saved.",
+        })
+      } catch (err) {
+        toast.error("Couldn't update profile", {
+          description:
+            err instanceof Error ? err.message : "Please try again.",
+        })
+        throw err
+      }
+    },
+    [setCurrentUser]
+  )
 
-  const markMessageRead = useCallback((id: number) => {
-    setMessageThreads((prev) =>
-      prev.map((thread) =>
-        thread.id === id ? { ...thread, unread: false } : thread
-      )
-    )
+  // Load the signed-in user's own listings whenever the identity changes.
+  useEffect(() => {
+    if (!currentUser) return
+    let cancelled = false
+    listingService
+      .getUserListings(currentUser.id, allListings)
+      .then((items) => {
+        if (cancelled) return
+        setUserListings(items)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        console.error("Failed to load your listings", err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [currentUser, allListings])
+
+  const buildListingInput = useCallback(
+    async (data: NewListingData): Promise<ListingMutationInput> => {
+      const provinceId =
+        (await listingService.resolveProvinceId(province)) ?? 1
+      return {
+        title: data.name,
+        description: data.bio,
+        typeId: typeToId(data.type),
+        price: data.price,
+        deposit: data.deposit,
+        beds: data.beds,
+        baths: data.baths,
+        availableFrom: toIsoAvailableFrom(data.availableFrom),
+        responseTime: "Within the hour",
+        addressLine1: data.address,
+        addressLine2: "",
+        suburb: data.location,
+        postalCode: "",
+        provinceId,
+        amenityIds: data.amenityIds,
+        ruleIds: data.ruleIds,
+      }
+    },
+    [province]
+  )
+
+  const handleAddListing = useCallback(
+    async (data: NewListingData) => {
+      if (!currentUser) return
+      try {
+        const input = await buildListingInput(data)
+        const created = await listingService.createListing(
+          currentUser.id,
+          input,
+          data.files
+        )
+        setUserListings((prev) => [
+          created,
+          ...prev.filter((p) => p.id !== created.id),
+        ])
+        toast.success("Listing created", {
+          description: `${created.title ?? created.name} is now live.`,
+        })
+      } catch (err) {
+        toast.error("Couldn't create listing", {
+          description: err instanceof Error ? err.message : "Please try again.",
+        })
+        throw err
+      }
+    },
+    [currentUser, buildListingInput]
+  )
+
+  const handleUpdateListing = useCallback(
+    async (listingId: string, data: NewListingData) => {
+      if (!currentUser) return
+      try {
+        const input = await buildListingInput(data)
+        const updated = await listingService.updateListing(
+          currentUser.id,
+          listingId,
+          input
+        )
+        setUserListings((prev) => [
+          updated,
+          ...prev.filter((p) => p.id !== updated.id),
+        ])
+        toast.success("Listing updated", {
+          description: "Your changes have been saved.",
+        })
+      } catch (err) {
+        toast.error("Couldn't update listing", {
+          description: err instanceof Error ? err.message : "Please try again.",
+        })
+        throw err
+      }
+    },
+    [currentUser, buildListingInput]
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    messagesService
+      .loadMessages()
+      .then((items) => {
+        if (cancelled) return
+        setMessages(items.length > 0 ? items : MOCK_MESSAGES)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setMessages(MOCK_MESSAGES)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
+
+  const messageGroups = useMemo(() => groupMessages(messages), [messages])
+
+  const messageThreads: PlaceItem[] = useMemo(
+    () =>
+      messageGroups.map((thread, index) => ({
+        id: index,
+        name: thread.name,
+        type: formatMessageDate(thread.latestTimestamp),
+        status: thread.messages[thread.messages.length - 1].content,
+        pinned: false,
+        unread: thread.unreadCount > 0,
+      })),
+    [messageGroups]
+  )
+
+  const messageTotal = messageGroups.length
+  const messageUnread = messageGroups.reduce(
+    (sum, t) => sum + t.unreadCount,
+    0
+  )
+
+  const openMessageThread = useCallback(
+    (id: number) => {
+      const thread = messageGroups[id]
+      if (thread) navigate(`/messages/${thread.conversationId}`)
+    },
+    [messageGroups, navigate]
+  )
 
   const isFeatured = useCallback(
     (p: FeaturedProfile) => p.featured === true || promotedIds.has(p.id),
@@ -754,11 +894,11 @@ function MainApp({
                 <PageHeader
                   icon={MessageSquare}
                   title="Messages"
-                  subtitle={`${messageTotal} total · ${messageUnread} unread`}
+                  subtitle={`${messageTotal} threads · ${messageUnread} unread`}
                 />
                 <PinItemComponent
                   items={messageThreads}
-                  onOpen={markMessageRead}
+                  onOpen={openMessageThread}
                   pinnedLabel="Pinned"
                   allLabel="All Messages"
                 />
@@ -774,7 +914,7 @@ function MainApp({
                       <PageHeader
                         icon={ShieldCheck}
                         title="Trust & Safety Hub"
-                        subtitle="How we keep Cohabit a safe place to find your housemate."
+                        subtitle={<>How we keep <span className="text-accent">Cohabit</span> a safe place to find your housemate.</>}
                       />
                     </div>
 
@@ -943,7 +1083,7 @@ function MainApp({
                   <div className="w-full">
                     <PageHeader
                       icon={BarChart3}
-                      title="Cohabit by the numbers"
+                      title={<><span className="text-accent">Cohabit</span> by the numbers</>}
                       subtitle="A growing community of trusted housemates."
                     />
                   </div>
@@ -1030,45 +1170,21 @@ function MainApp({
             {activeTab === "Profile" && currentUser && (
               <UserProfile
                 user={currentUser}
-                userListings={allListings.filter(
-                  (p) => p.userId === currentUser.id
-                )}
+                userListings={userListings}
                 verified={userVerified}
                 onVerify={(type) => {
                   if (!userVerified.includes(type)) {
                     setUserVerified((prev) => [...prev, type])
                   }
                 }}
-                onUpdateUser={setCurrentUser}
+                onUpdateUser={handleUpdateUser}
                 onToggleFavorite={toggleFavorite}
                 onViewListing={handleViewListing}
-
-                onAddListing={(data) => {
-                  const id = `user-listing-${Date.now()}`
-                  const newProfile: FeaturedProfile = {
-                    id,
-                    imageSrc:
-                      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=1000&h=700",
-                    name: data.name,
-                    location: data.location,
-                    mapAddress: data.address || data.location,
-                    bio: data.bio,
-                    photoCount: 0,
-                    verified: [],
-                    province,
-                    type: data.type,
-                    userId: currentUser.id,
-                    price: data.price,
-                    deposit: data.deposit,
-                    beds: data.beds,
-                    baths: data.baths,
-                    availableFrom: data.availableFrom,
-                    responseTime: "Within the hour",
-                    rules: [],
-                    amenities: data.amenities,
-                  }
-                  addListing(newProfile)
-                }}
+                onAddListing={handleAddListing}
+                onUpdateListing={handleUpdateListing}
+                getListingDetail={(id) =>
+                  listingService.getListingById(id, allListings)
+                }
               />
             )}
           </div>
@@ -1257,6 +1373,10 @@ function AppFrame() {
       <Routes>
         <Route path="/listing/:id" element={<ListingDetailPage />} />
         <Route
+          path="/messages/:conversationId"
+          element={<MessageDetailPage />}
+        />
+        <Route
           path="*"
           element={
             <AppRoot
@@ -1393,6 +1513,161 @@ function ListingDetailPage() {
       relatedListings={related}
       onViewRelated={(rid) => navigate(`/listing/${rid}`)}
     />
+  )
+}
+
+/** Detail view for one message thread (all related messages grouped). */
+function MessageDetailPage() {
+  const { conversationId } = useParams<{ conversationId: string }>()
+  const navigate = useNavigate()
+  const [state, setState] = useState<{
+    id: string
+    thread: MessageThread | null
+  } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = (items: SystemMessageDto[]) => {
+      if (cancelled) return
+      const list = items.length > 0 ? items : MOCK_MESSAGES
+      const thread =
+        groupMessages(list).find((g) => g.conversationId === conversationId) ??
+        null
+      setState({ id: conversationId ?? "", thread })
+
+      if (thread) {
+        for (const message of thread.messages) {
+          if (!message.isRead) messagesService.markRead(message.id).catch(() => {})
+        }
+      }
+    }
+
+    messagesService.loadMessages().then(load).catch(() => load(MOCK_MESSAGES))
+    return () => {
+      cancelled = true
+    }
+  }, [conversationId])
+
+  const current = state && state.id === conversationId ? state : null
+  const thread = current?.thread ?? null
+  const notFound = current !== null && thread === null
+
+  if (notFound) {
+    return (
+      <ErrorOne
+        code="404"
+        title="Thread not found"
+        description="This conversation may have been removed or the link is invalid."
+        action={{
+          label: "Back to Messages",
+          onClick: () => navigate("/"),
+        }}
+      />
+    )
+  }
+
+  if (!thread) {
+    return (
+      <AppShell>
+        <main className="flex-1 overflow-y-auto px-6 pt-6 pb-28">
+          <div className="mx-auto max-w-2xl space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-28 animate-pulse rounded-xl bg-muted"
+              />
+            ))}
+          </div>
+        </main>
+      </AppShell>
+    )
+  }
+
+  const days = Array.from(
+    thread.messages.reduce((map, m) => {
+      const day = messageDay(m.timestamp)
+      const list = map.get(day) ?? []
+      list.push(m)
+      map.set(day, list)
+      return map
+    }, new Map<string, SystemMessageDto[]>())
+  ).map(([day, messages]) => ({ day, messages }))
+
+  return (
+    <AppShell>
+      <main className="flex-1 overflow-y-auto px-4 pt-5 pb-28 sm:px-6">
+        <div className="mx-auto max-w-2xl">
+          <header className="mb-6">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              Back
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="h-7 w-1 rounded-full bg-primary/80" />
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {thread.name}
+                </h1>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {thread.messages.length} messages
+                  {thread.listingId
+                    ? " · about one of your saved listings"
+                    : <>{" "}· <span className="text-accent">Cohabit</span> updates</>}
+                </p>
+              </div>
+            </div>
+            {thread.listingId && (
+              <button
+                type="button"
+                onClick={() => navigate(`/listing/${thread.listingId}`)}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full border bg-background/60 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-muted"
+              >
+                View listing
+                <ArrowLeft className="size-3.5 rotate-180" aria-hidden="true" />
+              </button>
+            )}
+          </header>
+
+          <div className="flex flex-col gap-6">
+            {days.map(({ day, messages: dayMessages }) => (
+              <MessageGroup key={day}>
+                <div className="self-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                  {day}
+                </div>
+                {dayMessages.map((m) => (
+                  <Message key={m.id} align="start">
+                    <MessageAvatar className="bg-primary/10 text-primary">
+                      <span className="flex size-8 items-center justify-center text-xs font-semibold">
+                        C
+                      </span>
+                    </MessageAvatar>
+                    <MessageContent>
+                      <MessageHeader>
+                        <span className="font-semibold text-accent">
+                          Cohabit
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span>{formatMessageTime(m.timestamp)}</span>
+                      </MessageHeader>
+                      <div className="w-fit max-w-full rounded-2xl rounded-tl-sm bg-muted px-4 py-3">
+                        <p className="text-sm font-semibold">{m.title}</p>
+                        <p className="mt-1 text-sm text-foreground/90">
+                          {m.content}
+                        </p>
+                      </div>
+                    </MessageContent>
+                  </Message>
+                ))}
+              </MessageGroup>
+            ))}
+          </div>
+        </div>
+      </main>
+    </AppShell>
   )
 }
 

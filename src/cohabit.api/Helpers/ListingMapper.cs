@@ -67,6 +67,8 @@ internal static class ListingMapper
     private static ListingAddressDto ToAddress(Address address)
     {
         return new ListingAddressDto(
+            address.AddressLine1,
+            address.AddressLine2,
             address.Suburb,
             address.PostalCode,
             new ProvinceDto(address.Province.Id, address.Province.Name));
