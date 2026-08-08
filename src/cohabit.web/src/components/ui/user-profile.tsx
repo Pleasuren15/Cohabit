@@ -19,6 +19,7 @@ import {
   Pencil,
   Plus,
   Building2,
+  LogOut,
 } from "lucide-react"
 import type { FeaturedProfile } from "@/App"
 import {
@@ -107,6 +108,7 @@ interface UserProfileProps {
   onAddListing?: (data: NewListingData) => Promise<void>
   onUpdateListing?: (id: string, data: NewListingData) => Promise<void>
   getListingDetail?: (id: string) => Promise<FeaturedProfile | null>
+  onSignOut?: () => Promise<void>
 }
 
 export function UserProfile({
@@ -120,6 +122,7 @@ export function UserProfile({
   onAddListing,
   onUpdateListing,
   getListingDetail,
+  onSignOut,
 }: UserProfileProps) {
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false)
@@ -335,15 +338,26 @@ export function UserProfile({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowEditProfile(true)}
-            className="flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white"
-            aria-label="Edit profile"
-          >
-            <Pencil className="size-3.5" />
-            Edit
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void onSignOut?.()}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Sign out"
+            >
+              <LogOut className="size-3.5" />
+              Sign out
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEditProfile(true)}
+              className="flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white"
+              aria-label="Edit profile"
+            >
+              <Pencil className="size-3.5" />
+              Edit
+            </button>
+          </div>
         </div>
       </div>
 

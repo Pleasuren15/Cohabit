@@ -40,7 +40,7 @@ import { PROVINCE_SHAPES } from "@/lib/province-shapes"
 import { PROVINCES } from "@/lib/provinces"
 import { cn } from "@/lib/utils"
 import { FamilyReceiveComponent } from "@/components/ui/family-receive-component"
-import { Auth3 } from "@/components/ui/auth-03"
+import { Auth3, type SignUpDetails } from "@/components/ui/auth-03"
 import {
   Tabs,
   TabsList,
@@ -75,7 +75,7 @@ import {
   type VerificationType,
 } from "@/services/listing-service"
 import { USE_MOCK_DATA } from "@/services/config"
-import { DEMO_USER_ID } from "@/services/favorites-service"
+import { authService } from "@/services/auth-service"
 import { userService } from "@/services/user-service"
 import {
   MOCK_MESSAGES,
@@ -89,20 +89,6 @@ import { AppProvider, useApp } from "@/context/app-context"
 
 export { FEATURED_PROFILES }
 export type { FeaturedProfile, VerificationType }
-
-const MOCK_USER: UserData = {
-  id: "user-1",
-  firstName: "Thabo",
-  lastName: "Mokoena",
-  cellphone: "+27 82 123 4567",
-  email: "thabo.m@example.com",
-  dateOfBirth: "1994-05-12",
-  gender: "male",
-  bio: "Creative graphic designer looking for a shared space.",
-  isOtpVerified: true,
-  avatarUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=200&h=200",
-  timestamp: "June 2025",
-}
 
 const COHABIT_PHRASES = ["Find Your Match", "Share Your Space", "Live Together"]
 
@@ -450,11 +436,13 @@ function MainApp({
   setShowAuth,
   currentUser,
   setCurrentUser,
+  onSignOut,
 }: {
   province: string
   setShowAuth: (show: boolean) => void
   currentUser: UserData | null
   setCurrentUser: (user: UserData | null) => void
+  onSignOut: () => Promise<void>
 }) {
   const navigate = useNavigate()
   const {
@@ -1185,6 +1173,7 @@ function MainApp({
                 getListingDetail={(id) =>
                   listingService.getListingById(id, allListings)
                 }
+                onSignOut={onSignOut}
               />
             )}
           </div>
@@ -1326,13 +1315,77 @@ function AppFrame() {
   const [showAuth, setShowAuth] = useState(false)
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
 
-  const handleAuthenticated = () => {
-    setCurrentUser(
-      USE_MOCK_DATA ? MOCK_USER : { ...MOCK_USER, id: DEMO_USER_ID }
-    )
-    setShowAuth(false)
-    setActiveTab("Profile")
-  }
+  // Restore the Supabase session on boot and keep `currentUser` in sync.
+  useEffect(() => {
+    let cancelled = false
+    authService
+      .getSessionUser()
+      .then((user) => {
+        if (!cancelled && user) setCurrentUser(user)
+      })
+      .catch((err: unknown) =>
+        console.error("Failed to restore auth session", err)
+      )
+    const unsubscribe = authService.onAuthStateChange((user) => {
+      if (cancelled) return
+      setCurrentUser(user)
+    })
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [])
+
+  const handleSignIn = useCallback(
+    async (email: string, password: string) => {
+      const result = await authService.signIn(email, password)
+      if (result.user) {
+        setCurrentUser(result.user)
+        setShowAuth(false)
+        setActiveTab("Profile")
+      }
+    },
+    [setActiveTab]
+  )
+
+  const handleSignUp = useCallback(
+    async (details: SignUpDetails) => {
+      const result = await authService.signUp({
+        name: details.name,
+        email: details.email,
+        password: details.password,
+        dateOfBirth: details.dateOfBirth,
+        province: details.province,
+      })
+      if (result.emailConfirmationRequired) {
+        setShowAuth(false)
+        toast.success("Check your inbox", {
+          description: "We sent a confirmation link to your email address.",
+        })
+        return
+      }
+      if (result.user) {
+        setCurrentUser(result.user)
+        setShowAuth(false)
+        setActiveTab("Profile")
+      }
+    },
+    [setActiveTab]
+  )
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await authService.signOut()
+      setCurrentUser(null)
+      toast.success("Signed out", {
+        description: "You've been signed out of your account.",
+      })
+    } catch (err) {
+      toast.error("Couldn't sign out", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      })
+    }
+  }, [])
 
   return (
     <>
@@ -1361,10 +1414,7 @@ function AppFrame() {
               >
                 <X className="size-5" />
               </button>
-              <Auth3
-                onSignIn={handleAuthenticated}
-                onSignUp={handleAuthenticated}
-              />
+              <Auth3 onSignIn={handleSignIn} onSignUp={handleSignUp} />
             </motion.div>
           </motion.div>
         )}
@@ -1383,6 +1433,7 @@ function AppFrame() {
               setShowAuth={setShowAuth}
               currentUser={currentUser}
               setCurrentUser={setCurrentUser}
+              onSignOut={handleSignOut}
             />
           }
         />
@@ -1405,10 +1456,12 @@ function AppRoot({
   setShowAuth,
   currentUser,
   setCurrentUser,
+  onSignOut,
 }: {
   setShowAuth: (show: boolean) => void
   currentUser: UserData | null
   setCurrentUser: (user: UserData | null) => void
+  onSignOut: () => Promise<void>
 }) {
   const { province, setProvince } = useApp()
 
@@ -1422,6 +1475,7 @@ function AppRoot({
       setShowAuth={setShowAuth}
       currentUser={currentUser}
       setCurrentUser={setCurrentUser}
+      onSignOut={onSignOut}
     />
   )
 }

@@ -9,14 +9,34 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Home } from "lucide-react"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { PROVINCES } from "@/lib/provinces"
+import { PROVINCE_SHAPES } from "@/lib/province-shapes"
+import {
   MdEmail,
   MdLock,
   MdPerson,
   MdVisibility,
   MdVisibilityOff,
   MdArrowForward,
+  MdCalendarToday,
+  MdLocationPin,
 } from "react-icons/md"
 import { TwinOrbit } from "@/components/loading-ui/twin-orbit"
+import { toast } from "sonner"
+
+export interface SignUpDetails {
+  name: string
+  email: string
+  dateOfBirth: string
+  province: string
+  password: string
+}
 
 export interface Auth3SocialProvider {
   id: string
@@ -33,12 +53,17 @@ export interface Auth3Props {
   forgotPasswordText?: string
   onForgotPassword?: () => void
   onSignIn?: (email: string, password: string) => void
-  onSignUp?: (name: string, email: string, password: string) => void
+  onSignUp?: (details: SignUpDetails) => void
   termsHref?: string
   privacyHref?: string
+  provinceOptions?: { id: string; label: string }[]
 }
 
 const DEFAULT_SOCIAL_PROVIDERS: Auth3SocialProvider[] = []
+
+const DEFAULT_PROVINCE_OPTIONS = Object.entries(PROVINCES).map(
+  ([id, label]) => ({ id, label })
+)
 
 function PasswordInput({
   id,
@@ -93,17 +118,33 @@ export function Auth3({
   onSignUp,
   termsHref = "#",
   privacyHref = "#",
+  provinceOptions = DEFAULT_PROVINCE_OPTIONS,
 }: Auth3Props) {
   const [siEmail, setSiEmail] = useState("")
   const [siPassword, setSiPassword] = useState("")
 
   const [suName, setSuName] = useState("")
   const [suEmail, setSuEmail] = useState("")
+  const [suDob, setSuDob] = useState("")
+  const [suProvince, setSuProvince] = useState("")
   const [suPassword, setSuPassword] = useState("")
+  const [suConfirmPassword, setSuConfirmPassword] = useState("")
   const [tab, setTab] = useState("signin")
 
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [isSigningUp, setIsSigningUp] = useState(false)
+
+  const confirmTouched = suConfirmPassword.length > 0
+  const passwordsMatch = suPassword === suConfirmPassword
+  const showPasswordMismatch = confirmTouched && !passwordsMatch
+  const canRegister =
+    !showPasswordMismatch &&
+    suName.trim().length > 0 &&
+    suEmail.trim().length > 0 &&
+    suDob.length > 0 &&
+    suProvince.length > 0 &&
+    suPassword.length >= 8 &&
+    suConfirmPassword.length >= 8
 
   const handleSignIn = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -114,6 +155,11 @@ export function Auth3({
           onSignIn?.(siEmail, siPassword),
           new Promise<void>((r) => setTimeout(r, 1200)),
         ])
+      } catch (err) {
+        toast.error("Couldn't sign in", {
+          description:
+            err instanceof Error ? err.message : "Please try again.",
+        })
       } finally {
         setIsSigningIn(false)
       }
@@ -127,14 +173,25 @@ export function Auth3({
       setIsSigningUp(true)
       try {
         await Promise.all([
-          onSignUp?.(suName, suEmail, suPassword),
+          onSignUp?.({
+            name: suName,
+            email: suEmail,
+            dateOfBirth: suDob,
+            province: suProvince,
+            password: suPassword,
+          }),
           new Promise<void>((r) => setTimeout(r, 1200)),
         ])
+      } catch (err) {
+        toast.error("Couldn't create account", {
+          description:
+            err instanceof Error ? err.message : "Please try again.",
+        })
       } finally {
         setIsSigningUp(false)
       }
     },
-    [suName, suEmail, suPassword, onSignUp]
+    [suName, suEmail, suDob, suProvince, suPassword, onSignUp]
   )
 
   return (
@@ -334,7 +391,7 @@ export function Auth3({
                           htmlFor="auth3-su-email"
                           className="text-xs font-medium"
                         >
-                          Work email
+                          Email
                         </Label>
                         <div className="relative">
                           <MdEmail className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -347,6 +404,75 @@ export function Auth3({
                             className="h-10 border-border bg-muted pl-10 shadow-none focus-visible:ring-accent/30"
                             required
                           />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="auth3-su-dob"
+                          className="text-xs font-medium"
+                        >
+                          Date of birth
+                        </Label>
+                        <div className="relative">
+                          <MdCalendarToday className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            id="auth3-su-dob"
+                            type="date"
+                            value={suDob}
+                            onChange={(e) => setSuDob(e.target.value)}
+                            className="h-10 border-border bg-muted pl-10 shadow-none focus-visible:ring-accent/30 [color-scheme:light] dark:[color-scheme:dark]"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="auth3-su-province"
+                          className="text-xs font-medium"
+                        >
+                          Province
+                        </Label>
+                        <div className="relative">
+                          <MdLocationPin className="pointer-events-none absolute top-1/2 left-3.5 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Select
+                            value={suProvince}
+                            onValueChange={setSuProvince}
+                            required
+                          >
+                            <SelectTrigger
+                              id="auth3-su-province"
+                              className="h-10 w-full border-border bg-muted pl-10 text-left shadow-none focus-visible:ring-accent/30"
+                            >
+                              <SelectValue placeholder="Select your province" />
+                            </SelectTrigger>
+                            <SelectContent
+                              position="popper"
+                              align="start"
+                              className="max-h-60"
+                            >
+                              {provinceOptions.map((prov) => (
+                                <SelectItem
+                                  key={prov.id}
+                                  value={prov.id}
+                                  className="rounded-lg"
+                                >
+                                  <span className="flex items-center gap-2.5">
+                                    <img
+                                      src={PROVINCE_SHAPES[prov.id]}
+                                      alt=""
+                                      aria-hidden="true"
+                                      className="size-6 shrink-0 object-contain"
+                                    />
+                                    <span className="truncate">
+                                      {prov.label}
+                                    </span>
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
 
@@ -365,9 +491,29 @@ export function Auth3({
                         />
                       </div>
 
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="auth3-su-confirm"
+                          className="text-xs font-medium"
+                        >
+                          Confirm password
+                        </Label>
+                        <PasswordInput
+                          id="auth3-su-confirm"
+                          placeholder="Repeat your password"
+                          value={suConfirmPassword}
+                          onChange={setSuConfirmPassword}
+                        />
+                        {showPasswordMismatch && (
+                          <p className="text-xs font-medium text-red-500">
+                            Passwords don't match
+                          </p>
+                        )}
+                      </div>
+
                       <Button
                         type="submit"
-                        disabled={isSigningUp}
+                        disabled={isSigningUp || !canRegister}
                         className="mt-2 h-10 w-full gap-2 font-semibold disabled:pointer-events-none disabled:opacity-60"
                       >
                         {isSigningUp ? (
