@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
   MapPin,
@@ -13,6 +13,7 @@ import {
   Share2,
   Check,
   Heart,
+  Star,
 } from "lucide-react"
 import { ViewOnMap } from "./view-on-map"
 
@@ -31,6 +32,7 @@ interface ExpandableProfileCardProps {
   onToggleFavorite?: (id: string) => void
   onView?: (id: string) => void
   price?: number
+  featured?: boolean
 }
 
 const VERIFICATION_CONFIG: Record<
@@ -56,17 +58,39 @@ export function ExpandableProfileCard({
   onToggleFavorite,
   onView,
   price,
+  featured = false,
 }: ExpandableProfileCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
+  const copiedTimer = useRef<number | null>(null)
 
-  const handleShare = (e: React.MouseEvent) => {
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+    }
+  }, [])
+
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const shareUrl = `${window.location.origin}/profile/${name.toLowerCase().replace(/\s+/g, "-")}`
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    const slug =
+      id ?? name.toLowerCase().replace(/\s+/g, "-")
+    const shareUrl = `${window.location.origin}/listing/${slug}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: name, url: shareUrl })
+        return
+      }
+      await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+      copiedTimer.current = window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* share dismissed or clipboard denied */
+    }
   }
 
   return (
@@ -83,7 +107,7 @@ export function ExpandableProfileCard({
             setIsExpanded((prev) => !prev)
           }
         }}
-        className="relative block w-full cursor-pointer text-left"
+        className="relative block w-full cursor-pointer text-left focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {/* Full-width background image */}
         <div className="relative h-48 overflow-hidden sm:h-56">
@@ -92,6 +116,14 @@ export function ExpandableProfileCard({
             alt={name}
             className="h-full w-full object-cover"
           />
+
+          {/* Featured badge */}
+          {featured && (
+            <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-2.5 py-1 text-[10px] font-bold text-black shadow-md">
+              <Star className="size-3 fill-black" />
+              Featured
+            </span>
+          )}
 
           {/* Top-right actions: view + photo count */}
           <div className="absolute top-3 right-3 flex items-center gap-1.5">

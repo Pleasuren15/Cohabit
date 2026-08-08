@@ -1,5 +1,6 @@
 import { type SelectHTMLAttributes, forwardRef } from "react"
 import { ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export interface NativeSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   className?: string
@@ -8,9 +9,10 @@ export interface NativeSelectProps extends SelectHTMLAttributes<HTMLSelectElemen
 const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
   ({ className, children, ...props }, ref) => {
     return (
-      <div className={`relative ${className || ""}`}>
+      <div data-slot="native-select" className={cn("relative", className)}>
         <select
           ref={ref}
+          data-slot="native-select-trigger"
           className="w-full appearance-none bg-transparent px-3 py-2.5 pr-8 text-sm text-foreground outline-none"
           {...props}
         >

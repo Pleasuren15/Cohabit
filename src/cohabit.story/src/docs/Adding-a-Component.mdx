@@ -1,0 +1,45 @@
+import { Meta, Markdown } from "@storybook/addon-docs/blocks"
+
+<Meta title="Guides/Adding a Component" />
+
+# Adding a Component
+
+<Markdown>
+All components live in `src/components` grouped by purpose. To add a new one:
+
+1. Create the component in the relevant folder, e.g. `src/components/ui/my-thing.tsx`.
+2. Add a sibling story file `my-thing.stories.tsx`.
+3. Give the story a `title` prefixed with its group (`ui/`, `base-ui/`, `layout/`, `loading-ui/`).
+4. Tag it with `["autodocs"]` so the docs page is generated automatically.
+
+## Story file template
+
+```tsx
+import type { Meta, StoryObj } from "@storybook/react"
+
+import { MyThing } from "./my-thing"
+
+const meta = {
+  title: "ui/MyThing",
+  component: MyThing,
+  parameters: { layout: "centered" },
+  tags: ["autodocs"],
+} satisfies Meta<typeof MyThing>
+
+export default meta
+type Story = StoryObj<typeof meta>
+
+export const Default: Story = {
+  args: { label: "Hello" },
+}
+```
+
+## Accessibility & tests
+
+- Every story is run through axe-core (`a11y.test: "error"`). If a story cannot
+  pass a rule legitimately, override it at the story level with
+  `parameters.a11y.config.rules` and document why.
+- Interactive stories should include a `play` function (from `storybook/test`)
+  that exercises the interaction so it runs in CI via the Vitest addon.
+- To preview a component in dark mode, flip the **Theme** toolbar toggle.
+</Markdown>

@@ -5,17 +5,19 @@ on:
     branches: [main]
     paths:
       - 'src/cohabit.web/**'
+      - 'src/cohabit.story/**'
       - 'test/cohabit.web.vite.tests/**'
       - '.github/workflows/cohabit.web.yml'
   pull_request:
     branches: [main]
     paths:
       - 'src/cohabit.web/**'
+      - 'src/cohabit.story/**'
       - 'test/cohabit.web.vite.tests/**'
       - '.github/workflows/cohabit.web.yml'
 
 jobs:
-  build-and-test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,29 +28,62 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install web dependencies
         working-directory: src/cohabit.web
         run: npm install
 
-      - name: Typecheck
+      - name: Typecheck web
         working-directory: src/cohabit.web
         run: npm run typecheck
 
-      - name: Build
+      - name: Build web
         working-directory: src/cohabit.web
         run: npm run build
 
-      - name: Run unit tests
+      - name: Run web unit tests
         working-directory: src/cohabit.web
         run: npm run test
 
-      - name: Publish coverage
+      - name: Publish web coverage
         working-directory: src/cohabit.web
         run: npm run coverage
 
-      - name: Upload coverage report
+      - name: Install story dependencies
+        working-directory: src/cohabit.story
+        run: npm install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('src/cohabit.story/package.json') }}
+
+      - name: Install Playwright browser
+        working-directory: src/cohabit.story
+        run: npx playwright install chromium --with-deps
+
+      - name: Typecheck story
+        working-directory: src/cohabit.story
+        run: npm run typecheck
+
+      - name: Build Storybook
+        working-directory: src/cohabit.story
+        run: npm run build:static
+
+      - name: Run Storybook interaction tests
+        working-directory: src/cohabit.story
+        run: npm test
+
+      - name: Upload web coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cohabit-web-coverage
           path: src/cohabit.web/coverage
+
+      - name: Upload Storybook build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cohabit-storybook-static
+          path: src/cohabit.story/storybook-static

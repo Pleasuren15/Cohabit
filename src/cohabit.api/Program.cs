@@ -81,3 +81,5 @@ app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
 
 app.Run();
+
+public partial class Program { }
