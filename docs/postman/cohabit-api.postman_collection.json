@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "ad47925b-7258-4442-a9af-412c7f76d753",
     "name": "Cohabit API",
-    "description": "API collection for the Cohabit platform.\n\n**Setup**\n1. Import this collection and the `cohabit-api.postman_environment.json` environment.\n2. Select the **Cohabit API (local)** environment in the top-right dropdown.\n3. `baseUrl` defaults to `http://localhost:5001` (the Aspire-hosted API).\n\n**Seeded data**\nLookup ids (provinces, listing types, amenities, rules, verification types) and entity ids (user, address, listing) are pre-loaded as environment variables, so you don't need to call list endpoints first. After a successful create request, the id is auto-captured into the environment for follow-up update/delete requests.",
+    "description": "API collection for the Cohabit platform.\n\n**Setup**\n1. Import this collection and the `cohabit-api.postman_environment.json` environment.\n2. Select the **Cohabit API (local)** environment in the top-right dropdown.\n3. `baseUrl` defaults to `http://localhost:5001` (cohabit API) and `commsBaseUrl` to `http://localhost:5002` (comms API, both Aspire-hosted).\n4. The OTP endpoints require a Bearer token: paste a JWT (with `sub`, `phone_number` and `email` claims) into the `token` environment variable.\n\n**Seeded data**\nLookup ids (provinces, listing types, amenities, rules, verification types) and entity ids (user, address, listing) are pre-loaded as environment variables, so you don't need to call list endpoints first. After a successful create request, the id is auto-captured into the environment for follow-up update/delete requests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -504,12 +504,90 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Comms API",
+      "item": [
+        {
+          "name": "OTP",
+          "item": [
+            {
+              "name": "Request OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": "{{commsBaseUrl}}/api/otp/request",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"channel\": \"Sms\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Dispatches an OTP to the JWT user via the selected channel (`Sms` | `Email`). The destination is resolved from the token's `phone_number`/`email` claim. Rate-limited to 2 requests per user per 15 minutes (429 on the 3rd). Requires a valid Bearer token in the `token` environment variable."
+              },
+              "response": []
+            },
+            {
+              "name": "Verify OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": "{{commsBaseUrl}}/api/otp/verify",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"channel\": \"Sms\",\n  \"code\": \"123456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Verifies a received OTP for the JWT user. A correct code is consumed (one-time use, so it verifies at most once). Returns 200 with `isValid: true/false`; a malformed code returns 400. Requires a valid Bearer token in the `token` environment variable."
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:5001"
+    },
+    {
+      "key": "commsBaseUrl",
+      "value": "http://localhost:5002"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "messageId",
+      "value": ""
     },
     {
       "key": "userId",
