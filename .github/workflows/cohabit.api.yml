@@ -19,7 +19,7 @@ on:
       - 'cohabit.slnx'
 
 jobs:
-  build-and-test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,51 +36,36 @@ jobs:
       - name: Build
         run: dotnet build cohabit.slnx --no-restore --configuration Release
 
-      - name: Run tests
+      - name: Run unit tests
         run: >-
           dotnet test test/cohabit.api.unit.tests/cohabit.api.unit.tests.csproj
+          --no-build
           --no-restore
           --configuration Release
           --logger trx
-          --results-directory ./TestResults
+          --results-directory ./TestResults/unit
           --verbosity normal
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cohabit-api-test-results
-          path: ./TestResults
-
-  integration-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore cohabit.slnx
-
-      - name: Build
-        run: dotnet build cohabit.slnx --no-restore --configuration Release
 
       - name: Run integration tests
         run: >-
           dotnet test test/cohabit.api.integration.tests/cohabit.api.integration.tests.csproj
+          --no-build
           --no-restore
           --configuration Release
           --logger trx
-          --results-directory ./TestResults
+          --results-directory ./TestResults/integration
           --verbosity normal
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
+      - name: Upload unit test results
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cohabit-api-unit-test-results
+          path: ./TestResults/unit
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: cohabit-api-integration-test-results
-          path: ./TestResults
+          path: ./TestResults/integration
