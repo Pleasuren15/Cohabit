@@ -19,7 +19,7 @@ on:
       - 'cohabit.slnx'
 
 jobs:
-  ci:
+  build-and-unit-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -46,6 +46,31 @@ jobs:
           --results-directory ./TestResults/unit
           --verbosity normal
 
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cohabit-api-unit-test-results
+          path: ./TestResults/unit
+
+  integration-tests:
+    needs: build-and-unit-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore cohabit.slnx
+
+      - name: Build
+        run: dotnet build cohabit.slnx --no-restore --configuration Release
+
       - name: Run integration tests
         run: >-
           dotnet test test/cohabit.api.integration.tests/cohabit.api.integration.tests.csproj
@@ -55,13 +80,6 @@ jobs:
           --logger trx
           --results-directory ./TestResults/integration
           --verbosity normal
-
-      - name: Upload unit test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cohabit-api-unit-test-results
-          path: ./TestResults/unit
 
       - name: Upload integration test results
         if: always()
