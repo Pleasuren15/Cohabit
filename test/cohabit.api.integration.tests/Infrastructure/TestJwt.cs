@@ -38,12 +38,18 @@ public static class TestJwt
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey ?? SigningKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var now = DateTime.UtcNow;
+        var effectiveExpires = expires ?? now.AddMinutes(60);
+        // Keep NotBefore strictly before Expires (JWT requires Expires > NotBefore),
+        // even when a caller asks for an already-expired token.
+        var notBefore = effectiveExpires < now ? effectiveExpires.AddMinutes(-1) : now.AddMinutes(-1);
+
         var token = new JwtSecurityToken(
             issuer: Issuer,
             audience: Audience,
             claims: claims,
-            notBefore: DateTime.UtcNow.AddMinutes(-1),
-            expires: expires ?? DateTime.UtcNow.AddMinutes(60),
+            notBefore: notBefore,
+            expires: effectiveExpires,
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
