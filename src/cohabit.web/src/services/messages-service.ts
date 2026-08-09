@@ -9,7 +9,6 @@
  */
 
 import { API_BASE_URL, USE_MOCK_DATA } from "@/services/config"
-import { DEMO_USER_ID } from "@/services/favorites-service"
 
 export interface SystemMessageDto {
   id: string
@@ -34,8 +33,8 @@ export interface MessageThread {
 }
 
 export interface MessagesService {
-  loadMessages(): Promise<SystemMessageDto[]>
-  markRead(messageId: string): Promise<void>
+  loadMessages(userId: string): Promise<SystemMessageDto[]>
+  markRead(userId: string, messageId: string): Promise<void>
 }
 
 /** Groups messages into threads by conversation, newest thread first. */
@@ -74,27 +73,27 @@ export function groupMessages(messages: SystemMessageDto[]): MessageThread[] {
 
 /** Mock implementation: returns the sample thread set. */
 class MockMessagesService implements MessagesService {
-  async loadMessages(): Promise<SystemMessageDto[]> {
+  async loadMessages(_userId: string): Promise<SystemMessageDto[]> {
     return MOCK_MESSAGES
   }
 
-  async markRead(_messageId: string): Promise<void> {}
+  async markRead(_userId: string, _messageId: string): Promise<void> {}
 }
 
 /** Persists to the Cohabit API. */
 class HttpMessagesService implements MessagesService {
-  private url(path = ""): string {
-    return `${API_BASE_URL}/api/users/${DEMO_USER_ID}/messages${path}`
+  private url(userId: string, path = ""): string {
+    return `${API_BASE_URL}/api/users/${userId}/messages${path}`
   }
 
-  async loadMessages(): Promise<SystemMessageDto[]> {
-    const res = await fetch(this.url())
+  async loadMessages(userId: string): Promise<SystemMessageDto[]> {
+    const res = await fetch(this.url(userId))
     if (!res.ok) throw new Error(`Failed to load messages (${res.status})`)
     return (await res.json()) as SystemMessageDto[]
   }
 
-  async markRead(messageId: string): Promise<void> {
-    const res = await fetch(this.url(`/${messageId}/read`), {
+  async markRead(userId: string, messageId: string): Promise<void> {
+    const res = await fetch(this.url(userId, `/${messageId}/read`), {
       method: "PATCH",
     })
     if (!res.ok) throw new Error(`Failed to mark message read (${res.status})`)

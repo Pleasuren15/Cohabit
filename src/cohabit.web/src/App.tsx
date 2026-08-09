@@ -23,6 +23,7 @@ import {
   Lock,
   AlertTriangle,
   ArrowLeft,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react"
 import { FlipText } from "@/components/ui/flip-text"
@@ -40,7 +41,7 @@ import { PROVINCE_SHAPES } from "@/lib/province-shapes"
 import { PROVINCES } from "@/lib/provinces"
 import { cn } from "@/lib/utils"
 import { FamilyReceiveComponent } from "@/components/ui/family-receive-component"
-import { Auth3 } from "@/components/ui/auth-03"
+import { Auth3, type SignUpDetails } from "@/components/ui/auth-03"
 import {
   Tabs,
   TabsList,
@@ -54,6 +55,7 @@ import { DetailPage } from "@/components/ui/detail-page"
 import { ErrorOne } from "@/components/ui/error-1"
 import {
   MinimalCarousel,
+  type CarouselBadge,
   type CarouselCard,
 } from "@/components/ui/minimal-carousel"
 import {
@@ -75,6 +77,7 @@ import {
   type VerificationType,
 } from "@/services/listing-service"
 import { USE_MOCK_DATA } from "@/services/config"
+import { authService } from "@/services/auth-service"
 import { DEMO_USER_ID } from "@/services/favorites-service"
 import { userService } from "@/services/user-service"
 import {
@@ -86,23 +89,11 @@ import {
 } from "@/services/messages-service"
 import { Routes, Route, useNavigate, useParams } from "react-router-dom"
 import { AppProvider, useApp } from "@/context/app-context"
+import { useUnfavoriteConfirm } from "@/components/ui/unfavorite-confirm"
+import { HowCohabitWorks } from "@/components/ui/how-cohabit-works"
 
 export { FEATURED_PROFILES }
 export type { FeaturedProfile, VerificationType }
-
-const MOCK_USER: UserData = {
-  id: "user-1",
-  firstName: "Thabo",
-  lastName: "Mokoena",
-  cellphone: "+27 82 123 4567",
-  email: "thabo.m@example.com",
-  dateOfBirth: "1994-05-12",
-  gender: "male",
-  bio: "Creative graphic designer looking for a shared space.",
-  isOtpVerified: true,
-  avatarUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=200&h=200",
-  timestamp: "June 2025",
-}
 
 const COHABIT_PHRASES = ["Find Your Match", "Share Your Space", "Live Together"]
 
@@ -251,6 +242,34 @@ const WATCHLIST_GRADIENTS = [
   "bg-gradient-to-br from-fuchsia-500 to-pink-600",
   "bg-gradient-to-br from-orange-500 to-red-600",
 ]
+
+const NEW_BADGE_WINDOW_MS = 3 * 86_400_000
+
+function formatSavedAt(ts: number): string {
+  if (ts <= 0) return ""
+  const diff = Date.now() - ts
+  if (diff < 86_400_000) return "today"
+  if (diff < 2 * 86_400_000) return "yesterday"
+  return new Date(ts).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  })
+}
+
+function watchlistBadge(
+  p: FeaturedProfile,
+  savedAt: Record<string, number>,
+  promotedIds: Set<string>
+): CarouselBadge | undefined {
+  const ts = savedAt[p.id]
+  if (ts !== undefined && Date.now() - ts < NEW_BADGE_WINDOW_MS) {
+    return { label: "New", tone: "new" }
+  }
+  if (p.featured === true || promotedIds.has(p.id)) {
+    return { label: "Featured", tone: "updated" }
+  }
+  return undefined
+}
 
 /** Shared full-bleed backdrop: MeshBackground + legibility scrim + decorative province shapes. */
 function AppShell({ children }: { children: ReactNode }) {
@@ -450,11 +469,13 @@ function MainApp({
   setShowAuth,
   currentUser,
   setCurrentUser,
+  onSignOut,
 }: {
   province: string
   setShowAuth: (show: boolean) => void
   currentUser: UserData | null
   setCurrentUser: (user: UserData | null) => void
+  onSignOut: () => Promise<void>
 }) {
   const navigate = useNavigate()
   const {
@@ -463,6 +484,8 @@ function MainApp({
     setActiveTab,
     favorites,
     toggleFavorite,
+    savedAt,
+    clearFavorites,
     favoriteProfiles,
     promotedIds,
     allListings,
@@ -474,11 +497,19 @@ function MainApp({
   const [messages, setMessages] = useState<SystemMessageDto[]>([])
   const [userListings, setUserListings] = useState<FeaturedProfile[]>([])
 
+  const { handleToggle, dialog: unfavoriteDialog } =
+    useUnfavoriteConfirm(toggleFavorite)
+  const handleFavoriteToggle = useCallback(
+    (id: string) => handleToggle(id, favorites.has(id)),
+    [favorites, handleToggle]
+  )
+
   const handleUpdateUser = useCallback(
     async (updated: UserData) => {
       try {
         const saved = await userService.updateUser(updated)
-        setCurrentUser(saved)
+        // The API DTO has no free-text address; keep the one from the edit form.
+        setCurrentUser({ ...saved, address: updated.address ?? saved.address })
         toast.success("Profile updated", {
           description: "Your profile has been saved.",
         })
@@ -595,7 +626,7 @@ function MainApp({
   useEffect(() => {
     let cancelled = false
     messagesService
-      .loadMessages()
+      .loadMessages(currentUser?.id ?? DEMO_USER_ID)
       .then((items) => {
         if (cancelled) return
         setMessages(items.length > 0 ? items : MOCK_MESSAGES)
@@ -607,7 +638,7 @@ function MainApp({
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [currentUser])
 
   const messageGroups = useMemo(() => groupMessages(messages), [messages])
 
@@ -697,9 +728,50 @@ function MainApp({
           value: p.location,
           color: WATCHLIST_GRADIENTS[i % WATCHLIST_GRADIENTS.length],
           imageSrc: p.imageSrc,
+          badge: watchlistBadge(p, savedAt, promotedIds),
         })),
-    [allListings, favorites, favoriteProfiles]
+    [allListings, favorites, favoriteProfiles, savedAt, promotedIds]
   )
+
+  const similarCards: CarouselCard[] = useMemo(() => {
+    if (watchlistCards.length === 0) return []
+    const favProvinces = new Set(
+      (USE_MOCK_DATA ? allListings : favoriteProfiles)
+        .filter((p) => favorites.has(p.id))
+        .map((p) => p.province)
+    )
+    const favPrices = (USE_MOCK_DATA ? allListings : favoriteProfiles)
+      .filter((p) => favorites.has(p.id))
+      .map((p) => p.price)
+    if (favPrices.length === 0) return []
+    const minPrice = Math.min(...favPrices)
+    const maxPrice = Math.max(...favPrices)
+    return allListings
+      .filter(
+        (p) =>
+          !favorites.has(p.id) &&
+          favProvinces.has(p.province) &&
+          p.price >= minPrice * 0.8 &&
+          p.price <= maxPrice * 1.25
+      )
+      .slice(0, 6)
+      .map((p, i) => ({
+        id: p.id,
+        title: p.name,
+        value: p.location,
+        color: WATCHLIST_GRADIENTS[i % WATCHLIST_GRADIENTS.length],
+        imageSrc: p.imageSrc,
+      }))
+  }, [allListings, favorites, favoriteProfiles, watchlistCards.length])
+
+  const lastSavedAt = useMemo(() => {
+    let max = 0
+    for (const id of favorites) {
+      const ts = savedAt[id]
+      if (ts !== undefined && ts > max) max = ts
+    }
+    return max
+  }, [favorites, savedAt])
 
   const dockItems: DockItem[] = [
     {
@@ -859,7 +931,7 @@ function MainApp({
                         isFavorited={favorites.has(
                           (item as FeaturedProfile).id
                         )}
-                        onToggleFavorite={toggleFavorite}
+                        onToggleFavorite={handleFavoriteToggle}
                         onView={handleViewListing}
                       />
                     )
@@ -880,13 +952,37 @@ function MainApp({
             )}
 
             {activeTab === "WatchList" && (
-              <PageHeader
-                icon={Heart}
-                title="WatchList"
-                iconClassName={
-                  watchlistCards.length > 0 ? "fill-red-500 text-red-500" : ""
-                }
-              />
+              <div className="flex flex-col gap-2">
+                <PageHeader
+                  icon={Heart}
+                  title="WatchList"
+                  iconClassName={
+                    watchlistCards.length > 0
+                      ? "fill-red-500 text-red-500"
+                      : ""
+                  }
+                />
+                <div className="-mt-3 flex w-full items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {watchlistCards.length} saved
+                    {lastSavedAt > 0 && (
+                      <>
+                        {" "}
+                        · last saved {formatSavedAt(lastSavedAt)}
+                      </>
+                    )}
+                  </p>
+                  {watchlistCards.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void clearFavorites()}
+                      className="rounded-full border border-border bg-background/60 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
 
             {activeTab === "Messages" && (
@@ -907,6 +1003,20 @@ function MainApp({
 
             {activeTab === "Info" && (
               <div className="flex flex-col items-center gap-5">
+                {/* Band 0 — How Cohabit works */}
+                <section className="w-full bg-background/70 px-5 py-5 sm:px-6">
+                  <div className="w-full">
+                    <PageHeader
+                      icon={Sparkles}
+                      title="How Cohabit works"
+                      subtitle="Four simple steps to find your next housemate."
+                    />
+                  </div>
+                  <div className="w-full pt-4">
+                    <HowCohabitWorks />
+                  </div>
+                </section>
+
                 {/* Band 1 — Trust & Safety + Verification */}
                 <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="flex flex-col items-center">
@@ -1178,26 +1288,47 @@ function MainApp({
                   }
                 }}
                 onUpdateUser={handleUpdateUser}
-                onToggleFavorite={toggleFavorite}
+                onToggleFavorite={handleFavoriteToggle}
                 onViewListing={handleViewListing}
                 onAddListing={handleAddListing}
                 onUpdateListing={handleUpdateListing}
                 getListingDetail={(id) =>
                   listingService.getListingById(id, allListings)
                 }
+                onSignOut={onSignOut}
               />
             )}
           </div>
 
           {/* WatchList carousel — full width, outside max-w-md */}
           {activeTab === "WatchList" && watchlistCards.length > 0 && (
-            <MinimalCarousel
-              cards={watchlistCards}
-              onFavoriteToggle={(card) => {
-                toggleFavorite(card.id)
-              }}
-              onViewListing={(card) => handleViewListing(card.id)}
-            />
+            <div className="mt-4 flex w-full flex-col items-center gap-6">
+              <MinimalCarousel
+                cards={watchlistCards}
+                onFavoriteToggle={(card) => {
+                  handleFavoriteToggle(card.id)
+                }}
+                onViewListing={(card) => handleViewListing(card.id)}
+              />
+
+              {/* Similar matches */}
+              {similarCards.length > 0 && (
+                <div className="w-full">
+                  <PageHeader
+                    icon={Sparkles}
+                    title="More like this"
+                    subtitle="Based on the listings you've saved"
+                  />
+                  <MinimalCarousel
+                    cards={similarCards}
+                    onFavoriteToggle={(card) => {
+                      handleFavoriteToggle(card.id)
+                    }}
+                    onViewListing={(card) => handleViewListing(card.id)}
+                  />
+                </div>
+              )}
+            </div>
           )}
 
           {/* WatchList empty state */}
@@ -1306,6 +1437,7 @@ function MainApp({
           </motion.div>
         )}
       </AnimatePresence>
+      {unfavoriteDialog}
     </>
   )
 }
@@ -1322,17 +1454,99 @@ export function App() {
 
 /** App-wide shell: auth overlay, onboarding dialog and toasts on every route. */
 function AppFrame() {
-  const { setActiveTab } = useApp()
+  const { setActiveTab, setCurrentUserId } = useApp()
   const [showAuth, setShowAuth] = useState(false)
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
 
-  const handleAuthenticated = () => {
-    setCurrentUser(
-      USE_MOCK_DATA ? MOCK_USER : { ...MOCK_USER, id: DEMO_USER_ID }
-    )
-    setShowAuth(false)
-    setActiveTab("Profile")
-  }
+  // Mirror the signed-in user's id into the app context so route-level
+  // components (e.g. the message detail page) can scope their data.
+  useEffect(() => {
+    setCurrentUserId(currentUser?.id ?? null)
+  }, [currentUser, setCurrentUserId])
+
+  // Restore the Supabase session on boot and keep `currentUser` in sync.
+  useEffect(() => {
+    let cancelled = false
+    authService
+      .getSessionUser()
+      .then((user) => {
+        if (!cancelled && user) setCurrentUser(user)
+      })
+      .catch((err: unknown) =>
+        console.error("Failed to restore auth session", err)
+      )
+    const unsubscribe = authService.onAuthStateChange((user) => {
+      if (cancelled) return
+      setCurrentUser(user)
+    })
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [])
+
+  const syncCurrentUser = useCallback(async () => {
+    try {
+      await authService.syncUser()
+    } catch (err) {
+      toast.error("Couldn't sync your account", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      })
+    }
+  }, [])
+
+  const handleSignIn = useCallback(
+    async (email: string, password: string) => {
+      const result = await authService.signIn(email, password)
+      if (result.user) {
+        setCurrentUser(result.user)
+        setShowAuth(false)
+        setActiveTab("Profile")
+        void syncCurrentUser()
+      }
+    },
+    [setActiveTab, syncCurrentUser]
+  )
+
+  const handleSignUp = useCallback(
+    async (details: SignUpDetails) => {
+      const result = await authService.signUp({
+        name: details.name,
+        email: details.email,
+        password: details.password,
+        dateOfBirth: details.dateOfBirth,
+        province: details.province,
+      })
+      if (result.emailConfirmationRequired) {
+        setShowAuth(false)
+        toast.success("Check your inbox", {
+          description: "We sent a confirmation link to your email address.",
+        })
+        return
+      }
+      if (result.user) {
+        setCurrentUser(result.user)
+        setShowAuth(false)
+        setActiveTab("Profile")
+        void syncCurrentUser()
+      }
+    },
+    [setActiveTab, syncCurrentUser]
+  )
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await authService.signOut()
+      setCurrentUser(null)
+      toast.success("Signed out", {
+        description: "You've been signed out of your account.",
+      })
+    } catch (err) {
+      toast.error("Couldn't sign out", {
+        description: err instanceof Error ? err.message : "Please try again.",
+      })
+    }
+  }, [])
 
   return (
     <>
@@ -1361,10 +1575,7 @@ function AppFrame() {
               >
                 <X className="size-5" />
               </button>
-              <Auth3
-                onSignIn={handleAuthenticated}
-                onSignUp={handleAuthenticated}
-              />
+              <Auth3 onSignIn={handleSignIn} onSignUp={handleSignUp} />
             </motion.div>
           </motion.div>
         )}
@@ -1383,6 +1594,7 @@ function AppFrame() {
               setShowAuth={setShowAuth}
               currentUser={currentUser}
               setCurrentUser={setCurrentUser}
+              onSignOut={handleSignOut}
             />
           }
         />
@@ -1405,10 +1617,12 @@ function AppRoot({
   setShowAuth,
   currentUser,
   setCurrentUser,
+  onSignOut,
 }: {
   setShowAuth: (show: boolean) => void
   currentUser: UserData | null
   setCurrentUser: (user: UserData | null) => void
+  onSignOut: () => Promise<void>
 }) {
   const { province, setProvince } = useApp()
 
@@ -1422,6 +1636,7 @@ function AppRoot({
       setShowAuth={setShowAuth}
       currentUser={currentUser}
       setCurrentUser={setCurrentUser}
+      onSignOut={onSignOut}
     />
   )
 }
@@ -1442,6 +1657,9 @@ function ListingDetailPage() {
     id: string
     listing: FeaturedProfile | null
   } | null>(null)
+
+  const { handleToggle, dialog: unfavoriteDialog } =
+    useUnfavoriteConfirm(toggleFavorite)
 
   useEffect(() => {
     let cancelled = false
@@ -1498,21 +1716,26 @@ function ListingDetailPage() {
   const related = allListings.filter((p) => p.id !== listing.id)
 
   return (
-    <DetailPage
-      key={listing.id}
-      {...listing}
-      featured={listing.featured === true || promotedIds.has(listing.id)}
-      isFavorited={favorites.has(listing.id)}
-      onToggleFavorite={() => toggleFavorite(listing.id)}
-      onPromote={() => promoteListing(listing.id)}
-      onRequestView={() => {
-        setActiveTab("Messages")
-        navigate("/")
-      }}
-      onBack={() => navigate(-1)}
-      relatedListings={related}
-      onViewRelated={(rid) => navigate(`/listing/${rid}`)}
-    />
+    <>
+      <DetailPage
+        key={listing.id}
+        {...listing}
+        featured={listing.featured === true || promotedIds.has(listing.id)}
+        isFavorited={favorites.has(listing.id)}
+        onToggleFavorite={() =>
+          handleToggle(listing.id, favorites.has(listing.id))
+        }
+        onPromote={() => promoteListing(listing.id)}
+        onRequestView={() => {
+          setActiveTab("Messages")
+          navigate("/")
+        }}
+        onBack={() => navigate(-1)}
+        relatedListings={related}
+        onViewRelated={(rid) => navigate(`/listing/${rid}`)}
+      />
+      {unfavoriteDialog}
+    </>
   )
 }
 
@@ -1520,6 +1743,7 @@ function ListingDetailPage() {
 function MessageDetailPage() {
   const { conversationId } = useParams<{ conversationId: string }>()
   const navigate = useNavigate()
+  const { currentUserId } = useApp()
   const [state, setState] = useState<{
     id: string
     thread: MessageThread | null
@@ -1527,6 +1751,7 @@ function MessageDetailPage() {
 
   useEffect(() => {
     let cancelled = false
+    const userId = currentUserId ?? DEMO_USER_ID
     const load = (items: SystemMessageDto[]) => {
       if (cancelled) return
       const list = items.length > 0 ? items : MOCK_MESSAGES
@@ -1537,16 +1762,20 @@ function MessageDetailPage() {
 
       if (thread) {
         for (const message of thread.messages) {
-          if (!message.isRead) messagesService.markRead(message.id).catch(() => {})
+          if (!message.isRead)
+            messagesService.markRead(userId, message.id).catch(() => {})
         }
       }
     }
 
-    messagesService.loadMessages().then(load).catch(() => load(MOCK_MESSAGES))
+    messagesService
+      .loadMessages(userId)
+      .then(load)
+      .catch(() => load(MOCK_MESSAGES))
     return () => {
       cancelled = true
     }
-  }, [conversationId])
+  }, [conversationId, currentUserId])
 
   const current = state && state.id === conversationId ? state : null
   const thread = current?.thread ?? null

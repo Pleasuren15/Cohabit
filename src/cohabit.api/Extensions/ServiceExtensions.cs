@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json.Serialization;
 using cohabit.api.DatabaseAccessors;
 using cohabit.api.Helpers;
@@ -5,6 +7,8 @@ using cohabit.api.Infrastructure;
 using cohabit.api.Services;
 using cohabit.application.Data;
 using cohabit.application.Data.Seeding;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Hosting;
 
 namespace cohabit.api.Extensions;
@@ -26,6 +30,38 @@ public static class ServiceExtensions
                 options.Filters.Add<ApiExceptionFilter>();
                 options.ModelBinderProviders.Insert(0, new IntListModelBinderProvider());
             });
+
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                var jwt = builder.Configuration.GetSection("Jwt");
+                var authority = jwt["Authority"];
+                var signingKey = jwt["SigningKey"];
+                var useAuthority = !string.IsNullOrWhiteSpace(authority);
+                var useSymmetric = !string.IsNullOrWhiteSpace(signingKey);
+
+                options.MapInboundClaims = false;
+                if (useAuthority)
+                    options.Authority = authority;
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    // Supabase email/password access tokens carry `iss: "supabase"` even though the
+                    // OIDC discovery issuer is the auth URL. When validating against Supabase's JWKS
+                    // the ES256 signature is the source of trust, so issuer is not enforced there.
+                    ValidateIssuer = !useAuthority && !string.IsNullOrWhiteSpace(jwt["Issuer"]),
+                    ValidIssuer = jwt["Issuer"],
+                    ValidateAudience = !string.IsNullOrWhiteSpace(jwt["Audience"]),
+                    ValidAudience = jwt["Audience"],
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = useSymmetric,
+                    IssuerSigningKey = useSymmetric
+                        ? new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey!))
+                        : null,
+                    ClockSkew = TimeSpan.FromMinutes(1)
+                };
+            });
+        builder.Services.AddAuthorization();
 
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<ICache, InMemoryCache>();
@@ -58,6 +94,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IAddressService, AddressService>();
         builder.Services.AddScoped<IWatchListService, WatchListService>();
         builder.Services.AddScoped<ISystemMessagingService, SystemMessagingService>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
 
         builder.Services.AddScoped<ILookupSeeder, ProvinceSeeder>();
         builder.Services.AddScoped<ILookupSeeder, ListingTypeSeeder>();

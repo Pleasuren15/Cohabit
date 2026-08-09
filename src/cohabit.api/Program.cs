@@ -36,6 +36,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();

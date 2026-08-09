@@ -37,4 +37,12 @@ internal sealed class CountingUserAccessor(IUserAccessor inner) : IUserAccessor
         DeleteCalls++;
         await inner.DeleteAsync(userId, ct);
     }
+
+    public int SyncCalls { get; private set; }
+
+    public async Task<(User User, bool IsNew)> SyncFromJwtAsync(JwtUserProfile profile, CancellationToken ct = default)
+    {
+        SyncCalls++;
+        return await inner.SyncFromJwtAsync(profile, ct);
+    }
 }
