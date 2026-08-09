@@ -37,8 +37,8 @@ public sealed class TestData
         db.ListingTypes.AddRange(Room, Apartment);
         await db.SaveChangesAsync();
 
-        var alice = User.CreateFromJwt("Alice", "Smith", DateOnly.Parse("1995-01-01"), 'F');
-        var bob = User.CreateFromJwt("Bob", "Jones", DateOnly.Parse("1992-05-05"), 'M');
+        var alice = User.CreateFromJwt(Guid.NewGuid(), "Alice", "Smith", DateOnly.Parse("1995-01-01"), 'F', null, null, null);
+        var bob = User.CreateFromJwt(Guid.NewGuid(), "Bob", "Jones", DateOnly.Parse("1992-05-05"), 'M', null, null, null);
         Alice = alice;
         Bob = bob;
         db.Users.AddRange(alice, bob);

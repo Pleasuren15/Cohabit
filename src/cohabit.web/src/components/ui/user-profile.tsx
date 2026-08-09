@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef, useId, type FormEvent } from "react"
+import { useState, useCallback, useEffect, useRef, useId, useMemo, type FormEvent } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
   User,
@@ -20,6 +20,10 @@ import {
   Plus,
   Building2,
   LogOut,
+  Camera,
+  PenLine,
+  AlertTriangle,
+  type LucideIcon,
 } from "lucide-react"
 import type { FeaturedProfile } from "@/App"
 import {
@@ -30,6 +34,9 @@ import { AMENITIES, AMENITY_NAMES } from "@/lib/amenities"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 import { EditProfile, type ProfileData } from "./edit-profile"
 import { FileUpload, type FileItem, type FileStatus } from "./file-upload-2"
+import { TaskWidget, type TaskData, type Subtask } from "./task-widget-disclosure"
+import { PrivacyDialog } from "./privacy-dialog"
+import { authService } from "@/services/auth-service"
 
 export interface UserData {
   id: string
@@ -41,6 +48,7 @@ export interface UserData {
   gender: string
   bio: string
   isOtpVerified: boolean
+  address?: string
   avatarUrl?: string
   timestamp?: string
 }
@@ -200,6 +208,81 @@ export function UserProfile({
 
   const fullName = `${user.firstName} ${user.lastName}`
 
+  // Profile-completeness: every missing detail is a step towards a fully set-up
+  // account. Progress reflects how far the profile is from being complete.
+  const completionSteps = useMemo(
+    () =>
+      [
+        {
+          id: "photo",
+          label: "Add a profile photo",
+          hint: "Help others recognise you",
+          icon: Camera,
+          completed: Boolean(user.avatarUrl),
+        },
+        {
+          id: "bio",
+          label: "Add a bio",
+          hint: "Tell housemates a little about yourself",
+          icon: PenLine,
+          completed: Boolean(user.bio?.trim()),
+        },
+        {
+          id: "phone",
+          label: "Add your phone number",
+          hint: "So people can reach you",
+          icon: Phone,
+          completed: Boolean(user.cellphone?.trim()),
+        },
+        {
+          id: "dob",
+          label: "Add your date of birth",
+          hint: "Required for identity checks",
+          icon: Calendar,
+          completed:
+            Boolean(user.dateOfBirth) && user.dateOfBirth !== "2000-01-01",
+        },
+        {
+          id: "email",
+          label: "Confirm your email address",
+          hint: "Verify your account ownership",
+          icon: Mail,
+          completed: verified.includes("email"),
+        },
+        {
+          id: "address",
+          label: "Add your address",
+          hint: "Help people find your area",
+          icon: MapPin,
+          completed: Boolean(user.address?.trim()),
+        },
+      ] satisfies { id: string; label: string; hint: string; icon: LucideIcon; completed: boolean }[],
+    [user, verified]
+  )
+
+  const completionData = useMemo<TaskData>(() => {
+    const subtasks: Subtask[] = completionSteps.map(({ id, label, completed }) => ({
+      id,
+      title: label,
+      completed,
+    }))
+    const completedCount = subtasks.filter((s) => s.completed).length
+    const totalCount = subtasks.length
+    const progress = Math.round((completedCount / totalCount) * 100)
+    return {
+      title: "Complete your profile",
+      progress,
+      completedCount,
+      totalCount,
+      priority: progress === 100 ? "Done" : progress >= 60 ? "Medium" : "High",
+      status: progress === 100 ? "Complete" : "In Progress",
+      subtasks,
+      assignees: [],
+    }
+  }, [completionSteps])
+
+  const missingSteps = completionSteps.filter((step) => !step.completed)
+
   const profileData: ProfileData = {
     fullName,
     email: user.email,
@@ -207,6 +290,7 @@ export function UserProfile({
     dateOfBirth: user.dateOfBirth,
     gender: user.gender,
     title: user.bio,
+    address: user.address ?? "",
     avatarUrl: user.avatarUrl || "",
   }
 
@@ -284,9 +368,14 @@ export function UserProfile({
       dateOfBirth: data.dateOfBirth ?? user.dateOfBirth,
       gender: data.gender ?? user.gender,
       bio: data.title,
+      address: data.address,
       avatarUrl: data.avatarUrl || user.avatarUrl,
     }
     try {
+      // The address lives in the Supabase auth profile (the API user has no
+      // free-text address column yet), so persist it there too. This triggers an
+      // auth state change that refreshes the in-memory profile via toUserData.
+      await authService.updateProfileMetadata({ address: data.address ?? "" })
       await onUpdateUser?.(updated)
       setShowEditProfile(false)
     } catch {
@@ -361,6 +450,11 @@ export function UserProfile({
         </div>
       </div>
 
+      {/* Profile completion widget */}
+      <div className="flex justify-center">
+        <TaskWidget data={completionData} />
+      </div>
+
       {/* User Details Card */}
       <div className="overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
         <div className="flex items-center gap-4 bg-gradient-to-r from-accent/5 to-transparent p-5">
@@ -396,12 +490,66 @@ export function UserProfile({
             valueNode={
               <span className="inline-flex items-center gap-1.5">
                 <SouthAfricaFlag className="h-3 w-auto rounded-[1px] ring-1 ring-black/10" />
-                South Africa
+                {user.address?.trim()
+                  ? `${user.address.trim()} · South Africa`
+                  : "South Africa"}
               </span>
             }
           />
           <DetailRow icon={Clock} label="Member since" value={user.timestamp || "July 2025"} />
         </div>
+      </div>
+
+      {/* Missing details */}
+      <div className="rounded-2xl border border-border/40 bg-background p-5 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          {missingSteps.length > 0 ? (
+            <>
+              <AlertTriangle className="size-4 text-amber-500" />
+              <h3 className="text-sm font-semibold">
+                Still missing ({missingSteps.length})
+              </h3>
+            </>
+          ) : (
+            <>
+              <BadgeCheck className="size-4 text-green-500" />
+              <h3 className="text-sm font-semibold">Profile complete</h3>
+            </>
+          )}
+        </div>
+
+        {missingSteps.length > 0 ? (
+          <div className="space-y-2">
+            {missingSteps.map((step) => {
+              const Icon = step.icon
+              return (
+                <div
+                  key={step.id}
+                  className="flex items-center gap-3 rounded-xl border border-dashed border-border/60 px-3 py-2.5"
+                >
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground">
+                    <Icon className="size-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{step.label}</p>
+                    <p className="text-xs text-muted-foreground">{step.hint}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditProfile(true)}
+                    className="shrink-0 rounded-full bg-accent px-3 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90"
+                  >
+                    Add
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            All your details are set — nothing missing.
+          </p>
+        )}
       </div>
 
       {/* Verification Section */}
@@ -441,6 +589,8 @@ export function UserProfile({
           })}
         </div>
       </div>
+
+      <PrivacyDialog />
 
       {/* My Listings */}
       <div className="space-y-3">

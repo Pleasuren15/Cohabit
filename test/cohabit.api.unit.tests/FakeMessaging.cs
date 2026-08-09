@@ -26,8 +26,7 @@ internal sealed class FakeSystemMessagingService : ISystemMessagingService
 
 /// <summary>No-op messaging accessor used by CRUD tests that don't exercise messages.</summary>
 internal sealed class FakeMessagingAccessor : IMessagingAccessor
-{
-    public Task<IReadOnlyList<Message>> GetMessagesAsync(Guid userId, CancellationToken ct = default) =>
+{    public Task<IReadOnlyList<Message>> GetMessagesAsync(Guid userId, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<Message>>(Array.Empty<Message>());
 
     public Task<Message> SendAsync(
@@ -53,4 +52,28 @@ internal sealed class FakeMessagingAccessor : IMessagingAccessor
 
     public Task<string> GetUserDisplayNameAsync(Guid userId, CancellationToken ct = default) =>
         Task.FromResult("Test User");
+}
+
+/// <summary>Records system messages so tests can assert on what was sent.</summary>
+internal sealed class RecordingSystemMessagingService : ISystemMessagingService
+{
+    public List<(Guid UserId, string Title, string Content)> Sent { get; } = [];
+
+    public Task SendAsync(Guid userId, string title, string content, Guid? listingId = null, CancellationToken ct = default)
+    {
+        Sent.Add((userId, title, content));
+        return Task.CompletedTask;
+    }
+
+    public Task SendToListingOwnerAsync(Guid listingId, string title, string content, CancellationToken ct = default) =>
+        Task.CompletedTask;
+
+    public Task SendToListingWatchersAsync(Guid listingId, string title, string content, CancellationToken ct = default) =>
+        Task.CompletedTask;
+
+    public Task<IReadOnlyList<SystemMessageDto>> GetForUserAsync(Guid userId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<SystemMessageDto>>(Array.Empty<SystemMessageDto>());
+
+    public Task MarkReadAsync(Guid userId, Guid messageId, CancellationToken ct = default) =>
+        Task.CompletedTask;
 }

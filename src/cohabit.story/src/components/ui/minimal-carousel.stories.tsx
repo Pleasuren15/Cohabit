@@ -90,3 +90,24 @@ export const Interactive: Story = {
     )
   },
 }
+
+const badgesCards: CarouselCard[] = cards.map((card, i) => ({
+  ...card,
+  badge:
+    i === 0
+      ? { label: "New", tone: "new" }
+      : i === 1
+        ? { label: "Featured", tone: "updated" }
+        : i === 2
+          ? { label: "Off market", tone: "off" }
+          : undefined,
+}))
+
+export const WithBadges: Story = {
+  args: { cards: badgesCards },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByText("New")).toBeVisible()
+  },
+}
+

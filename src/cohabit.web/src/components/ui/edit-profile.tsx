@@ -1,6 +1,6 @@
 import { useState, useEffect, useId } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Mail, Phone, Calendar, Venus, PenLine, Image } from "lucide-react";
+import { X, User, Mail, Phone, Calendar, Venus, PenLine, Image, MapPin } from "lucide-react";
 
 export interface ProfileData {
     fullName: string;
@@ -10,6 +10,7 @@ export interface ProfileData {
     gender: string;
     title: string;
     avatarUrl: string;
+    address: string;
 }
 
 interface EditProfileProps {
@@ -70,6 +71,7 @@ function EditProfileForm({
     const genderId = useId();
     const titleId = useId();
     const avatarUrlId = useId();
+    const addressId = useId();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -216,6 +218,22 @@ function EditProfileForm({
                                             onChange={handleChange}
                                             rows={3}
                                             className={`${fieldClass} resize-none text-[14px]`}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label htmlFor={addressId} className={labelClass}>
+                                            <MapPin className="size-4 shrink-0" />
+                                            Address
+                                        </label>
+                                        <input
+                                            id={addressId}
+                                            name="address"
+                                            title="address"
+                                            value={formData.address}
+                                            onChange={handleChange}
+                                            placeholder="e.g. Sea Point, Cape Town"
+                                            className={fieldClass}
                                         />
                                     </div>
 

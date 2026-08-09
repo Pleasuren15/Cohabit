@@ -54,21 +54,52 @@ public sealed class User
     }
 
     public static User CreateFromJwt(
+        Guid id,
         string firstName,
         string lastName,
-        DateOnly dateOfBirth,
-        char gender)
+        DateOnly? dateOfBirth,
+        char gender,
+        string? email,
+        string? cellphone,
+        string? avatarUrl)
     {
         return new User
         {
-            Id = Guid.NewGuid(),
+            Id = id,
             FirstName = firstName,
             LastName = lastName,
-            DateOfBirth = dateOfBirth,
+            Email = email,
+            Cellphone = cellphone,
+            DateOfBirth = dateOfBirth ?? new DateOnly(2000, 1, 1),
             Gender = gender,
+            AvatarUrl = avatarUrl,
             IsOtpVerified = false,
             Timestamp = DateTime.UtcNow
         };
+    }
+
+    /// <summary>
+    ///     Refreshes the profile fields from an authenticated JWT on subsequent
+    ///     logins. Only non-empty values are applied, so a token with sparse
+    ///     metadata never wipes existing profile data. Gender is only updated
+    ///     when the token carries an explicit 'M' or 'F' value.
+    /// </summary>
+    public void UpdateFromJwt(
+        string? firstName,
+        string? lastName,
+        DateOnly? dateOfBirth,
+        char gender,
+        string? email,
+        string? cellphone,
+        string? avatarUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(firstName)) FirstName = firstName.Trim();
+        if (!string.IsNullOrWhiteSpace(lastName)) LastName = lastName.Trim();
+        if (dateOfBirth is not null) DateOfBirth = dateOfBirth.Value;
+        if (gender is 'M' or 'F') Gender = gender;
+        if (!string.IsNullOrWhiteSpace(email)) Email = email.Trim().ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(cellphone)) Cellphone = cellphone.Trim();
+        if (!string.IsNullOrWhiteSpace(avatarUrl)) AvatarUrl = avatarUrl;
     }
 
     public void Update(

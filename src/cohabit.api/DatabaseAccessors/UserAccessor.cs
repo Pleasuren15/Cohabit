@@ -80,6 +80,38 @@ public sealed class UserAccessor(CohabitDbContext dbContext) : IUserAccessor
         await dbContext.SaveChangesAsync(ct);
     }
 
+    public async Task<(User User, bool IsNew)> SyncFromJwtAsync(JwtUserProfile profile, CancellationToken ct = default)
+    {
+        var existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == profile.UserId, ct);
+        if (existing is not null)
+        {
+            existing.UpdateFromJwt(
+                profile.FirstName,
+                profile.LastName,
+                profile.DateOfBirth,
+                profile.Gender,
+                profile.Email,
+                profile.Cellphone,
+                profile.AvatarUrl);
+            await dbContext.SaveChangesAsync(ct);
+            return (existing, false);
+        }
+
+        var user = User.CreateFromJwt(
+            profile.UserId,
+            profile.FirstName ?? string.Empty,
+            profile.LastName ?? string.Empty,
+            profile.DateOfBirth,
+            profile.Gender,
+            profile.Email,
+            profile.Cellphone,
+            profile.AvatarUrl);
+
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync(ct);
+        return (user, true);
+    }
+
     private async Task EnsureUniqueAsync(
         string normalizedEmail,
         string normalizedCellphone,

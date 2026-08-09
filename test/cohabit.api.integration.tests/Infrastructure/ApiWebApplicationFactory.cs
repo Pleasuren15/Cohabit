@@ -19,7 +19,11 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:cohabit-db"] = Containers.Postgres.GetConnectionString(),
-                ["ConnectionStrings:cohabit-images"] = Containers.AzuriteBlobConnectionString
+                ["ConnectionStrings:cohabit-images"] = Containers.AzuriteBlobConnectionString,
+                ["Jwt:SigningKey"] = TestJwt.SigningKey,
+                ["Jwt:Issuer"] = TestJwt.Issuer,
+                ["Jwt:Audience"] = TestJwt.Audience,
+                ["Jwt:Authority"] = ""
             });
         });
     }

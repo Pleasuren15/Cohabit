@@ -4,12 +4,24 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Heart } from "lucide-react"
 
 /* --- Types --- */
+export interface CarouselBadge {
+  label: string
+  tone: "new" | "updated" | "off"
+}
+
 export interface CarouselCard {
   id: string
   title: string
   value: string
   color: string
   imageSrc?: string
+  badge?: CarouselBadge
+}
+
+const BADGE_TONES: Record<CarouselBadge["tone"], string> = {
+  new: "bg-emerald-500",
+  updated: "bg-amber-500",
+  off: "bg-zinc-500",
 }
 
 interface MinimalCarouselProps {
@@ -103,6 +115,13 @@ export function MinimalCarousel({
                   </div>
 
                   <div className="relative z-10 mt-auto pt-4">
+                    {activeCard.badge && (
+                      <span
+                        className={`mb-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase ${BADGE_TONES[activeCard.badge.tone]}`}
+                      >
+                        {activeCard.badge.label}
+                      </span>
+                    )}
                     <h3 className="truncate text-xl leading-tight font-semibold opacity-90 sm:text-2xl">
                       {activeCard.title}
                     </h3>
@@ -154,6 +173,14 @@ export function MinimalCarousel({
                   >
                     View
                   </button>
+
+                  {card.badge && (
+                    <span
+                      className={`absolute top-2 left-2 z-10 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase ${BADGE_TONES[card.badge.tone]}`}
+                    >
+                      {card.badge.label}
+                    </span>
+                  )}
 
                   <div className="relative z-10 overflow-hidden">
                     <h4
