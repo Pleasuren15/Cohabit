@@ -32,9 +32,20 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {}
+export const Default: Story = {
+  // The sign-in/sign-up panels animate in with framer-motion. Axe's
+  // color-contrast check can sample the panel mid-animation (semi-transparent,
+  // blended with the background) and report a false violation, so wait for the
+  // entrance animation to settle before the a11y test runs.
+  play: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  },
+}
 
 export const WithSocialProviders: Story = {
+  play: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  },
   args: {
     socialProviders,
     onSignIn: (email, password) => {
@@ -48,6 +59,9 @@ export const WithSocialProviders: Story = {
 }
 
 export const DefaultTabSignUp: Story = {
+  play: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  },
   args: {
     socialProviders,
     defaultTab: "signup",

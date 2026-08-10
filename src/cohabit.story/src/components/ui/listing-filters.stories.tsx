@@ -34,6 +34,11 @@ function FilterSheetDemo({
 export const Default: Story = {
   args: { open: true, onClose: () => {}, filters: {}, onChange: () => {} },
   render: () => <FilterSheetDemo />,
+  // The sheet animates in with framer-motion; wait for it to settle so axe's
+  // color-contrast check doesn't sample the panel mid-animation.
+  play: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  },
 }
 
 export const WithSelections: Story = {
@@ -49,6 +54,9 @@ export const WithSelections: Story = {
       }}
     />
   ),
+  play: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  },
 }
 
 export const Interactive: Story = {
@@ -58,5 +66,6 @@ export const Interactive: Story = {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole("button", { name: "Wi-Fi" }))
     await userEvent.click(canvas.getByRole("button", { name: "No smoking" }))
+    await new Promise((resolve) => setTimeout(resolve, 500))
   },
 }
