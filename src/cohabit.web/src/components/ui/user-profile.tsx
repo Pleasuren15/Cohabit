@@ -23,6 +23,9 @@ import {
   Camera,
   PenLine,
   AlertTriangle,
+  Check,
+  Users,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react"
 import type { FeaturedProfile } from "@/App"
@@ -30,9 +33,11 @@ import {
   amenityNameToId,
   ruleNameToId,
 } from "@/services/listing-service"
+import type { Inquiry, InquiryStatus } from "@/services/inquiries-service"
 import { AMENITIES, AMENITY_NAMES } from "@/lib/amenities"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 import { EditProfile, type ProfileData } from "./edit-profile"
+import { ProfileCompletionDialog } from "./profile-completion-dialog"
 import { FileUpload, type FileItem, type FileStatus } from "./file-upload-2"
 import { TaskWidget, type TaskData, type Subtask } from "./task-widget-disclosure"
 import { PrivacyDialog } from "./privacy-dialog"
@@ -53,7 +58,7 @@ export interface UserData {
   timestamp?: string
 }
 
-type VerificationType = "phone" | "email" | "id" | "credit"
+export type VerificationType = "phone" | "email" | "id" | "credit"
 
 const LISTING_STEPS = ["Type", "Basics", "Price & size", "Amenities", "Description", "Photos"]
 
@@ -81,6 +86,30 @@ const LISTING_GRADIENTS = [
   "bg-gradient-to-br from-fuchsia-500 to-pink-600",
   "bg-gradient-to-br from-orange-500 to-red-600",
 ]
+
+const INQUIRY_STATUS_META: Record<
+  InquiryStatus,
+  { label: string; className: string }
+> = {
+  new: {
+    label: "New",
+    className: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
+  },
+  contacted: {
+    label: "Contacted",
+    className:
+      "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
+  },
+  accepted: {
+    label: "Accepted",
+    className:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+  },
+  declined: {
+    label: "Declined",
+    className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-500/15 dark:text-zinc-400",
+  },
+}
 
 /** API amenity names -> the labels shown in the add/edit form. */
 const DB_TO_WEB_AMENITY: Record<string, string> = {
@@ -117,6 +146,9 @@ interface UserProfileProps {
   onUpdateListing?: (id: string, data: NewListingData) => Promise<void>
   getListingDetail?: (id: string) => Promise<FeaturedProfile | null>
   onSignOut?: () => Promise<void>
+  inquiries?: Inquiry[]
+  onUpdateInquiryStatus?: (id: string, status: InquiryStatus) => void
+  openNewListingSignal?: number
 }
 
 export function UserProfile({
@@ -131,10 +163,18 @@ export function UserProfile({
   onUpdateListing,
   getListingDetail,
   onSignOut,
+  inquiries = [],
+  onUpdateInquiryStatus,
+  openNewListingSignal = 0,
 }: UserProfileProps) {
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false)
-  const [showNewListing, setShowNewListing] = useState(false)
+  const [activeMissingStep, setActiveMissingStep] = useState<string | null>(null)
+  // Opens immediately when the parent triggered a "List your space" request
+  // (signal increments) and this component mounts on the Profile tab.
+  const [showNewListing, setShowNewListing] = useState(
+    () => openNewListingSignal > 0
+  )
   const [listingStep, setListingStep] = useState(1)
   const [editingId, setEditingId] = useState<string | null>(null)
   const originalAmenitiesRef = useRef<number[]>([])
@@ -383,6 +423,24 @@ export function UserProfile({
     }
   }
 
+  /** Saves a single missing profile detail from its dedicated completion form. */
+  const handleSaveMissingStep = async (
+    stepId: string,
+    updated: UserData
+  ) => {
+    try {
+      if (stepId === "address") {
+        await authService.updateProfileMetadata({
+          address: updated.address ?? "",
+        })
+      }
+      await onUpdateUser?.(updated)
+      setActiveMissingStep(null)
+    } catch {
+      // Keep the dialog open; the caller has already surfaced the error.
+    }
+  }
+
   const canProceedStep =
     listingStep === 2
       ? newListingName.trim().length > 0 &&
@@ -412,6 +470,33 @@ export function UserProfile({
     color: LISTING_GRADIENTS[i % LISTING_GRADIENTS.length],
     imageSrc: p.imageSrc,
   }))
+
+  // Inquiries for listings the current user owns — grouped per listing.
+  const ownListingIds = useMemo(
+    () => new Set(userListings.map((l) => l.id)),
+    [userListings]
+  )
+  const listingInquiries = useMemo(
+    () =>
+      inquiries
+        .filter((inq) => ownListingIds.has(inq.listingId))
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+    [inquiries, ownListingIds]
+  )
+  const newInquiryCount = listingInquiries.filter((i) => i.status === "new").length
+
+  const formatInquiryDate = (iso: string) => {
+    const parsed = new Date(`${iso} 12:00:00`)
+    if (Number.isNaN(parsed.getTime())) return iso
+    return parsed.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  }
 
   return (
     <div className="mx-auto w-full max-w-md space-y-5 pb-8">
@@ -536,7 +621,7 @@ export function UserProfile({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowEditProfile(true)}
+                    onClick={() => setActiveMissingStep(step.id)}
                     className="shrink-0 rounded-full bg-accent px-3 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90"
                   >
                     Add
@@ -626,6 +711,118 @@ export function UserProfile({
           </div>
         )}
       </div>
+
+      {/* Inquiries — landlord dashboard */}
+      {userListings.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="size-4 text-accent" />
+              <h3 className="text-sm font-semibold">Inquiries</h3>
+              {newInquiryCount > 0 && (
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">
+                  {newInquiryCount} new
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {listingInquiries.length} total
+            </span>
+          </div>
+
+          {listingInquiries.length > 0 ? (
+            <div className="space-y-2">
+              {listingInquiries.map((inq) => {
+                const initials = inq.inquireeName
+                  .split(" ")
+                  .map((part) => part[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase()
+                const meta = INQUIRY_STATUS_META[inq.status]
+                const canRespond = inq.status === "new" || inq.status === "contacted"
+                return (
+                  <div
+                    key={inq.id}
+                    className="rounded-2xl border border-border/40 bg-background p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">
+                          {initials}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">
+                            {inq.inquireeName}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {inq.listingTitle}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${meta.className}`}
+                      >
+                        {meta.label}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="size-3 text-accent" />
+                        Moves in {formatInquiryDate(inq.moveInDate)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Users className="size-3 text-accent" />
+                        {inq.occupants} {inq.occupants === 1 ? "occupant" : "occupants"}
+                      </span>
+                    </div>
+
+                    {inq.message && (
+                      <p className="mt-2 rounded-xl bg-muted/40 px-3 py-2 text-xs leading-relaxed text-foreground/80">
+                        “{inq.message}”
+                      </p>
+                    )}
+
+                    {canRespond && (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onUpdateInquiryStatus?.(inq.id, "contacted")}
+                          className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          <MessageCircle className="size-3" />
+                          Mark contacted
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateInquiryStatus?.(inq.id, "accepted")}
+                          className="flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] font-medium text-white transition-colors hover:bg-emerald-600"
+                        >
+                          <Check className="size-3" />
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateInquiryStatus?.(inq.id, "declined")}
+                          className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-red-600"
+                        >
+                          <X className="size-3" />
+                          Decline
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
+              No inquiries yet. Share your listings to start receiving requests.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* New Listing Dialog */}
       <AnimatePresence>
@@ -970,6 +1167,24 @@ export function UserProfile({
         initialData={profileData}
         onSave={handleSaveProfile}
       />
+
+      {/* Dedicated "Still missing" completion forms — one per missing detail */}
+      {(() => {
+        const step = completionSteps.find((s) => s.id === activeMissingStep)
+        if (!step) return null
+        return (
+          <ProfileCompletionDialog
+            key={step.id}
+            step={step}
+            open={activeMissingStep !== null}
+            onClose={() => setActiveMissingStep(null)}
+            user={user}
+            verified={verified}
+            onVerify={onVerify}
+            onSave={handleSaveMissingStep}
+          />
+        )
+      })()}
 
       {/* Verify Dialog — centered */}
       <AnimatePresence>

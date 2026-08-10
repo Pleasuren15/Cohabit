@@ -24,6 +24,8 @@ import {
   AlertTriangle,
   ArrowLeft,
   Sparkles,
+  Building2,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react"
 import { FlipText } from "@/components/ui/flip-text"
@@ -38,6 +40,8 @@ import {
 import MeshBackground from "@/components/MeshBackground"
 import LandingBackdrop from "@/components/LandingBackdrop"
 import { ListingFilter } from "@/components/listing-filter"
+import { ListingFiltersSheet } from "@/components/listing-filters"
+import { countActiveFilters, type ListingFilters } from "@/lib/listing-utils"
 import { PROVINCE_SHAPES } from "@/lib/province-shapes"
 import { PROVINCES } from "@/lib/provinces"
 import { cn } from "@/lib/utils"
@@ -350,6 +354,7 @@ function LandingShell({ children }: { children: ReactNode }) {
 function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
   const [phraseIndex, setPhraseIndex] = useState(0)
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null)
+  const { setShowAuth } = useApp()
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -433,6 +438,23 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
             </div>
           </motion.div>
 
+          {/* Landlord journey CTA */}
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
+            type="button"
+            onClick={() => setShowAuth(true)}
+            className="group inline-flex items-center gap-2 rounded-full border border-border/40 bg-background/20 px-4 py-2 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+          >
+            <Building2
+              className="size-3.5 text-accent"
+              aria-hidden="true"
+            />
+            Own a space? List your property
+            <ArrowLeft className="size-3.5 -rotate-180 transition-transform group-hover:translate-x-0.5" />
+          </motion.button>
+
           {/* Trust badges */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -493,9 +515,11 @@ function PageHeader({
 function Reveal({
   children,
   delay = 0,
+  className,
 }: {
   children: ReactNode
   delay?: number
+  className?: string
 }) {
   return (
     <motion.div
@@ -503,6 +527,7 @@ function Reveal({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.5, ease: "easeOut", delay }}
+      className={className}
     >
       {children}
     </motion.div>
@@ -512,15 +537,9 @@ function Reveal({
 /** Main app shell with dock navbar */
 function MainApp({
   province,
-  setShowAuth,
-  currentUser,
-  setCurrentUser,
   onSignOut,
 }: {
   province: string
-  setShowAuth: (show: boolean) => void
-  currentUser: UserData | null
-  setCurrentUser: (user: UserData | null) => void
   onSignOut: () => Promise<void>
 }) {
   const navigate = useNavigate()
@@ -528,6 +547,9 @@ function MainApp({
     setProvince,
     activeTab,
     setActiveTab,
+    setShowAuth,
+    currentUser,
+    setCurrentUser,
     favorites,
     toggleFavorite,
     savedAt,
@@ -536,9 +558,14 @@ function MainApp({
     promotedIds,
     allListings,
     upsertListing,
+    inquiries,
+    updateInquiryStatus,
   } = useApp()
   const [listingFilter, setListingFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [filters, setFilters] = useState<ListingFilters>({})
+  const [showFilters, setShowFilters] = useState(false)
+  const [openListingSignal, setOpenListingSignal] = useState(0)
   const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
   const [showProvincePicker, setShowProvincePicker] = useState(false)
   const [messages, setMessages] = useState<SystemMessageDto[]>([])
@@ -550,6 +577,16 @@ function MainApp({
     (id: string) => handleToggle(id, favorites.has(id)),
     [favorites, handleToggle]
   )
+
+  /** Landlord journey entry point: auth when signed out, else open the form. */
+  const handleListSpace = useCallback(() => {
+    if (!currentUser) {
+      setShowAuth(true)
+      return
+    }
+    setActiveTab("Profile")
+    setOpenListingSignal((s) => s + 1)
+  }, [currentUser, setShowAuth, setActiveTab])
 
   const handleUpdateUser = useCallback(
     async (updated: UserData) => {
@@ -742,6 +779,7 @@ function MainApp({
           page: 1,
           pageSize,
           promotedIds,
+          filters,
         },
         allListings
       )
@@ -757,7 +795,15 @@ function MainApp({
     return () => {
       cancelled = true
     }
-  }, [province, listingFilter, searchQuery, pageSize, promotedIds, allListings])
+  }, [
+    province,
+    listingFilter,
+    searchQuery,
+    pageSize,
+    promotedIds,
+    allListings,
+    filters,
+  ])
 
   const listings = result?.listings ?? []
   const totalCount = result?.totalCount ?? 0
@@ -865,24 +911,40 @@ function MainApp({
         <div className="fixed top-0 right-0 left-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <div className="mx-auto max-w-md space-y-3 px-6 pt-6 pb-3">
             {/* Filter + province at very top */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <ListingFilter
                 value={listingFilter}
                 onChange={setListingFilter}
               />
-              <button
-                type="button"
-                onClick={() => setShowProvincePicker(true)}
-                className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
-                aria-label="Change province"
-              >
-                <img
-                  src={PROVINCE_SHAPES[province]}
-                  alt=""
-                  className="h-5 w-5 object-contain drop-shadow-sm"
-                />
-                <span className="leading-tight">{PROVINCES[province]}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(true)}
+                  className="relative inline-flex items-center gap-1.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                  aria-label="Filter listings"
+                >
+                  <SlidersHorizontal className="size-3.5" />
+                  Filters
+                  {countActiveFilters(filters) > 0 && (
+                    <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">
+                      {countActiveFilters(filters)}
+                    </span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowProvincePicker(true)}
+                  className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
+                  aria-label="Change province"
+                >
+                  <img
+                    src={PROVINCE_SHAPES[province]}
+                    alt=""
+                    className="h-5 w-5 object-contain drop-shadow-sm"
+                  />
+                  <span className="leading-tight">{PROVINCES[province]}</span>
+                </button>
+              </div>
             </div>
 
             {/* Search bar below filter */}
@@ -936,6 +998,30 @@ function MainApp({
           <div className="mx-auto max-w-md">
             {activeTab === "Home" && (
               <>
+                {/* Landlord journey CTA */}
+                <button
+                  type="button"
+                  onClick={handleListSpace}
+                  className="group mb-5 flex w-full items-center gap-3 rounded-2xl border border-accent/20 bg-gradient-to-r from-accent/10 to-transparent p-4 text-left transition-colors hover:border-accent/40"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                    <Building2 className="size-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-foreground">
+                      {currentUser
+                        ? "Manage your listings"
+                        : "Own a space? List it"}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {currentUser
+                        ? "Track inquiries and reach more tenants"
+                        : "Post your room or property and reach vetted tenants"}
+                    </span>
+                  </span>
+                  <ArrowLeft className="size-4 shrink-0 -rotate-180 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                </button>
+
                 {/* No results state */}
                 {!profilesLoading && listings.length === 0 && (
                   <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
@@ -1363,6 +1449,9 @@ function MainApp({
                   listingService.getListingById(id, allListings)
                 }
                 onSignOut={onSignOut}
+                inquiries={inquiries}
+                onUpdateInquiryStatus={updateInquiryStatus}
+                openNewListingSignal={openListingSignal}
               />
             )}
           </div>
@@ -1506,6 +1595,12 @@ function MainApp({
           </motion.div>
         )}
       </AnimatePresence>
+      <ListingFiltersSheet
+        open={showFilters}
+        onClose={() => setShowFilters(false)}
+        filters={filters}
+        onChange={setFilters}
+      />
       {unfavoriteDialog}
     </>
   )
@@ -1525,9 +1620,14 @@ export function App() {
 
 /** App-wide shell: auth overlay, onboarding dialog and toasts on every route. */
 function AppFrame() {
-  const { setActiveTab, setCurrentUserId } = useApp()
-  const [showAuth, setShowAuth] = useState(false)
-  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
+  const {
+    setActiveTab,
+    setCurrentUserId,
+    showAuth,
+    setShowAuth,
+    currentUser,
+    setCurrentUser,
+  } = useApp()
 
   // Mirror the signed-in user's id into the app context so route-level
   // components (e.g. the message detail page) can scope their data.
@@ -1554,7 +1654,7 @@ function AppFrame() {
       cancelled = true
       unsubscribe()
     }
-  }, [])
+  }, [setCurrentUser])
 
   const syncCurrentUser = useCallback(async () => {
     try {
@@ -1576,7 +1676,7 @@ function AppFrame() {
         void syncCurrentUser()
       }
     },
-    [setActiveTab, syncCurrentUser]
+    [setActiveTab, syncCurrentUser, setCurrentUser, setShowAuth]
   )
 
   const handleSignUp = useCallback(
@@ -1602,7 +1702,7 @@ function AppFrame() {
         void syncCurrentUser()
       }
     },
-    [setActiveTab, syncCurrentUser]
+    [setActiveTab, syncCurrentUser, setCurrentUser, setShowAuth]
   )
 
   const handleSignOut = useCallback(async () => {
@@ -1617,7 +1717,7 @@ function AppFrame() {
         description: err instanceof Error ? err.message : "Please try again.",
       })
     }
-  }, [])
+  }, [setCurrentUser])
 
   return (
     <>
@@ -1658,17 +1758,7 @@ function AppFrame() {
           path="/messages/:conversationId"
           element={<MessageDetailPage />}
         />
-        <Route
-          path="*"
-          element={
-            <AppRoot
-              setShowAuth={setShowAuth}
-              currentUser={currentUser}
-              setCurrentUser={setCurrentUser}
-              onSignOut={handleSignOut}
-            />
-          }
-        />
+        <Route path="*" element={<AppRoot onSignOut={handleSignOut} />} />
       </Routes>
 
       {/* Onboarding choice dialog — appears 3s after the app loads,
@@ -1677,6 +1767,7 @@ function AppFrame() {
         delay={3000}
         onRegister={() => setShowAuth(true)}
         onLogin={() => setShowAuth(true)}
+        onListSpace={() => setShowAuth(true)}
       />
 
       <Toaster position="top-center" richColors />
@@ -1684,32 +1775,14 @@ function AppFrame() {
   )
 }
 
-function AppRoot({
-  setShowAuth,
-  currentUser,
-  setCurrentUser,
-  onSignOut,
-}: {
-  setShowAuth: (show: boolean) => void
-  currentUser: UserData | null
-  setCurrentUser: (user: UserData | null) => void
-  onSignOut: () => Promise<void>
-}) {
+function AppRoot({ onSignOut }: { onSignOut: () => Promise<void> }) {
   const { province, setProvince } = useApp()
 
   if (!province) {
     return <LandingPage onEnter={setProvince} />
   }
 
-  return (
-    <MainApp
-      province={province}
-      setShowAuth={setShowAuth}
-      currentUser={currentUser}
-      setCurrentUser={setCurrentUser}
-      onSignOut={onSignOut}
-    />
-  )
+  return <MainApp province={province} onSignOut={onSignOut} />
 }
 
 function ListingDetailPage() {
@@ -1719,9 +1792,8 @@ function ListingDetailPage() {
     allListings,
     favorites,
     toggleFavorite,
-    promotedIds,
-    promoteListing,
-    setActiveTab,
+    currentUser,
+    submitInquiry,
     getListingById,
   } = useApp()
   const [result, setResult] = useState<{
@@ -1796,15 +1868,29 @@ function ListingDetailPage() {
         <DetailPage
           key={listing.id}
           {...listing}
-          featured={listing.featured === true || promotedIds.has(listing.id)}
           isFavorited={favorites.has(listing.id)}
           onToggleFavorite={() =>
             handleToggle(listing.id, favorites.has(listing.id))
           }
-          onPromote={() => promoteListing(listing.id)}
-          onRequestView={() => {
-            setActiveTab("Messages")
-            navigate("/")
+          onRequestView={(id, details) => {
+            const inquireeName =
+              currentUser && (currentUser.firstName || currentUser.lastName)
+                ? `${currentUser.firstName} ${currentUser.lastName}`.trim()
+                : "Guest"
+            void submitInquiry({
+              listingId: id,
+              listingTitle: listing.title ?? listing.name,
+              listingImageSrc: listing.imageSrc,
+              type: listing.type,
+              inquireeUserId: currentUser?.id ?? "guest",
+              inquireeName,
+              moveInDate: details.moveInDate,
+              occupants: details.occupants,
+              message: details.message,
+            })
+            toast.success("Request sent", {
+              description: `${listing.title ?? listing.name}'s owner will get back to you shortly.`,
+            })
           }}
           onBack={() => navigate(-1)}
           relatedListings={related}

@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest"
 import {
   filterFeaturedProfiles,
   toggleFavoriteItem,
+  matchesListingFilters,
+  countActiveFilters,
+  filtersAreEmpty,
 } from "@/lib/listing-utils"
 import { makeProfile, SAMPLE_PROFILES } from "./fixtures"
 
@@ -101,10 +104,109 @@ describe("filterFeaturedProfiles", () => {
     expect(filterFeaturedProfiles([], "wc", "all", "")).toEqual([])
   })
 
+  it("applies structured filters", () => {
+    const results = filterFeaturedProfiles(
+      SAMPLE_PROFILES,
+      "wc",
+      "all",
+      "",
+      { maxPrice: 7000 }
+    )
+    expect(results.map((p) => p.id)).toEqual(["wc-roommate-2"])
+  })
+
   it("does not mutate the input array", () => {
     const copy = [...SAMPLE_PROFILES]
     filterFeaturedProfiles(SAMPLE_PROFILES, "wc", "all", "")
     expect(SAMPLE_PROFILES).toEqual(copy)
+  })
+})
+
+describe("matchesListingFilters", () => {
+  const profile = makeProfile({
+    price: 7500,
+    beds: 2,
+    baths: 1,
+    availableFrom: "1 Sep 2026",
+    amenities: ["Wi-Fi", "Parking"],
+    rules: ["No smoking", "Pets welcome"],
+  })
+
+  it("matches everything when no filters are provided", () => {
+    expect(matchesListingFilters(profile)).toBe(true)
+    expect(matchesListingFilters(profile, {})).toBe(true)
+  })
+
+  it("filters by price range", () => {
+    expect(matchesListingFilters(profile, { minPrice: 5000, maxPrice: 8000 })).toBe(true)
+    expect(matchesListingFilters(profile, { minPrice: 8000 })).toBe(false)
+    expect(matchesListingFilters(profile, { maxPrice: 7000 })).toBe(false)
+  })
+
+  it("filters by minimum beds and baths", () => {
+    expect(matchesListingFilters(profile, { minBeds: 2, minBaths: 1 })).toBe(true)
+    expect(matchesListingFilters(profile, { minBeds: 3 })).toBe(false)
+    expect(matchesListingFilters(profile, { minBaths: 2 })).toBe(false)
+  })
+
+  it("filters by move-in date", () => {
+    expect(matchesListingFilters(profile, { moveInBy: "2026-09-01" })).toBe(true)
+    expect(matchesListingFilters(profile, { moveInBy: "2026-08-31" })).toBe(false)
+    expect(matchesListingFilters(profile, { moveInBy: "2027-01-01" })).toBe(true)
+  })
+
+  it("treats 'Immediately' listings as always available", () => {
+    const immediate = makeProfile({ availableFrom: "Immediately" })
+    expect(matchesListingFilters(immediate, { moveInBy: "2026-01-01" })).toBe(true)
+  })
+
+  it("filters by required amenities and rules", () => {
+    expect(
+      matchesListingFilters(profile, {
+        requireAmenities: ["Wi-Fi", "Parking"],
+      })
+    ).toBe(true)
+    expect(matchesListingFilters(profile, { requireAmenities: ["Gym"] })).toBe(
+      false
+    )
+    expect(
+      matchesListingFilters(profile, {
+        requireRules: ["No smoking", "Pets welcome"],
+      })
+    ).toBe(true)
+    expect(matchesListingFilters(profile, { requireRules: ["No parties"] })).toBe(
+      false
+    )
+  })
+
+  it("ignores empty requirement lists", () => {
+    expect(
+      matchesListingFilters(profile, { requireAmenities: [], requireRules: [] })
+    ).toBe(true)
+  })
+})
+
+describe("countActiveFilters / filtersAreEmpty", () => {
+  it("counts zero for an empty filter set", () => {
+    expect(countActiveFilters(undefined)).toBe(0)
+    expect(countActiveFilters({})).toBe(0)
+  })
+
+  it("counts each populated group once", () => {
+    expect(countActiveFilters({ minPrice: 1000 })).toBe(1)
+    expect(countActiveFilters({ minBeds: 2, minBaths: 1 })).toBe(2)
+    expect(
+      countActiveFilters({
+        minPrice: 1000,
+        minBeds: 2,
+        moveInBy: "2026-09-01",
+      })
+    ).toBe(3)
+  })
+
+  it("detects empty filter sets", () => {
+    expect(filtersAreEmpty({})).toBe(true)
+    expect(filtersAreEmpty({ minPrice: 1000 })).toBe(false)
   })
 })
 

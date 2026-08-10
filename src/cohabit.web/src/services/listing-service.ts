@@ -15,6 +15,7 @@
 
 import { API_BASE_URL, USE_MOCK_DATA } from "@/services/config"
 import { PROVINCES } from "@/lib/provinces"
+import { matchesListingFilters, type ListingFilters } from "@/lib/listing-utils"
 
 export type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -54,6 +55,8 @@ export interface ListingQuery {
   pageSize: number
   /** ids that should sort to the top (featured + promoted) */
   promotedIds: ReadonlySet<string>
+  /** structured filters from the "better search" sheet */
+  filters?: ListingFilters
 }
 
 export interface PagedListings {
@@ -185,6 +188,7 @@ class MockListingService implements ListingService {
         if (query.type === "roommate" && p.type !== "roommate") return false
         if (query.type === "rentals" && p.type !== "rentals") return false
         if (q && !`${p.name} ${p.location}`.toLowerCase().includes(q)) return false
+        if (!matchesListingFilters(p, query.filters)) return false
         return true
       })
       .slice()

@@ -40,6 +40,49 @@ function requireClient() {
   return supabase
 }
 
+/**
+ * Demo sign-in used when Supabase isn't configured (mock mode). Signing in as
+ * the demo host lets people experience the landlord journey end-to-end without
+ * a real backend. The choice persists so a refresh keeps you signed in.
+ */
+const MOCK_SIGNED_IN_KEY = "cohabit:mock-signed-in"
+const MOCK_USER_ID = "user-1"
+
+function readMockSignedIn(): boolean {
+  try {
+    return localStorage.getItem(MOCK_SIGNED_IN_KEY) === "true"
+  } catch {
+    return false
+  }
+}
+
+function writeMockSignedIn(value: boolean): void {
+  try {
+    if (value) localStorage.setItem(MOCK_SIGNED_IN_KEY, "true")
+    else localStorage.removeItem(MOCK_SIGNED_IN_KEY)
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function mockDemoUser(): UserData {
+  return {
+    id: MOCK_USER_ID,
+    firstName: "Thabo",
+    lastName: "Mokoena",
+    cellphone: "+27 82 123 4567",
+    email: "thabo@cohabit.co.za",
+    dateOfBirth: "1994-05-12",
+    gender: "male",
+    bio: "Hosting spaces and finding great tenants across South Africa.",
+    address: "Sea Point, Cape Town",
+    isOtpVerified: true,
+    avatarUrl:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200&h=200",
+    timestamp: "July 2025",
+  }
+}
+
 /** Maps a Supabase user record to the app's profile shape. */
 export function toUserData(user: User): UserData {
   const meta = user.user_metadata ?? {}
@@ -64,6 +107,10 @@ export function toUserData(user: User): UserData {
 
 export const authService = {
   async signIn(email: string, password: string): Promise<AuthResult> {
+    if (!supabase) {
+      writeMockSignedIn(true)
+      return { user: mockDemoUser(), emailConfirmationRequired: false }
+    }
     const client = requireClient()
     const { data, error } = await client.auth.signInWithPassword({
       email,
@@ -74,6 +121,10 @@ export const authService = {
   },
 
   async signUp(input: SignUpInput): Promise<AuthResult> {
+    if (!supabase) {
+      writeMockSignedIn(true)
+      return { user: mockDemoUser(), emailConfirmationRequired: false }
+    }
     const client = requireClient()
     const nameTokens = input.name.trim().split(/\s+/)
     const firstName = nameTokens[0] ?? input.name
@@ -103,6 +154,10 @@ export const authService = {
   },
 
   async signOut(): Promise<void> {
+    if (!supabase) {
+      writeMockSignedIn(false)
+      return
+    }
     const client = requireClient()
     const { error } = await client.auth.signOut()
     if (error) throw error
@@ -120,7 +175,7 @@ export const authService = {
   },
 
   async getSessionUser(): Promise<UserData | null> {
-    if (!supabase) return null
+    if (!supabase) return readMockSignedIn() ? mockDemoUser() : null
     const { data } = await supabase.auth.getSession()
     const user = data.session?.user ?? null
     return user ? toUserData(user) : null

@@ -18,6 +18,7 @@ export default defineConfig({
       "react/jsx-dev-runtime": path.resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
       "@testing-library/react": path.resolve(__dirname, "node_modules/@testing-library/react"),
       "@testing-library/user-event": path.resolve(__dirname, "node_modules/@testing-library/user-event"),
+      "react-router-dom": path.resolve(__dirname, "node_modules/react-router-dom"),
     },
   },
   server: {

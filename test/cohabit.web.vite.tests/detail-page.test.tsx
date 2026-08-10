@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { render, screen, within } from "@testing-library/react"
+import { render, screen, within, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { DetailPage } from "@/components/ui/detail-page"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -11,11 +11,9 @@ function renderDetail(
   {
     relatedListings = [],
     isFavorited = false,
-    onPromote,
   }: {
     relatedListings?: typeof SAMPLE_RELATED_LISTINGS
     isFavorited?: boolean
-    onPromote?: (id: string) => void
   } = {}
 ) {
   const onBack = vi.fn()
@@ -33,7 +31,6 @@ function renderDetail(
         onRequestView={onRequestView}
         onToggleFavorite={onToggleFavorite}
         onViewRelated={onViewRelated}
-        onPromote={onPromote}
       />
     </TooltipProvider>
   )
@@ -182,24 +179,78 @@ describe("DetailPage interaction", () => {
     expect(onBack).toHaveBeenCalled()
   })
 
-  it("calls onRequestView from the sticky request button", async () => {
+  /** Opens the inquiry form, fills it out and submits. */
+  async function submitInquiryForm(user: ReturnType<typeof userEvent.setup>) {
+    await user.selectOptions(
+      screen.getByLabelText(/number of occupants/i),
+      "2"
+    )
+    fireEvent.change(screen.getByLabelText(/move-in date/i), {
+      target: { value: "2026-10-01" },
+    })
+    await user.type(
+      screen.getByLabelText(/message to host/i),
+      "Keen to view this weekend!"
+    )
+    await user.click(screen.getByRole("button", { name: /send request/i }))
+  }
+
+  it("calls onRequestView with inquiry details from the sticky request button", async () => {
     const user = userEvent.setup()
     const { onRequestView } = renderDetail()
 
     await user.click(
       screen.getByRole("button", { name: /request to view/i })
     )
-    expect(onRequestView).toHaveBeenCalledWith("profile-1")
+    expect(
+      screen.getByRole("dialog", { name: /request to view/i })
+    ).toBeInTheDocument()
+
+    await submitInquiryForm(user)
+
+    expect(onRequestView).toHaveBeenCalledWith("profile-1", {
+      moveInDate: "2026-10-01",
+      occupants: 2,
+      message: "Keen to view this weekend!",
+    })
   })
 
-  it("calls onRequestView from the availability question", async () => {
+  it("calls onRequestView with inquiry details from the availability question", async () => {
     const user = userEvent.setup()
     const { onRequestView } = renderDetail()
 
     await user.click(
       screen.getByRole("button", { name: /is this still available/i })
     )
-    expect(onRequestView).toHaveBeenCalledWith("profile-1")
+    expect(
+      screen.getByRole("dialog", { name: /request to view/i })
+    ).toBeInTheDocument()
+
+    await submitInquiryForm(user)
+
+    expect(onRequestView).toHaveBeenCalledWith("profile-1", {
+      moveInDate: "2026-10-01",
+      occupants: 2,
+      message: "Keen to view this weekend!",
+    })
+  })
+
+  it("keeps the inquiry form open until required fields are filled", async () => {
+    const user = userEvent.setup()
+    const { onRequestView } = renderDetail()
+
+    await user.click(
+      screen.getByRole("button", { name: /request to view/i })
+    )
+    fireEvent.change(screen.getByLabelText(/move-in date/i), {
+      target: { value: "" },
+    })
+    await user.click(screen.getByRole("button", { name: /send request/i }))
+
+    expect(
+      screen.getByRole("dialog", { name: /request to view/i })
+    ).toBeInTheDocument()
+    expect(onRequestView).not.toHaveBeenCalled()
   })
 
   it("calls onToggleFavorite with the listing id", async () => {
@@ -210,43 +261,5 @@ describe("DetailPage interaction", () => {
       screen.getByRole("button", { name: /add to favorites/i })
     )
     expect(onToggleFavorite).toHaveBeenCalledWith("listing-1")
-  })
-})
-
-describe("DetailPage promote upsell", () => {
-  it("shows the promote upsell with pricing tiers when not featured", () => {
-    renderDetail({ featured: false })
-
-    expect(
-      screen.getByRole("heading", { name: /promote this listing/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: /r99 \/ 7 days/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: /r249 \/ 30 days/i })
-    ).toBeInTheDocument()
-  })
-
-  it("calls onPromote with the listing id when a tier is selected", async () => {
-    const user = userEvent.setup()
-    const onPromote = vi.fn()
-    renderDetail({ id: "promote-me" }, { onPromote })
-
-    await user.click(
-      screen.getByRole("button", { name: /r99 \/ 7 days/i })
-    )
-    expect(onPromote).toHaveBeenCalledWith("promote-me")
-  })
-
-  it("shows the featured state instead of the upsell when featured", () => {
-    renderDetail({ featured: true })
-
-    expect(
-      screen.getByRole("heading", { name: /this listing is featured/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole("button", { name: /r99 \/ 7 days/i })
-    ).not.toBeInTheDocument()
   })
 })
