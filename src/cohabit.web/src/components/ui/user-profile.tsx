@@ -223,7 +223,7 @@ export function UserProfile({
         {
           id: "bio",
           label: "Add a bio",
-          hint: "Tell housemates a little about yourself",
+          hint: "Tell hosts and housemates a little about yourself",
           icon: PenLine,
           completed: Boolean(user.bio?.trim()),
         },

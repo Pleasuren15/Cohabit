@@ -74,7 +74,7 @@ describe("UserProfile data rendering", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders a listing count and each listing title", () => {
+  it("renders a listing count and shows the active listing title", () => {
     const userListings = [
       makeProfile({ id: "l1", name: "Sea Point Flat" }),
       makeProfile({ id: "l2", name: "Umhlanga Room" }),
@@ -82,8 +82,10 @@ describe("UserProfile data rendering", () => {
     renderProfile({ userListings })
 
     expect(screen.getByText("(2)")).toBeInTheDocument()
-    for (const listing of userListings) {
-      expect(screen.getByText(listing.name)).toBeInTheDocument()
+    const active = userListings[0]
+    expect(screen.getByText(active.name)).toBeInTheDocument()
+    for (const listing of userListings.slice(1)) {
+      expect(screen.queryByText(listing.name)).not.toBeInTheDocument()
     }
   })
 })

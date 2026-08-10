@@ -5,8 +5,10 @@ import { AnimatePresence, motion } from "motion/react"
 import { X, KeyRound, Users, Bell, BellOff, LogIn, UserRound } from "lucide-react"
 import { FluidTabs, type TabItem } from "@/components/ui/fluid-tabs"
 import { SwitchMode } from "@/components/ui/switch-mode"
-
-const STORAGE_KEY = "cohabit:onboarding-dismissed"
+import {
+  isOnboardingDismissed,
+  markOnboardingDismissed,
+} from "@/lib/onboarding"
 
 interface OnboardingDialogProps {
   /** Delay (ms) before the dialog appears after the app mounts. */
@@ -33,13 +35,7 @@ export function OnboardingDialog({
 
   // Show the dialog after the delay, unless the user opted out previously.
   useEffect(() => {
-    let dismissed = false
-    try {
-      dismissed = localStorage.getItem(STORAGE_KEY) === "1"
-    } catch {
-      /* localStorage unavailable — still show */
-    }
-    if (dismissed) return
+    if (isOnboardingDismissed()) return
 
     const timer = window.setTimeout(() => setOpen(true), delay)
     return () => window.clearTimeout(timer)
@@ -48,11 +44,7 @@ export function OnboardingDialog({
   const close = () => {
     setOpen(false)
     if (neverAgain) {
-      try {
-        localStorage.setItem(STORAGE_KEY, "1")
-      } catch {
-        /* ignore storage errors */
-      }
+      markOnboardingDismissed()
     }
   }
 
@@ -132,7 +124,7 @@ export function OnboardingDialog({
                     </p>
                     <p className="text-sm leading-relaxed text-muted-foreground">
                       Post your room or property, set your price, and connect with
-                      verified housemates in your area.
+                      vetted tenants in your area.
                     </p>
                   </div>
                 ) : (

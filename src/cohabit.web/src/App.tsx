@@ -36,6 +36,7 @@ import {
   MessageHeader,
 } from "@/components/ui/message"
 import MeshBackground from "@/components/MeshBackground"
+import LandingBackdrop from "@/components/LandingBackdrop"
 import { ListingFilter } from "@/components/listing-filter"
 import { PROVINCE_SHAPES } from "@/lib/province-shapes"
 import { PROVINCES } from "@/lib/provinces"
@@ -128,7 +129,7 @@ const TERMS = [
 const HOUSING_FAQS: FaqItem[] = [
   {
     id: "verify",
-    question: "How do I verify a potential roommate?",
+    question: "How do I verify a potential roommate or host?",
     answer:
       "We recommend scheduling a video call first, meeting in a public place, and asking for references. Cohabit verifies hosts where possible, but always trust your instincts.",
   },
@@ -272,11 +273,18 @@ function watchlistBadge(
 }
 
 /** Shared full-bleed backdrop: MeshBackground + legibility scrim + decorative province shapes. */
-function AppShell({ children }: { children: ReactNode }) {
+function AppShell({
+  children,
+  backdrop,
+}: {
+  children: ReactNode
+  backdrop?: ReactNode
+}) {
   return (
     <div className="relative min-h-svh w-full">
       {/* Mesh-gradient background */}
       <MeshBackground />
+      {backdrop}
 
       {/* Scrim to keep text legible over the gradient */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/10 via-transparent to-background/20" />
@@ -307,10 +315,10 @@ function AppShell({ children }: { children: ReactNode }) {
   )
 }
 
-/** Landing page shell: AppShell backdrop + branding header/footer */
+/** Landing page shell: branded backdrop + header/footer */
 function LandingShell({ children }: { children: ReactNode }) {
   return (
-    <AppShell>
+    <AppShell backdrop={<LandingBackdrop />}>
       <header className="flex items-center justify-between px-6 pt-5 sm:pt-6">
         <div className="flex items-center gap-2">
           <span className="text-xl font-bold tracking-tight text-accent lowercase">
@@ -395,7 +403,7 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
               {COHABIT_PHRASES[phraseIndex]}
             </FlipText>
             <p className="mx-auto max-w-xs text-sm leading-relaxed text-balance text-muted-foreground">
-              Browse shared homes and compatible housemates across South Africa.
+              Browse rooms, full rentals and compatible housemates across South Africa.
             </p>
           </div>
 
@@ -489,6 +497,7 @@ function MainApp({
     favoriteProfiles,
     promotedIds,
     allListings,
+    upsertListing,
   } = useApp()
   const [listingFilter, setListingFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -583,9 +592,11 @@ function MainApp({
           created,
           ...prev.filter((p) => p.id !== created.id),
         ])
+        upsertListing(created)
         toast.success("Listing created", {
           description: `${created.title ?? created.name} is now live.`,
         })
+        navigate(`/listing/${created.id}`)
       } catch (err) {
         toast.error("Couldn't create listing", {
           description: err instanceof Error ? err.message : "Please try again.",
@@ -593,7 +604,7 @@ function MainApp({
         throw err
       }
     },
-    [currentUser, buildListingInput]
+    [currentUser, buildListingInput, upsertListing, navigate]
   )
 
   const handleUpdateListing = useCallback(
@@ -1009,7 +1020,7 @@ function MainApp({
                     <PageHeader
                       icon={Sparkles}
                       title="How Cohabit works"
-                      subtitle="Four simple steps to find your next housemate."
+                      subtitle="Four simple steps to find your next home or housemate."
                     />
                   </div>
                   <div className="w-full pt-4">
@@ -1024,7 +1035,7 @@ function MainApp({
                       <PageHeader
                         icon={ShieldCheck}
                         title="Trust & Safety Hub"
-                        subtitle={<>How we keep <span className="text-accent">Cohabit</span> a safe place to find your housemate.</>}
+                        subtitle={<>How we keep <span className="text-accent">Cohabit</span> a safe place to find your home or housemate.</>}
                       />
                     </div>
 
@@ -1194,7 +1205,7 @@ function MainApp({
                     <PageHeader
                       icon={BarChart3}
                       title={<><span className="text-accent">Cohabit</span> by the numbers</>}
-                      subtitle="A growing community of trusted housemates."
+                      subtitle="A growing community of trusted hosts and housemates."
                     />
                   </div>
 

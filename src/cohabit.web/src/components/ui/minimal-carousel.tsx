@@ -224,18 +224,18 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                     </button>
                   )}
 
-                  <div className="relative z-10 overflow-hidden">
-                    <h4
-                      className={`${activeId ? "text-[10px] sm:text-xs" : "text-sm sm:text-base"} truncate leading-tight font-medium opacity-90`}
-                    >
-                      {card.title}
-                    </h4>
-                    <p
-                      className={`${activeId ? "text-[10px] sm:text-xs" : "text-sm sm:text-base"} truncate font-semibold text-white/60`}
-                    >
-                      {card.value}
-                    </p>
-                  </div>
+                  {/* Name + location only in flat (no active) mode; secondary
+                      cards beside an expanded card stay image-only. */}
+                  {!activeId && (
+                    <div className="relative z-10 overflow-hidden">
+                      <h4 className="truncate text-sm font-medium leading-tight opacity-90 sm:text-base">
+                        {card.title}
+                      </h4>
+                      <p className="truncate text-sm font-semibold text-white/60 sm:text-base">
+                        {card.value}
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </motion.div>

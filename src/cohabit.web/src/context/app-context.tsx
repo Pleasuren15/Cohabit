@@ -15,6 +15,8 @@ import {
   type FeaturedProfile,
 } from "@/services/listing-service"
 import { favoritesService } from "@/services/favorites-service"
+import { PROVINCES } from "@/lib/provinces"
+import { persistGuestProvince, readGuestProvince } from "@/lib/onboarding"
 
 export interface AppContextValue {
   province: string | null
@@ -31,6 +33,7 @@ export interface AppContextValue {
   promotedIds: Set<string>
   promoteListing: (id: string) => void
   allListings: FeaturedProfile[]
+  upsertListing: (listing: FeaturedProfile) => void
   getListingById: (id: string) => Promise<FeaturedProfile | null>
 }
 
@@ -62,9 +65,19 @@ export function AppProvider({
   children: ReactNode
   initialListings?: FeaturedProfile[]
 }) {
-  const [province, setProvince] = useState<string | null>(null)
+  // Restore an opted-out guest's province so the picker doesn't re-ask on load.
+  const [province, setProvinceState] = useState<string | null>(() => {
+    const stored = readGuestProvince()
+    return stored && PROVINCES[stored] ? stored : null
+  })
   const [activeTab, setActiveTab] = useState("Home")
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Remember the province for opted-out guests so future visits skip the picker.
+  const setProvince = useCallback((value: string) => {
+    setProvinceState(value)
+    persistGuestProvince(value)
+  }, [])
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     if (!USE_MOCK_DATA) return new Set()
     return new Set([
@@ -107,7 +120,17 @@ export function AppProvider({
     }
   }, [])
 
-  const allListings = initialListings
+  const [allListings, setAllListings] =
+    useState<FeaturedProfile[]>(initialListings)
+
+  // Keep created listings discoverable so a redirect to the detail page
+  // (e.g. right after adding a property) resolves in both mock and API mode.
+  const upsertListing = useCallback((listing: FeaturedProfile) => {
+    setAllListings((prev) => [
+      listing,
+      ...prev.filter((p) => p.id !== listing.id),
+    ])
+  }, [])
 
   const toggleFavorite = useCallback(
     async (id: string) => {
@@ -213,6 +236,7 @@ export function AppProvider({
     promotedIds,
     promoteListing,
     allListings,
+    upsertListing,
     getListingById,
   }
 

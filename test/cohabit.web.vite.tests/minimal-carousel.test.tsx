@@ -5,11 +5,15 @@ import { MinimalCarousel } from "@/components/ui/minimal-carousel"
 import { SAMPLE_CARDS } from "./fixtures"
 
 describe("MinimalCarousel data rendering", () => {
-  it("renders the title and value of every card", () => {
+  it("shows the name and location only on the active card", () => {
     render(<MinimalCarousel cards={SAMPLE_CARDS} />)
-    for (const card of SAMPLE_CARDS) {
-      expect(screen.getByText(card.title)).toBeInTheDocument()
-      expect(screen.getByText(card.value)).toBeInTheDocument()
+    const active = SAMPLE_CARDS[0]
+    expect(screen.getByText(active.title)).toBeInTheDocument()
+    expect(screen.getByText(active.value)).toBeInTheDocument()
+
+    for (const card of SAMPLE_CARDS.slice(1)) {
+      expect(screen.queryByText(card.title)).not.toBeInTheDocument()
+      expect(screen.queryByText(card.value)).not.toBeInTheDocument()
     }
   })
 
@@ -60,7 +64,11 @@ describe("MinimalCarousel interaction", () => {
     )
 
     const target = SAMPLE_CARDS[1]
-    await user.click(screen.getByText(target.title))
+    const gridViewButtons = screen.getAllByRole("button", {
+      name: /^view$/i,
+    })
+    const targetCell = gridViewButtons[0].parentElement!
+    await user.click(targetCell)
 
     const heading = screen.getByRole("heading", {
       level: 3,
