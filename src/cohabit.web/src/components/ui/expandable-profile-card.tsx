@@ -94,7 +94,7 @@ export function ExpandableProfileCard({
   }
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm transition-colors">
+    <div className="group w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
       {/* --- Image background + header overlay (always visible) --- */}
       <div
         role="button"
@@ -114,7 +114,7 @@ export function ExpandableProfileCard({
           <img
             src={imageSrc}
             alt={name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
 
           {/* Featured badge */}
@@ -163,11 +163,19 @@ export function ExpandableProfileCard({
                   isFavorited ? "Remove from favorites" : "Add to favorites"
                 }
               >
-                <Heart
-                  className={`size-3.5 transition-colors ${
-                    isFavorited ? "fill-red-500 text-red-500" : "text-white/80"
-                  }`}
-                />
+                <motion.span
+                  key={isFavorited ? "favorited" : "unfavorited"}
+                  initial={{ scale: 0.4 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                  className="inline-flex"
+                >
+                  <Heart
+                    className={`size-3.5 transition-colors ${
+                      isFavorited ? "fill-red-500 text-red-500" : "text-white/80"
+                    }`}
+                  />
+                </motion.span>
               </button>
             )}
 

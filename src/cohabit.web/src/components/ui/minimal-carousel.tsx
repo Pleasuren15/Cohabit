@@ -77,7 +77,7 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                 <motion.div
                   key={activeCard.id}
                   layoutId={activeCard.id}
-                  className="relative flex min-h-48 w-full flex-col justify-between overflow-hidden rounded-[28px] p-4 text-white shadow-2xl sm:h-56 sm:rounded-4xl sm:p-5"
+                  className="group relative flex min-h-48 w-full flex-col justify-between overflow-hidden rounded-[28px] p-4 text-white shadow-2xl sm:h-56 sm:rounded-4xl sm:p-5"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 >
                   {/* Background image when available, otherwise gradient */}
@@ -86,7 +86,7 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                       <img
                         src={activeCard.imageSrc}
                         alt=""
-                        className="absolute inset-0 h-full w-full object-cover"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
                     </>
@@ -174,7 +174,7 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                     setActiveId(card.id)
                   }}
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  className={`relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-[22px] p-3 text-white shadow-lg sm:rounded-[28px] sm:p-4 ${activeId ? "h-24 sm:h-28" : "h-28 sm:h-32"}`}
+                  className={`group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-[22px] p-3 text-white shadow-lg sm:rounded-[28px] sm:p-4 ${activeId ? "h-24 sm:h-28" : "h-28 sm:h-32"}`}
                 >
                   {/* Background image for grid cards too */}
                   {card.imageSrc ? (
@@ -182,7 +182,7 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                       <img
                         src={card.imageSrc}
                         alt=""
-                        className="absolute inset-0 h-full w-full object-cover"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     </>

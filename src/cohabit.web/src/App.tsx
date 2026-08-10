@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, type ReactNode } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, MotionConfig } from "framer-motion"
 import { GlassDock, type DockItem } from "@/components/ui/glass-dock"
 import {
   Home,
@@ -390,8 +390,13 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
       <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
         <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-8">
           {/* Hero */}
-          <div className="space-y-3">
-            <span className="inline-block text-xs font-semibold tracking-[0.2em] text-accent uppercase">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut", delay: 0.05 }}
+            className="space-y-3"
+          >
+            <span className="inline-block bg-gradient-to-r from-blue-600 to-sky-400 bg-clip-text text-xs font-semibold tracking-[0.2em] text-transparent uppercase dark:from-blue-400 dark:to-sky-300">
               Find your space
             </span>
             <FlipText
@@ -405,23 +410,36 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
             <p className="mx-auto max-w-xs text-sm leading-relaxed text-balance text-muted-foreground">
               Browse rooms, full rentals and compatible housemates across South Africa.
             </p>
-          </div>
+          </motion.div>
 
           {/* Province picker card */}
-          <div className="w-full rounded-3xl border border-border/40 bg-background/40 p-6 shadow-sm backdrop-blur-xl sm:p-8">
-            <div className="mb-5 space-y-1 text-center">
-              <h2 className="text-sm font-semibold text-foreground">
-                Get Started
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Choose your province to browse listings
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+            className="relative w-full"
+          >
+            <div className="pointer-events-none absolute -inset-4 rounded-full bg-blue-500/20 blur-3xl dark:bg-blue-500/10" />
+            <div className="relative w-full rounded-3xl border border-border/40 bg-background/40 p-6 shadow-sm backdrop-blur-xl sm:p-8">
+              <div className="mb-5 space-y-1 text-center">
+                <h2 className="text-sm font-semibold text-foreground">
+                  Get Started
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Choose your province to browse listings
+                </p>
+              </div>
+              <Select33 onProvinceChange={setSelectedProvince} />
             </div>
-            <Select33 onProvinceChange={setSelectedProvince} />
-          </div>
+          </motion.div>
 
           {/* Trust badges */}
-          <div className="flex items-center justify-center gap-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut", delay: 0.35 }}
+            className="flex items-center justify-center gap-3"
+          >
             {LANDING_BADGES.map(({ label, icon: Icon }) => (
               <span
                 key={label}
@@ -431,7 +449,7 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
                 {label}
               </span>
             ))}
-          </div>
+          </motion.div>
         </div>
       </main>
     </LandingShell>
@@ -468,6 +486,26 @@ function PageHeader({
         />
       </div>
     </div>
+  )
+}
+
+/** Fades content in as it scrolls into view (used on the Info page). */
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: ReactNode
+  delay?: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.5, ease: "easeOut", delay }}
+    >
+      {children}
+    </motion.div>
   )
 }
 
@@ -887,6 +925,14 @@ function MainApp({
         <main
           className={`flex-1 overflow-y-auto px-6 pb-28 ${activeTab === "Home" ? "pt-40" : "pt-6"}`}
         >
+          <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -14 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
           <div className="mx-auto max-w-md">
             {activeTab === "Home" && (
               <>
@@ -916,13 +962,13 @@ function MainApp({
                         key={i}
                         className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm"
                       >
-                        <div className="h-32 animate-pulse bg-muted sm:h-40" />
+                        <div className="h-32 skeleton-shimmer bg-muted sm:h-40" />
                         <div className="space-y-2.5 px-4 pt-3 pb-4">
-                          <div className="h-4 w-3/5 animate-pulse rounded bg-muted" />
-                          <div className="h-3 w-2/5 animate-pulse rounded bg-muted" />
+                          <div className="h-4 w-3/5 skeleton-shimmer rounded bg-muted" />
+                          <div className="h-3 w-2/5 skeleton-shimmer rounded bg-muted" />
                           <div className="flex gap-2">
-                            <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
-                            <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
+                            <div className="h-5 w-14 skeleton-shimmer rounded-full bg-muted" />
+                            <div className="h-5 w-14 skeleton-shimmer rounded-full bg-muted" />
                           </div>
                         </div>
                       </div>
@@ -1015,6 +1061,7 @@ function MainApp({
             {activeTab === "Info" && (
               <div className="flex flex-col items-center gap-5">
                 {/* Band 0 — How Cohabit works */}
+                <Reveal className="w-full">
                 <section className="w-full bg-background/70 px-5 py-5 sm:px-6">
                   <div className="w-full">
                     <PageHeader
@@ -1027,8 +1074,10 @@ function MainApp({
                     <HowCohabitWorks />
                   </div>
                 </section>
+                </Reveal>
 
                 {/* Band 1 — Trust & Safety + Verification */}
+                <Reveal className="w-full">
                 <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="flex flex-col items-center">
                     <div className="w-full">
@@ -1198,8 +1247,10 @@ function MainApp({
                     </div>
                   </div>
                 </section>
+                </Reveal>
 
                 {/* Band 2 — Stats */}
+                <Reveal className="w-full">
                 <section className="w-full bg-accent/5 px-5 py-5 sm:px-6">
                   <div className="w-full">
                     <PageHeader
@@ -1231,8 +1282,10 @@ function MainApp({
                     ))}
                   </div>
                 </section>
+                </Reveal>
 
                 {/* Band 3 — FAQ */}
+                <Reveal className="w-full">
                 <section className="w-full px-1">
                   <Faq6
                     badge="FAQ"
@@ -1240,8 +1293,10 @@ function MainApp({
                     faqs={HOUSING_FAQS}
                   />
                 </section>
+                </Reveal>
 
                 {/* Band 4 — Terms & Conditions */}
+                <Reveal className="w-full">
                 <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="w-full">
                     <PageHeader
@@ -1285,6 +1340,7 @@ function MainApp({
                     </div>
                   </div>
                 </section>
+                </Reveal>
               </div>
             )}
 
@@ -1364,6 +1420,8 @@ function MainApp({
               </div>
             </div>
           )}
+          </motion.div>
+          </AnimatePresence>
         </main>
       </AppShell>
 
@@ -1455,11 +1513,13 @@ function MainApp({
 
 export function App() {
   return (
-    <AppProvider
-      initialListings={USE_MOCK_DATA ? FEATURED_PROFILES : []}
-    >
-      <AppFrame />
-    </AppProvider>
+    <MotionConfig reducedMotion="user">
+      <AppProvider
+        initialListings={USE_MOCK_DATA ? FEATURED_PROFILES : []}
+      >
+        <AppFrame />
+      </AppProvider>
+    </MotionConfig>
   )
 }
 
@@ -1728,23 +1788,29 @@ function ListingDetailPage() {
 
   return (
     <>
-      <DetailPage
-        key={listing.id}
-        {...listing}
-        featured={listing.featured === true || promotedIds.has(listing.id)}
-        isFavorited={favorites.has(listing.id)}
-        onToggleFavorite={() =>
-          handleToggle(listing.id, favorites.has(listing.id))
-        }
-        onPromote={() => promoteListing(listing.id)}
-        onRequestView={() => {
-          setActiveTab("Messages")
-          navigate("/")
-        }}
-        onBack={() => navigate(-1)}
-        relatedListings={related}
-        onViewRelated={(rid) => navigate(`/listing/${rid}`)}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
+        <DetailPage
+          key={listing.id}
+          {...listing}
+          featured={listing.featured === true || promotedIds.has(listing.id)}
+          isFavorited={favorites.has(listing.id)}
+          onToggleFavorite={() =>
+            handleToggle(listing.id, favorites.has(listing.id))
+          }
+          onPromote={() => promoteListing(listing.id)}
+          onRequestView={() => {
+            setActiveTab("Messages")
+            navigate("/")
+          }}
+          onBack={() => navigate(-1)}
+          relatedListings={related}
+          onViewRelated={(rid) => navigate(`/listing/${rid}`)}
+        />
+      </motion.div>
       {unfavoriteDialog}
     </>
   )
@@ -1834,8 +1900,13 @@ function MessageDetailPage() {
   ).map(([day, messages]) => ({ day, messages }))
 
   return (
-    <AppShell>
-      <main className="flex-1 overflow-y-auto px-4 pt-5 pb-28 sm:px-6">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <AppShell>
+        <main className="flex-1 overflow-y-auto px-4 pt-5 pb-28 sm:px-6">
         <div className="mx-auto max-w-2xl">
           <header className="mb-6">
             <button
@@ -1908,6 +1979,7 @@ function MessageDetailPage() {
         </div>
       </main>
     </AppShell>
+    </motion.div>
   )
 }
 
