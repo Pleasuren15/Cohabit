@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { X, KeyRound, Users, Bell, BellOff, LogIn, UserRound } from "lucide-react"
+import { X, KeyRound, Users, Bell, BellOff, LogIn, UserRound, Plus } from "lucide-react"
 import { FluidTabs, type TabItem } from "@/components/ui/fluid-tabs"
 import { SwitchMode } from "@/components/ui/switch-mode"
-
-const STORAGE_KEY = "cohabit:onboarding-dismissed"
+import {
+  isOnboardingDismissed,
+  markOnboardingDismissed,
+} from "@/lib/onboarding"
 
 interface OnboardingDialogProps {
   /** Delay (ms) before the dialog appears after the app mounts. */
@@ -14,6 +16,7 @@ interface OnboardingDialogProps {
   onContinueAsGuest?: () => void
   onRegister?: () => void
   onLogin?: () => void
+  onListSpace?: () => void
 }
 
 const TABS: TabItem[] = [
@@ -26,6 +29,7 @@ export function OnboardingDialog({
   onContinueAsGuest,
   onRegister,
   onLogin,
+  onListSpace,
 }: OnboardingDialogProps) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<string>("rent")
@@ -33,13 +37,7 @@ export function OnboardingDialog({
 
   // Show the dialog after the delay, unless the user opted out previously.
   useEffect(() => {
-    let dismissed = false
-    try {
-      dismissed = localStorage.getItem(STORAGE_KEY) === "1"
-    } catch {
-      /* localStorage unavailable — still show */
-    }
-    if (dismissed) return
+    if (isOnboardingDismissed()) return
 
     const timer = window.setTimeout(() => setOpen(true), delay)
     return () => window.clearTimeout(timer)
@@ -48,11 +46,7 @@ export function OnboardingDialog({
   const close = () => {
     setOpen(false)
     if (neverAgain) {
-      try {
-        localStorage.setItem(STORAGE_KEY, "1")
-      } catch {
-        /* ignore storage errors */
-      }
+      markOnboardingDismissed()
     }
   }
 
@@ -69,6 +63,11 @@ export function OnboardingDialog({
   const handleLogin = () => {
     close()
     onLogin?.()
+  }
+
+  const handleListSpace = () => {
+    close()
+    onListSpace?.()
   }
 
   return (
@@ -126,14 +125,24 @@ export function OnboardingDialog({
 
               <div className="mt-5 min-h-28">
                 {activeTab === "rent" ? (
-                  <div className="space-y-2 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
-                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                      List your space for renting
-                    </p>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      Post your room or property, set your price, and connect with
-                      verified housemates in your area.
-                    </p>
+                  <div className="space-y-3 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                        List your space for renting
+                      </p>
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        Post your room or property, set your price, and connect with
+                        vetted tenants in your area.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleListSpace}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-blue-600/25 transition-opacity hover:opacity-90"
+                    >
+                      <Plus className="size-3.5" aria-hidden="true" />
+                      List your space
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-2 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-4">

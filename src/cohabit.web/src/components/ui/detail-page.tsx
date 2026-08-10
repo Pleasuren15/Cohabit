@@ -24,11 +24,11 @@ import {
   Wallet,
   Zap,
   ShieldCheck,
-  Star,
-  Megaphone,
+  Send,
 } from "lucide-react"
 import { AMENITIES } from "@/lib/amenities"
 import { ViewOnMap } from "./view-on-map"
+import { NativeSelect } from "@/components/base-ui/native-select"
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +36,13 @@ import {
 } from "@/components/ui/tooltip"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
+
+/** Structured fields collected when a viewer requests a viewing. */
+export interface ViewingRequest {
+  moveInDate: string
+  occupants: number
+  message: string
+}
 
 interface RelatedListing {
   id: string
@@ -61,11 +68,9 @@ interface DetailPageProps {
   responseTime: string
   rules: string[]
   amenities?: string[]
-  featured?: boolean
-  onPromote?: (id: string) => void
   isFavorited?: boolean
   onToggleFavorite?: (id: string) => void
-  onRequestView?: (id: string) => void
+  onRequestView?: (id: string, details: ViewingRequest) => void
   onBack: () => void
   relatedListings?: RelatedListing[]
   onViewRelated?: (id: string) => void
@@ -99,6 +104,15 @@ const VERIFICATION_COLORS: Record<VerificationType, string> = {
 
 const formatPrice = (value: number) => `R ${value.toLocaleString("en-ZA")}`
 
+/** ISO date `YYYY-MM-DD` two weeks from today — the inquiry form's default. */
+function defaultMoveInDate(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 14)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`
+}
+
 /** Derive a consistent phone number from the profile id. */
 function derivePhone(id: string): string {
   const digits = id
@@ -130,8 +144,6 @@ export function DetailPage({
   responseTime,
   rules,
   amenities,
-  featured = false,
-  onPromote,
   isFavorited = false,
   onToggleFavorite,
   onRequestView,
@@ -141,6 +153,10 @@ export function DetailPage({
 }: DetailPageProps) {
   const [fullScreenIndex, setFullScreenIndex] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
+  const [showInquiryForm, setShowInquiryForm] = useState(false)
+  const [inquiryMoveInDate, setInquiryMoveInDate] = useState(() => defaultMoveInDate())
+  const [inquiryOccupants, setInquiryOccupants] = useState("1")
+  const [inquiryMessage, setInquiryMessage] = useState("")
   const [amenitiesScroll, setAmenitiesScroll] = useState({
     canLeft: false,
     canRight: false,
@@ -438,53 +454,6 @@ export function DetailPage({
               />
             </div>
 
-            {/* Promote this listing — upsell */}
-            <div className="overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50 to-orange-50 shadow-sm dark:border-amber-400/30 dark:from-amber-400/10 dark:to-orange-400/10">
-              {featured ? (
-                <div className="flex items-center gap-3 p-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-400 text-black">
-                    <Star className="size-5 fill-black" />
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="text-sm font-bold text-foreground">
-                      This listing is featured
-                    </h2>
-                    <p className="text-xs text-muted-foreground">
-                      It appears at the top of search results until the
-                      promotion expires.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4">
-                  <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-                    <Megaphone className="size-4 text-amber-500" />
-                    Promote this listing
-                  </h2>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    Get up to 3x more views by featuring your listing at the
-                    top of search results.
-                  </p>
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onPromote?.(id)}
-                      className="flex-1 cursor-pointer rounded-full border border-amber-300 bg-white px-3 py-2 text-center text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-400/40 dark:bg-background dark:text-amber-300"
-                    >
-                      R99 / 7 days
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onPromote?.(id)}
-                      className="flex-1 cursor-pointer rounded-full bg-amber-400 px-3 py-2 text-center text-[11px] font-semibold text-black shadow-sm transition-colors hover:bg-amber-500"
-                    >
-                      R249 / 30 days
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Amenities — single-line scrollable row */}
             <div>
               <h2 className="mb-2 text-sm font-semibold text-foreground">
@@ -616,7 +585,10 @@ export function DetailPage({
                   )}
                   <button
                     type="button"
-                    onClick={() => onRequestView?.(id)}
+                    onClick={() => {
+                      setInquiryMessage("")
+                      setShowInquiryForm(true)
+                    }}
                     className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-accent/90"
                   >
                     <MessageSquare className="size-3" />
@@ -763,7 +735,10 @@ export function DetailPage({
             </div>
             <button
               type="button"
-              onClick={() => onRequestView?.(id)}
+              onClick={() => {
+                setInquiryMessage("")
+                setShowInquiryForm(true)
+              }}
               className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-accent/90"
             >
               <MessageSquare className="size-3.5" />
@@ -772,6 +747,144 @@ export function DetailPage({
           </div>
         </div>
       </motion.div>
+
+      {/* Structured inquiry form — the core marketplace mechanic */}
+      <AnimatePresence>
+        {showInquiryForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Request to view"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm sm:items-center"
+            onClick={() => setShowInquiryForm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border border-border bg-background p-5 shadow-xl sm:rounded-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="size-12 shrink-0 overflow-hidden rounded-xl">
+                    <img
+                      src={imageSrc}
+                      alt={name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="truncate text-base font-semibold">
+                      Request to view
+                    </h2>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {name} · {location}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowInquiryForm(false)}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="Close"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!inquiryMoveInDate.trim()) return
+                  onRequestView?.(id, {
+                    moveInDate: inquiryMoveInDate.trim(),
+                    occupants: Math.max(1, parseInt(inquiryOccupants, 10) || 1),
+                    message: inquiryMessage.trim(),
+                  })
+                  setShowInquiryForm(false)
+                }}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="inquiry-move-in"
+                      className="text-xs font-medium text-muted-foreground"
+                    >
+                      Move-in date
+                    </label>
+                    <input
+                      id="inquiry-move-in"
+                      type="date"
+                      value={inquiryMoveInDate}
+                      onChange={(e) => setInquiryMoveInDate(e.target.value)}
+                      required
+                      aria-label="Move-in date"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 dark:[color-scheme:dark]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="inquiry-occupants"
+                      className="text-xs font-medium text-muted-foreground"
+                    >
+                      Occupants
+                    </label>
+                    <NativeSelect
+                      id="inquiry-occupants"
+                      value={inquiryOccupants}
+                      onChange={(e) => setInquiryOccupants(e.target.value)}
+                      aria-label="Number of occupants"
+                      className="w-full rounded-xl border border-border bg-background focus:ring-1 focus:ring-accent/30 dark:bg-zinc-950 dark:[&_select]:bg-zinc-950 dark:[&_select]:[color-scheme:dark]"
+                    >
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <option key={n} value={n}>
+                          {n} {n === 1 ? "person" : "people"}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="inquiry-message"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Message to {name.split(" ")[0]}
+                  </label>
+                  <textarea
+                    id="inquiry-message"
+                    value={inquiryMessage}
+                    onChange={(e) => setInquiryMessage(e.target.value)}
+                    placeholder="Tell the host a little about yourself and when you'd like to visit."
+                    rows={4}
+                    aria-label="Message to host"
+                    className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent/90"
+                >
+                  <Send className="size-4" />
+                  Send request
+                </button>
+                <p className="text-center text-[11px] text-muted-foreground">
+                  The host is notified immediately and can accept or decline
+                  from their dashboard.
+                </p>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

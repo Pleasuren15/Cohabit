@@ -15,6 +15,7 @@
 
 import { API_BASE_URL, USE_MOCK_DATA } from "@/services/config"
 import { PROVINCES } from "@/lib/provinces"
+import { matchesListingFilters, type ListingFilters } from "@/lib/listing-utils"
 
 export type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -54,6 +55,8 @@ export interface ListingQuery {
   pageSize: number
   /** ids that should sort to the top (featured + promoted) */
   promotedIds: ReadonlySet<string>
+  /** structured filters from the "better search" sheet */
+  filters?: ListingFilters
 }
 
 export interface PagedListings {
@@ -185,6 +188,7 @@ class MockListingService implements ListingService {
         if (query.type === "roommate" && p.type !== "roommate") return false
         if (query.type === "rentals" && p.type !== "rentals") return false
         if (q && !`${p.name} ${p.location}`.toLowerCase().includes(q)) return false
+        if (!matchesListingFilters(p, query.filters)) return false
         return true
       })
       .slice()
@@ -692,12 +696,12 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     id: "5b7d0599-df6e-4da5-a970-94c0e14a3f5b",
     imageSrc:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1000&h=700",
-    name: "Emma Coetzee",
+    name: "Cork & Vine Garden Studio",
     location: "Stellenbosch, Winelands",
     mapAddress: "Stellenbosch, South Africa",
-    bio: "Postgraduate student in viticulture. Quiet and dedicated, but I unwind with hiking and dog parks on weekends. Non-smoker.",
-    price: 4800,
-    deposit: 4800,
+    bio: "A sunny self-catering studio in the heart of the Winelands, tucked behind a working farm. Fully furnished with an en-suite bathroom and a private garden entrance. Ideal for one professional or a student.",
+    price: 5200,
+    deposit: 5200,
     beds: 1,
     baths: 1,
     availableFrom: "1 Feb 2026",
@@ -706,20 +710,20 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     photoCount: 5,
     verified: ["phone", "id", "credit"],
     province: "wc",
-    type: "roommate",
+    type: "rentals",
     userId: "user-2",
   },
   {
     id: "2a0745b0-e19d-4a6b-94a9-6a5475cc25ea",
     imageSrc:
       "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&q=80&w=1000&h=700",
-    name: "Nomsa Mthembu",
+    name: "Morningside Garden Apartment",
     location: "Morningside, Durban",
     mapAddress: "Morningside, Durban, South Africa",
-    bio: "Registered nurse working night shifts at Addington Hospital. I need a calm, clean space during the day to rest. Respectful and drama-free.",
-    price: 5200,
-    deposit: 5200,
-    beds: 1,
+    bio: "Bright ground-floor two-bedroom in a secure Morningside complex. Garden patio, covered parking and monthly water included. Quiet block, close to the promenade and the Berea restaurant strip.",
+    price: 9800,
+    deposit: 9800,
+    beds: 2,
     baths: 1,
     availableFrom: "1 Sep 2026",
     responseTime: "Within the hour",
@@ -727,7 +731,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     photoCount: 3,
     verified: ["phone", "email", "id"],
     province: "kzn",
-    type: "roommate",
+    type: "rentals",
     userId: "user-2",
   },
   {
@@ -820,12 +824,12 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     id: "8c0ae681-cf63-4442-a039-a5ed8c7058e8",
     imageSrc:
       "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=1000&h=700",
-    name: "Katlego Mokoena",
+    name: "Central Bloem Studio",
     location: "Bloemfontein Central",
     mapAddress: "Bloemfontein, South Africa",
-    bio: "Journalist covering local news. I work flexible hours and enjoy hiking, photography, and trying new restaurants. Looking for a laid-back flatmate.",
-    price: 4200,
-    deposit: 4200,
+    bio: "Newly renovated studio in Bloemfontein Central with high ceilings and its own kitchenette. Walking distance to the CBD, Mimosa Mall and the university. Prepaid electricity and fibre-ready.",
+    price: 5400,
+    deposit: 5400,
     beds: 1,
     baths: 1,
     availableFrom: "Immediately",
@@ -834,20 +838,20 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     photoCount: 4,
     verified: ["phone", "email"],
     province: "fs",
-    type: "roommate",
+    type: "rentals",
     userId: "user-2",
   },
   {
     id: "b04e51c9-7dbf-42b2-a811-61588cb820cc",
     imageSrc:
       "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&q=80&w=1000&h=700",
-    name: "Anelize Visser",
+    name: "Universitas Loft",
     location: "Universitas, Bloemfontein",
     mapAddress: "Bloemfontein, South Africa",
-    bio: "Masters student at UFS. I need a quiet study environment but enjoy board games and coffee chats. Tidy, respectful, and drama-free.",
-    price: 3800,
-    deposit: 3800,
-    beds: 1,
+    bio: "Modern two-bedroom loft on the upper floor of a quiet Universitas block. Open-plan living, full kitchen and a lock-up garage. A short walk or drive to UFS and the campus precinct.",
+    price: 8200,
+    deposit: 8200,
+    beds: 2,
     baths: 1,
     availableFrom: "1 Feb 2026",
     responseTime: "Within a few hours",
@@ -855,20 +859,20 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     photoCount: 3,
     verified: ["phone", "id"],
     province: "fs",
-    type: "roommate",
+    type: "rentals",
     userId: "user-2",
   },
   {
     id: "ded583f9-5dc2-4de2-a53f-816533ebc8d5",
     imageSrc:
       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=1000&h=700",
-    name: "Tendai Masuku",
+    name: "Limpopo City Flat",
     location: "Polokwane Central",
     mapAddress: "Polokwane, South Africa",
-    bio: "Pharmacist at a local hospital. I work shifts but keep a tidy home. Love gardening, cooking, and weekend braais. Pet-friendly.",
-    price: 4500,
-    deposit: 4500,
-    beds: 1,
+    bio: "Secure two-bedroom flat in Polokwane Central with an open lounge, fitted kitchen and uninterrupted town views. On-site parking and 24-hour access. Ideal for a couple or two professionals.",
+    price: 7600,
+    deposit: 7600,
+    beds: 2,
     baths: 1,
     availableFrom: "1 Sep 2026",
     responseTime: "Within the hour",
@@ -876,7 +880,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     photoCount: 6,
     verified: ["phone", "email", "id"],
     province: "lp",
-    type: "roommate",
+    type: "rentals",
     userId: "user-2",
   },
   {

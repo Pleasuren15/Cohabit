@@ -16,8 +16,8 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   play: async () => {
     await expect(screen.getByText("Create your profile")).toBeVisible()
-    await expect(screen.getByText("Browse & save")).toBeVisible()
+    await expect(screen.getByText("Browse & list")).toBeVisible()
     await expect(screen.getByText("Connect & chat")).toBeVisible()
-    await expect(screen.getByText("Move in together")).toBeVisible()
+    await expect(screen.getByText("Settle in")).toBeVisible()
   },
 }

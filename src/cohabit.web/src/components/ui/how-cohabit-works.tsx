@@ -11,21 +11,21 @@ const STEPS = [
     completed: true,
   },
   {
-    title: "Browse & save",
+    title: "Browse & list",
     description:
-      "Explore listings from verified members across all 9 provinces and save your favourites.",
+      "Explore rooms, full rentals and shared homes across all 9 provinces — or post your own property and save your favourites.",
     icon: IdCard,
   },
   {
     title: "Connect & chat",
     description:
-      "Message potential housemates, arrange viewings, and agree on the details that matter.",
+      "Message hosts and potential housemates, arrange viewings, and agree on the details that matter.",
     icon: FilePenLine,
   },
   {
-    title: "Move in together",
+    title: "Settle in",
     description:
-      "Finalise your agreement and start your new co-habitation journey with confidence.",
+      "Finalise your lease or house agreement, meet your housemates, and move in with confidence.",
     icon: FileCheck2,
   },
 ]

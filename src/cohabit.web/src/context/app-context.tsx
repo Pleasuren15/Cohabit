@@ -15,12 +15,25 @@ import {
   type FeaturedProfile,
 } from "@/services/listing-service"
 import { favoritesService } from "@/services/favorites-service"
+import {
+  inquiriesService,
+  type Inquiry,
+  type InquiryDetails,
+  type InquiryStatus,
+} from "@/services/inquiries-service"
+import { PROVINCES } from "@/lib/provinces"
+import { persistGuestProvince, readGuestProvince } from "@/lib/onboarding"
+import type { UserData } from "@/components/ui/user-profile"
 
 export interface AppContextValue {
   province: string | null
   setProvince: (province: string) => void
   activeTab: string
   setActiveTab: (tab: string) => void
+  showAuth: boolean
+  setShowAuth: (show: boolean) => void
+  currentUser: UserData | null
+  setCurrentUser: (user: UserData | null) => void
   currentUserId: string | null
   setCurrentUserId: (id: string | null) => void
   favorites: Set<string>
@@ -29,9 +42,12 @@ export interface AppContextValue {
   clearFavorites: () => Promise<void>
   favoriteProfiles: FeaturedProfile[]
   promotedIds: Set<string>
-  promoteListing: (id: string) => void
   allListings: FeaturedProfile[]
+  upsertListing: (listing: FeaturedProfile) => void
   getListingById: (id: string) => Promise<FeaturedProfile | null>
+  inquiries: Inquiry[]
+  submitInquiry: (details: InquiryDetails) => Promise<Inquiry>
+  updateInquiryStatus: (id: string, status: InquiryStatus) => Promise<void>
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -62,9 +78,21 @@ export function AppProvider({
   children: ReactNode
   initialListings?: FeaturedProfile[]
 }) {
-  const [province, setProvince] = useState<string | null>(null)
+  // Restore an opted-out guest's province so the picker doesn't re-ask on load.
+  const [province, setProvinceState] = useState<string | null>(() => {
+    const stored = readGuestProvince()
+    return stored && PROVINCES[stored] ? stored : null
+  })
   const [activeTab, setActiveTab] = useState("Home")
+  const [showAuth, setShowAuth] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Remember the province for opted-out guests so future visits skip the picker.
+  const setProvince = useCallback((value: string) => {
+    setProvinceState(value)
+    persistGuestProvince(value)
+  }, [])
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     if (!USE_MOCK_DATA) return new Set()
     return new Set([
@@ -86,7 +114,7 @@ export function AppProvider({
     return readSavedAt()
   })
   const [favoriteProfiles, setFavoriteProfiles] = useState<FeaturedProfile[]>([])
-  const [promotedIds, setPromotedIds] = useState<Set<string>>(() => new Set())
+  const [promotedIds] = useState<Set<string>>(() => new Set())
 
   useEffect(() => {
     if (USE_MOCK_DATA) return
@@ -107,7 +135,17 @@ export function AppProvider({
     }
   }, [])
 
-  const allListings = initialListings
+  const [allListings, setAllListings] =
+    useState<FeaturedProfile[]>(initialListings)
+
+  // Keep created listings discoverable so a redirect to the detail page
+  // (e.g. right after adding a property) resolves in both mock and API mode.
+  const upsertListing = useCallback((listing: FeaturedProfile) => {
+    setAllListings((prev) => [
+      listing,
+      ...prev.filter((p) => p.id !== listing.id),
+    ])
+  }, [])
 
   const toggleFavorite = useCallback(
     async (id: string) => {
@@ -180,22 +218,44 @@ export function AppProvider({
     }
   }, [favorites])
 
-  const promoteListing = useCallback((id: string) => {
-    setPromotedIds((prev) => {
-      if (prev.has(id)) return prev
-      const next = new Set(prev)
-      next.add(id)
-      return next
-    })
-    toast.success("Listing promoted", {
-      description:
-        "Your listing is now featured at the top of search results.",
-    })
-  }, [])
-
   const getListingById = useCallback(
     (id: string) => listingService.getListingById(id, allListings),
     [allListings]
+  )
+
+  const [inquiries, setInquiries] = useState<Inquiry[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    inquiriesService
+      .loadInquiries()
+      .then((items) => {
+        if (cancelled) return
+        setInquiries(items)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        console.error("Failed to load inquiries", err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const submitInquiry = useCallback(async (details: InquiryDetails) => {
+    const created = await inquiriesService.submitInquiry(details)
+    setInquiries((prev) => [created, ...prev])
+    return created
+  }, [])
+
+  const updateInquiryStatus = useCallback(
+    async (id: string, status: InquiryStatus) => {
+      await inquiriesService.updateStatus(id, status)
+      setInquiries((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, status } : i))
+      )
+    },
+    []
   )
 
   const value: AppContextValue = {
@@ -203,6 +263,10 @@ export function AppProvider({
     setProvince,
     activeTab,
     setActiveTab,
+    showAuth,
+    setShowAuth,
+    currentUser,
+    setCurrentUser,
     currentUserId,
     setCurrentUserId,
     favorites,
@@ -211,9 +275,12 @@ export function AppProvider({
     clearFavorites,
     favoriteProfiles,
     promotedIds,
-    promoteListing,
     allListings,
+    upsertListing,
     getListingById,
+    inquiries,
+    submitInquiry,
+    updateInquiryStatus,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
