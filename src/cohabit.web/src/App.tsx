@@ -1151,7 +1151,62 @@ function MainApp({
 
             {activeTab === "Info" && (
               <div className="flex flex-col items-center gap-5">
-                {/* Band 0 — How Cohabit works */}
+                {/* Band 0 — What is Cohabit */}
+                <Reveal className="w-full">
+                <section className="w-full bg-background/70 px-5 py-5 sm:px-6">
+                  <div className="w-full">
+                    <PageHeader
+                      icon={Home}
+                      title="What is Cohabit?"
+                      subtitle="Shared living, made simple."
+                    />
+                  </div>
+
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Cohabit connects South Africans who need a home with
+                    verified hosts and compatible housemates — shared living,
+                    made simple.
+                  </p>
+
+                  <div className="mt-5 grid w-full grid-cols-2 gap-3">
+                    {[
+                      {
+                        icon: Home,
+                        title: "Find your space",
+                      },
+                      {
+                        icon: Handshake,
+                        title: "Match with housemates",
+                      },
+                      {
+                        icon: Building2,
+                        title: "Reach vetted tenants",
+                      },
+                      {
+                        icon: Shield,
+                        title: "Stay protected",
+                      },
+                    ].map((item) => {
+                      const IconComponent = item.icon
+                      return (
+                        <div
+                          key={item.title}
+                          className="flex items-center gap-3"
+                        >
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                            <IconComponent className="size-4" />
+                          </span>
+                          <h2 className="text-sm font-semibold text-foreground">
+                            {item.title}
+                          </h2>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </section>
+                </Reveal>
+
+                {/* Band 1 — How Cohabit works */}
                 <Reveal className="w-full">
                 <section className="w-full bg-background/70 px-5 py-5 sm:px-6">
                   <div className="w-full">
@@ -1167,7 +1222,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 1 — Trust & Safety + Verification */}
+                {/* Band 2 — Trust & Safety + Verification */}
                 <Reveal className="w-full">
                 <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="flex flex-col items-center">
@@ -1437,7 +1492,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 1 — Stats */}
+                {/* Band 3 — Stats */}
                 <Reveal className="w-full">
                 <section className="w-full bg-accent/5 px-5 py-5 sm:px-6">
                   <div className="w-full">
@@ -1472,7 +1527,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 2 — FAQ */}
+                {/* Band 4 — FAQ */}
                 <Reveal className="w-full">
                 <section className="w-full px-1">
                   <Faq6
@@ -1483,7 +1538,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 3 — Terms & Conditions */}
+                {/* Band 5 — Terms & Conditions */}
                 <Reveal className="w-full">
                 <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="w-full">
