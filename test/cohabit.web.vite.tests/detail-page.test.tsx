@@ -20,6 +20,7 @@ function renderDetail(
   const onRequestView = vi.fn()
   const onToggleFavorite = vi.fn()
   const onViewRelated = vi.fn()
+  const onReport = vi.fn()
 
   const view = render(
     <TooltipProvider>
@@ -31,11 +32,12 @@ function renderDetail(
         onRequestView={onRequestView}
         onToggleFavorite={onToggleFavorite}
         onViewRelated={onViewRelated}
+        onReport={onReport}
       />
     </TooltipProvider>
   )
 
-  return { onBack, onRequestView, onToggleFavorite, onViewRelated, view }
+  return { onBack, onRequestView, onToggleFavorite, onViewRelated, onReport, view }
 }
 
 function formattedRegex(value: number) {
@@ -261,5 +263,85 @@ describe("DetailPage interaction", () => {
       screen.getByRole("button", { name: /add to favorites/i })
     )
     expect(onToggleFavorite).toHaveBeenCalledWith("listing-1")
+  })
+})
+
+describe("DetailPage report flow", () => {
+  it("opens the report dialog from the report listing button", async () => {
+    const user = userEvent.setup()
+    renderDetail()
+
+    await user.click(
+      screen.getByRole("button", { name: /report this listing/i })
+    )
+
+    expect(
+      screen.getByRole("dialog", { name: /report this listing/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: /it's a scam/i })
+    ).toBeInTheDocument()
+  })
+
+  it("calls onReport with the chosen reason and details", async () => {
+    const user = userEvent.setup()
+    const { onReport } = renderDetail({ id: "listing-1" })
+
+    await user.click(
+      screen.getByRole("button", { name: /report this listing/i })
+    )
+    await user.click(
+      screen.getByRole("button", { name: /it's a scam/i })
+    )
+    await user.type(
+      screen.getByLabelText(/report details/i),
+      "Asking for an e-wallet deposit before a viewing."
+    )
+    await user.click(screen.getByRole("button", { name: /submit report/i }))
+
+    expect(onReport).toHaveBeenCalledWith("listing-1", {
+      reason: "scam",
+      details: "Asking for an e-wallet deposit before a viewing.",
+    })
+  })
+
+  it("keeps the submit disabled until a reason is selected", async () => {
+    const user = userEvent.setup()
+    const { onReport } = renderDetail()
+
+    await user.click(
+      screen.getByRole("button", { name: /report this listing/i })
+    )
+
+    expect(
+      screen.getByRole("button", { name: /submit report/i })
+    ).toBeDisabled()
+
+    await user.click(
+      screen.getByRole("button", { name: /misleading information/i })
+    )
+
+    expect(
+      screen.getByRole("button", { name: /submit report/i })
+    ).toBeEnabled()
+    expect(onReport).not.toHaveBeenCalled()
+  })
+
+  it("submits without details when the description is empty", async () => {
+    const user = userEvent.setup()
+    const { onReport } = renderDetail({ id: "listing-1" })
+
+    await user.click(
+      screen.getByRole("button", { name: /report this listing/i })
+    )
+    await user.click(
+      screen.getByRole("button", { name: /deposit or payment fraud/i })
+    )
+    await user.click(screen.getByRole("button", { name: /submit report/i }))
+
+    expect(onReport).toHaveBeenCalledWith("listing-1", {
+      reason: "fraud",
+      details: undefined,
+    })
   })
 })

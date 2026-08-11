@@ -1,3 +1,4 @@
+using cohabit.api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Caching.Memory;
@@ -26,6 +27,9 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:Authority"] = ""
             });
         });
+
+        builder.ConfigureServices(services =>
+            services.AddScoped<IReportEmailSender, CapturingReportEmailSender>());
     }
 
     public void ClearCache()

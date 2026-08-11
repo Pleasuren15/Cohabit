@@ -10,6 +10,7 @@ using cohabit.application.Data.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Hosting;
+using Resend;
 
 namespace cohabit.api.Extensions;
 
@@ -95,6 +96,11 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IWatchListService, WatchListService>();
         builder.Services.AddScoped<ISystemMessagingService, SystemMessagingService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IReportService, ReportService>();
+        builder.Services.AddScoped<IReportEmailSender, ResendReportEmailSender>();
+        builder.Services.Configure<ReportOptions>(builder.Configuration.GetSection(ReportOptions.SectionName));
+        builder.Services.AddResend(options =>
+            options.ApiToken = builder.Configuration["Resend:ApiKey"] ?? string.Empty);
 
         builder.Services.AddScoped<ILookupSeeder, ProvinceSeeder>();
         builder.Services.AddScoped<ILookupSeeder, ListingTypeSeeder>();

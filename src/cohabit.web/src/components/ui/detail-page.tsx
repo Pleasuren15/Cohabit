@@ -25,6 +25,7 @@ import {
   Zap,
   ShieldCheck,
   Send,
+  Flag,
 } from "lucide-react"
 import { AMENITIES } from "@/lib/amenities"
 import { ViewOnMap } from "./view-on-map"
@@ -34,6 +35,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  REPORT_REASONS,
+  type ReportReason,
+} from "@/services/reports-service"
 
 type VerificationType = "phone" | "email" | "id" | "credit"
 
@@ -71,6 +76,7 @@ interface DetailPageProps {
   isFavorited?: boolean
   onToggleFavorite?: (id: string) => void
   onRequestView?: (id: string, details: ViewingRequest) => void
+  onReport?: (id: string, details: { reason: ReportReason; details?: string }) => void
   onBack: () => void
   relatedListings?: RelatedListing[]
   onViewRelated?: (id: string) => void
@@ -147,6 +153,7 @@ export function DetailPage({
   isFavorited = false,
   onToggleFavorite,
   onRequestView,
+  onReport,
   onBack,
   relatedListings,
   onViewRelated,
@@ -157,6 +164,9 @@ export function DetailPage({
   const [inquiryMoveInDate, setInquiryMoveInDate] = useState(() => defaultMoveInDate())
   const [inquiryOccupants, setInquiryOccupants] = useState("1")
   const [inquiryMessage, setInquiryMessage] = useState("")
+  const [showReportForm, setShowReportForm] = useState(false)
+  const [reportReason, setReportReason] = useState<ReportReason | null>(null)
+  const [reportDetails, setReportDetails] = useState("")
   const [amenitiesScroll, setAmenitiesScroll] = useState({
     canLeft: false,
     canRight: false,
@@ -712,6 +722,26 @@ export function DetailPage({
               </div>
             )}
 
+            {/* Report listing */}
+            <div className="rounded-2xl border border-dashed border-border/60 p-4 text-center">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Something wrong with this listing? Our safety team reviews
+                every report within 24 hours.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setReportReason(null)
+                  setReportDetails("")
+                  setShowReportForm(true)
+                }}
+                className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-800 dark:hover:bg-red-950/30"
+              >
+                <Flag className="size-3.5" />
+                Report this listing
+              </button>
+            </div>
+
             {/* Bottom spacing */}
             <div className="h-8" />
           </div>
@@ -879,6 +909,122 @@ export function DetailPage({
                 <p className="text-center text-[11px] text-muted-foreground">
                   The host is notified immediately and can accept or decline
                   from their dashboard.
+                </p>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Report listing form */}
+      <AnimatePresence>
+        {showReportForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Report this listing"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm sm:items-center"
+            onClick={() => setShowReportForm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border border-border bg-background p-5 shadow-xl sm:rounded-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/30">
+                    <Flag className="size-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="truncate text-base font-semibold">
+                      Report this listing
+                    </h2>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {name} · {location}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowReportForm(false)}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="Close"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!reportReason) return
+                  onReport?.(id, {
+                    reason: reportReason,
+                    details: reportDetails.trim() || undefined,
+                  })
+                  setShowReportForm(false)
+                }}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    What's the issue?
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {REPORT_REASONS.map(({ id: reasonId, label }) => (
+                      <button
+                        key={reasonId}
+                        type="button"
+                        onClick={() => setReportReason(reasonId)}
+                        aria-pressed={reportReason === reasonId}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                          reportReason === reasonId
+                            ? "border-red-500 bg-red-50 text-red-600 dark:bg-red-950/30"
+                            : "border-border bg-background text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="report-details"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Details (optional)
+                  </label>
+                  <textarea
+                    id="report-details"
+                    value={reportDetails}
+                    onChange={(e) => setReportDetails(e.target.value)}
+                    placeholder="Tell our safety team what happened."
+                    rows={4}
+                    aria-label="Report details"
+                    className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!reportReason}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Flag className="size-4" />
+                  Submit report
+                </button>
+                <p className="text-center text-[11px] text-muted-foreground">
+                  Reports are confidential and reviewed by our safety team.
+                  You'll never be matched with this listing again.
                 </p>
               </form>
             </motion.div>

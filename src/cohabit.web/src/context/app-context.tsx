@@ -21,6 +21,12 @@ import {
   type InquiryDetails,
   type InquiryStatus,
 } from "@/services/inquiries-service"
+import {
+  reportsService,
+  type PropertyReport,
+  type ReportDetails,
+  type ReportStatus,
+} from "@/services/reports-service"
 import { PROVINCES } from "@/lib/provinces"
 import { persistGuestProvince, readGuestProvince } from "@/lib/onboarding"
 import type { UserData } from "@/components/ui/user-profile"
@@ -48,6 +54,9 @@ export interface AppContextValue {
   inquiries: Inquiry[]
   submitInquiry: (details: InquiryDetails) => Promise<Inquiry>
   updateInquiryStatus: (id: string, status: InquiryStatus) => Promise<void>
+  reports: PropertyReport[]
+  submitReport: (details: ReportDetails) => Promise<PropertyReport>
+  updateReportStatus: (id: string, status: ReportStatus) => Promise<void>
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -258,6 +267,41 @@ export function AppProvider({
     []
   )
 
+  const [reports, setReports] = useState<PropertyReport[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    reportsService
+      .loadReports()
+      .then((items) => {
+        if (cancelled) return
+        setReports(items)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        console.error("Failed to load reports", err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const submitReport = useCallback(async (details: ReportDetails) => {
+    const created = await reportsService.submitReport(details)
+    setReports((prev) => [created, ...prev])
+    return created
+  }, [])
+
+  const updateReportStatus = useCallback(
+    async (id: string, status: ReportStatus) => {
+      await reportsService.updateStatus(id, status)
+      setReports((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r))
+      )
+    },
+    []
+  )
+
   const value: AppContextValue = {
     province,
     setProvince,
@@ -281,6 +325,9 @@ export function AppProvider({
     inquiries,
     submitInquiry,
     updateInquiryStatus,
+    reports,
+    submitReport,
+    updateReportStatus,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

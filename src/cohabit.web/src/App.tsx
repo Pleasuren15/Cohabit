@@ -22,6 +22,7 @@ import {
   Flag,
   Lock,
   AlertTriangle,
+  Eye,
   ArrowLeft,
   Sparkles,
   Building2,
@@ -1332,6 +1333,103 @@ function MainApp({
                       </p>
                     </div>
                   </div>
+                  <div className="mt-4 flex flex-col items-center">
+                    <div className="w-full">
+                      <PageHeader
+                        icon={AlertTriangle}
+                        title="Staying safe on Cohabit"
+                        subtitle="Practical tips to keep you, your money and your home safe when searching for a place or a housemate."
+                      />
+                    </div>
+
+                    <div className="w-full space-y-3">
+                      {[
+                        {
+                          icon: Eye,
+                          title: "Viewings & meetups",
+                          tips: [
+                            "Always view the property in person before paying anything — never rent sight unseen.",
+                            "Meet during daylight hours and bring a friend or family member along.",
+                            "Trust your instincts. If a meet-up feels off, leave and report it to us.",
+                          ],
+                        },
+                        {
+                          icon: Wallet,
+                          title: "Money & deposits",
+                          tips: [
+                            "Never pay a deposit before viewing the property and signing a written lease agreement.",
+                            "Pay through traceable methods (bank transfer with reference). Avoid cash, WhatsApp or e-wallet transfers to strangers.",
+                            "No legitimate landlord will ask for your banking PIN or your ID number up front.",
+                          ],
+                        },
+                        {
+                          icon: AlertTriangle,
+                          title: "Spotting scams",
+                          tips: [
+                            "Be wary of prices that are far below the local market rate.",
+                            "Watch out for pressure to 'act now' or to pay a holding fee to secure a listing you haven't seen.",
+                            "If a host refuses viewings or asks you to communicate off-platform, that's a red flag — report the listing.",
+                          ],
+                        },
+                        {
+                          icon: ShieldCheck,
+                          title: "Your personal data",
+                          tips: [
+                            "Keep private details (ID, banking, address) off your profile until you've met and verified the other person.",
+                            "Share contact details only after you're comfortable and you've checked verification badges.",
+                            "Sensitive messages about money are best kept inside Cohabit so our team can review them if needed.",
+                          ],
+                        },
+                      ].map((group) => {
+                        const GroupIcon = group.icon
+                        return (
+                          <div
+                            key={group.title}
+                            className="bg-background/70 p-5"
+                          >
+                            <div className="mb-2 flex items-center gap-3">
+                              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                                <GroupIcon className="size-4" />
+                              </span>
+                              <h2 className="font-semibold text-foreground">
+                                {group.title}
+                              </h2>
+                            </div>
+                            <ul className="space-y-1.5 text-sm leading-relaxed text-muted-foreground">
+                              {group.tips.map((tip) => (
+                                <li
+                                  key={tip}
+                                  className="flex gap-2"
+                                >
+                                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent/70" />
+                                  <span>{tip}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <div className="mt-5 w-full rounded-2xl border border-border/60 bg-background/70 p-5">
+                      <p className="text-xs leading-relaxed text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          Need urgent help?
+                        </span>{" "}
+                        If you're in immediate danger call the SAPS on{" "}
+                        <span className="font-medium text-foreground">
+                          10111
+                        </span>{" "}
+                        or Crime Stop on{" "}
+                        <span className="font-medium text-foreground">
+                          08600 10111
+                        </span>
+                        . For a non-urgent safety concern, report it via any
+                        listing's "Report this listing" button and our safety
+                        team will review it within 24 hours.
+                      </p>
+                    </div>
+                  </div>
                 </section>
                 </Reveal>
 
@@ -1794,6 +1892,7 @@ function ListingDetailPage() {
     toggleFavorite,
     currentUser,
     submitInquiry,
+    submitReport,
     getListingById,
   } = useApp()
   const [result, setResult] = useState<{
@@ -1891,6 +1990,33 @@ function ListingDetailPage() {
             toast.success("Request sent", {
               description: `${listing.title ?? listing.name}'s owner will get back to you shortly.`,
             })
+          }}
+          onReport={async (reportId, details) => {
+            const reporterName =
+              currentUser && (currentUser.firstName || currentUser.lastName)
+                ? `${currentUser.firstName} ${currentUser.lastName}`.trim()
+                : "Guest"
+            try {
+              await submitReport({
+                listingId: reportId,
+                listingTitle: listing.title ?? listing.name,
+                listingImageSrc: listing.imageSrc,
+                type: listing.type,
+                reporterName,
+                ...details,
+              })
+              toast.success("Report submitted", {
+                description:
+                  "Our safety team will review it within 24 hours.",
+              })
+            } catch (err) {
+              toast.error("Couldn't submit report", {
+                description:
+                  err instanceof Error
+                    ? err.message
+                    : "Please try again.",
+              })
+            }
           }}
           onBack={() => navigate(-1)}
           relatedListings={related}
