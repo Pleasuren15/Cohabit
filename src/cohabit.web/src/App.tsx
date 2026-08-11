@@ -97,6 +97,7 @@ import { Routes, Route, useNavigate, useParams } from "react-router-dom"
 import { AppProvider, useApp } from "@/context/app-context"
 import { useUnfavoriteConfirm } from "@/components/ui/unfavorite-confirm"
 import { HowCohabitWorks } from "@/components/ui/how-cohabit-works"
+import { ContractGenerator } from "@/components/ui/contract-generator"
 
 export { FEATURED_PROFILES }
 export type { FeaturedProfile, VerificationType }
@@ -569,6 +570,7 @@ function MainApp({
   const [openListingSignal, setOpenListingSignal] = useState(0)
   const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
   const [showProvincePicker, setShowProvincePicker] = useState(false)
+  const [showContractGenerator, setShowContractGenerator] = useState(false)
   const [messages, setMessages] = useState<SystemMessageDto[]>([])
   const [userListings, setUserListings] = useState<FeaturedProfile[]>([])
 
@@ -1433,7 +1435,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 2 — Stats */}
+                {/* Band 1 — Stats */}
                 <Reveal className="w-full">
                 <section className="w-full bg-accent/5 px-5 py-5 sm:px-6">
                   <div className="w-full">
@@ -1468,7 +1470,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 3 — FAQ */}
+                {/* Band 2 — FAQ */}
                 <Reveal className="w-full">
                 <section className="w-full px-1">
                   <Faq6
@@ -1479,7 +1481,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 4 — Terms & Conditions */}
+                {/* Band 3 — Terms & Conditions */}
                 <Reveal className="w-full">
                 <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
                   <div className="w-full">
@@ -1529,28 +1531,61 @@ function MainApp({
             )}
 
             {activeTab === "Profile" && currentUser && (
-              <UserProfile
-                user={currentUser}
-                userListings={userListings}
-                verified={userVerified}
-                onVerify={(type) => {
-                  if (!userVerified.includes(type)) {
-                    setUserVerified((prev) => [...prev, type])
+              <div className="space-y-5">
+                <UserProfile
+                  user={currentUser}
+                  userListings={userListings}
+                  verified={userVerified}
+                  onVerify={(type) => {
+                    if (!userVerified.includes(type)) {
+                      setUserVerified((prev) => [...prev, type])
+                    }
+                  }}
+                  onUpdateUser={handleUpdateUser}
+                  onToggleFavorite={handleFavoriteToggle}
+                  onViewListing={handleViewListing}
+                  onAddListing={handleAddListing}
+                  onUpdateListing={handleUpdateListing}
+                  getListingDetail={(id) =>
+                    listingService.getListingById(id, allListings)
                   }
-                }}
-                onUpdateUser={handleUpdateUser}
-                onToggleFavorite={handleFavoriteToggle}
-                onViewListing={handleViewListing}
-                onAddListing={handleAddListing}
-                onUpdateListing={handleUpdateListing}
-                getListingDetail={(id) =>
-                  listingService.getListingById(id, allListings)
-                }
-                onSignOut={onSignOut}
-                inquiries={inquiries}
-                onUpdateInquiryStatus={updateInquiryStatus}
-                openNewListingSignal={openListingSignal}
-              />
+                  onSignOut={onSignOut}
+                  inquiries={inquiries}
+                  onUpdateInquiryStatus={updateInquiryStatus}
+                  openNewListingSignal={openListingSignal}
+                />
+
+                {/* Contract Generator */}
+                <div className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent p-5 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                      <ScrollText className="size-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-sm font-semibold tracking-tight">
+                        Create a rental contract
+                      </h2>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                        Generate a roommate agreement or a residential lease
+                        between tenants and landlords. Choose the terms, preview
+                        the document, then download it as a PDF.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowContractGenerator(true)}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
+                  >
+                    <ScrollText className="size-4" aria-hidden="true" />
+                    Generate a contract
+                  </button>
+                  <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                    Templates only — not legal advice. Have your final document
+                    reviewed by a qualified professional.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
@@ -1698,6 +1733,10 @@ function MainApp({
         onClose={() => setShowFilters(false)}
         filters={filters}
         onChange={setFilters}
+      />
+      <ContractGenerator
+        open={showContractGenerator}
+        onOpenChange={setShowContractGenerator}
       />
       {unfavoriteDialog}
     </>

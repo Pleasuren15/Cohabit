@@ -53,6 +53,8 @@ Foundational UI (ui)
 Composite components (ui)
 
 - auth-03 — authentication/sign-in screen composition.
+- contract-document — styled rental contract document used for preview and PDF export; cover roommate, lease and empty states.
+- contract-generator — wizard dialog that builds a roommate agreement or residential lease, previews it and exports a PDF; cover the type → details → preview flow.
 - detail-page — listing/profile detail layout; cover loading, empty, populated states.
 - edit-profile — profile editing form composition.
 - expandable-profile-card — profile card with expand/collapse.
