@@ -913,75 +913,77 @@ function MainApp({
       {activeTab === "Home" && (
         <div className="fixed top-0 right-0 left-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <div className="mx-auto max-w-md space-y-3 px-6 pt-6 pb-3">
-            {/* Filter + province at very top */}
+            {/* Province + type at very top */}
             <div className="flex items-center justify-between gap-2">
-              <ListingFilter
-                value={listingFilter}
-                onChange={setListingFilter}
-              />
+              <button
+                type="button"
+                onClick={() => setShowProvincePicker(true)}
+                className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
+                aria-label="Change province"
+              >
+                <img
+                  src={PROVINCE_SHAPES[province]}
+                  alt=""
+                  className="h-5 w-5 object-contain drop-shadow-sm"
+                />
+                <span className="leading-tight">{PROVINCES[province]}</span>
+              </button>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowFilters(true)}
-                  className="relative inline-flex items-center gap-1.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
-                  aria-label="Filter listings"
-                >
-                  <SlidersHorizontal className="size-3.5" />
-                  Filters
-                  {countActiveFilters(filters) > 0 && (
-                    <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">
-                      {countActiveFilters(filters)}
-                    </span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowProvincePicker(true)}
-                  className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
-                  aria-label="Change province"
-                >
-                  <img
-                    src={PROVINCE_SHAPES[province]}
-                    alt=""
-                    className="h-5 w-5 object-contain drop-shadow-sm"
-                  />
-                  <span className="leading-tight">{PROVINCES[province]}</span>
-                </button>
+                <ListingFilter
+                  value={listingFilter}
+                  onChange={setListingFilter}
+                />
               </div>
             </div>
 
-            {/* Search bar below filter */}
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
-                  <Search className="size-3.5 text-muted-foreground" />
-                </div>
-                <input
-                  type="search"
-                  id="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
-                  placeholder="Search apartments, areas..."
-                />
-                {searchQuery ? (
+            {/* Search + filters on one line */}
+            <div className="flex items-center gap-2">
+              <form onSubmit={(e) => e.preventDefault()} className="min-w-0 flex-1">
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
+                    <Search className="size-3.5 text-muted-foreground" />
+                  </div>
+                  <input
+                    type="search"
+                    id="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
+                    placeholder="Search apartments, areas..."
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      aria-label="Clear search"
+                      className="absolute top-1/2 end-16 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  ) : null}
                   <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    aria-label="Clear search"
-                    className="absolute top-1/2 end-16 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                    type="submit"
+                    className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] leading-4 font-medium text-white shadow-sm transition-colors hover:bg-accent/90 focus:ring-2 focus:ring-accent/30 focus:outline-none"
                   >
-                    <X className="size-3.5" />
+                    Search
                   </button>
-                ) : null}
-                <button
-                  type="submit"
-                  className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] leading-4 font-medium text-white shadow-sm transition-colors hover:bg-accent/90 focus:ring-2 focus:ring-accent/30 focus:outline-none"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
+                </div>
+              </form>
+              <button
+                type="button"
+                onClick={() => setShowFilters(true)}
+                className="relative inline-flex shrink-0 items-center gap-1.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                aria-label="Filter listings"
+              >
+                <SlidersHorizontal className="size-3.5" />
+                Filters
+                {countActiveFilters(filters) > 0 && (
+                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">
+                    {countActiveFilters(filters)}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
