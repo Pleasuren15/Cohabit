@@ -102,10 +102,10 @@ const VERIFICATION_CONFIG: Record<
 }
 
 const VERIFICATION_COLORS: Record<VerificationType, string> = {
-  phone: "bg-blue-100 text-blue-700",
-  email: "bg-purple-100 text-purple-700",
-  id: "bg-green-100 text-green-700",
-  credit: "bg-amber-100 text-amber-700",
+  phone: "bg-blue-500/20 text-blue-100",
+  email: "bg-purple-500/20 text-purple-100",
+  id: "bg-green-500/20 text-green-100",
+  credit: "bg-amber-500/20 text-amber-100",
 }
 
 const formatPrice = (value: number) => `R ${value.toLocaleString("en-ZA")}`
@@ -440,8 +440,8 @@ export function DetailPage({
 
           {/* Content sections */}
           <div className="space-y-6 px-5 py-6">
-            {/* Key facts bar */}
-            <div className="grid grid-cols-4 divide-x divide-border/40 overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
+            {/* Key facts bar — scoreboard tiles */}
+            <div className="grid grid-cols-4 gap-1.5 overflow-hidden rounded-2xl bg-gradient-to-b from-accent/5 to-background p-2 shadow-sm">
               <Fact
                 icon={BedDouble}
                 label="Bedrooms"
@@ -466,9 +466,7 @@ export function DetailPage({
 
             {/* Amenities — single-line scrollable row */}
             <div>
-              <h2 className="mb-2 text-sm font-semibold text-foreground">
-                Amenities
-              </h2>
+              <SectionHeading eyebrow="The space">Amenities</SectionHeading>
               <div className="relative">
                 {amenitiesScroll.canLeft && (
                   <button
@@ -518,14 +516,12 @@ export function DetailPage({
               </div>
             </div>
 
-            {/* Listed by — owner details card */}
+            {/* Listed by — host identity band */}
             <div>
-              <h2 className="mb-2 text-sm font-semibold text-foreground">
-                Listed by
-              </h2>
-              <div className="overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
-                <div className="flex items-center gap-4 bg-gradient-to-r from-accent/5 to-transparent p-5">
-                  <div className="size-14 shrink-0 overflow-hidden rounded-full ring-2 ring-accent/20">
+              <SectionHeading eyebrow="Your host">Listed by</SectionHeading>
+              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 text-white shadow-lg">
+                <div className="flex items-center gap-4 p-5">
+                  <div className="size-14 shrink-0 overflow-hidden rounded-full ring-2 ring-white/40">
                     <img
                       src={imageSrc}
                       alt={name}
@@ -533,33 +529,34 @@ export function DetailPage({
                     />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-lg font-semibold tracking-tight">
+                    <h3 className="text-lg font-semibold tracking-tight text-white">
                       {name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">{bio}</p>
+                    <p className="text-sm text-white/80">{bio}</p>
                   </div>
                 </div>
 
-                <div className="divide-y divide-border/40 px-5 pb-1">
-                  <DetailRow icon={MapPin} label="Location" value={location} />
+                <div className="divide-y divide-white/10 bg-white/5 px-5 pb-1">
+                  <DetailRow tone="dark" icon={MapPin} label="Location" value={location} />
                   <DetailRow
+                    tone="dark"
                     icon={Phone}
                     label="Cellphone"
                     value={hasPhone ? phoneNumber : "Not shared"}
                   />
-                  <DetailRow icon={Mail} label="Email" value={hasEmail ? emailAddress : "Not shared"} />
+                  <DetailRow tone="dark" icon={Mail} label="Email" value={hasEmail ? emailAddress : "Not shared"} />
                 </div>
 
                 {/* Verification badges */}
                 {verified.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 border-t border-border/40 px-5 py-3">
+                  <div className="flex flex-wrap gap-1.5 border-t border-white/10 px-5 py-3">
                     {verified.map((v) => {
                       const config = VERIFICATION_CONFIG[v]
                       const Icon = config.icon
                       return (
                         <span
                           key={v}
-                          className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${VERIFICATION_COLORS[v]}`}
+                          className={`inline-flex items-center gap-0.5 rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-medium ${VERIFICATION_COLORS[v]}`}
                         >
                           <Icon className="size-2.5" />
                           {config.label}
@@ -570,15 +567,15 @@ export function DetailPage({
                 )}
 
                 {/* Contact actions */}
-                <div className="flex flex-wrap gap-1.5 border-t border-border/40 px-5 py-3">
-                  <span className="mr-1 inline-flex w-full items-center gap-1.5 text-xs text-muted-foreground">
-                    <Zap className="size-3.5 text-accent" />
+                <div className="flex flex-wrap gap-1.5 border-t border-white/10 px-5 py-3">
+                  <span className="mr-1 inline-flex w-full items-center gap-1.5 text-xs text-white/70">
+                    <Zap className="size-3.5 text-amber-200" />
                     Responds {responseTime.toLowerCase()}
                   </span>
                   {hasPhone && (
                     <a
                       href={`tel:${phoneNumber.replace(/\s/g, "")}`}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blue-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-blue-600"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blue-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-blue-400"
                     >
                       <Phone className="size-3" />
                       Call
@@ -587,7 +584,7 @@ export function DetailPage({
                   {hasEmail && (
                     <a
                       href={`mailto:${emailAddress}`}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-purple-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-purple-600"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-purple-500 px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-purple-400"
                     >
                       <Mail className="size-3" />
                       Email
@@ -599,7 +596,7 @@ export function DetailPage({
                       setInquiryMessage("")
                       setShowInquiryForm(true)
                     }}
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[10px] font-medium text-white transition-colors hover:bg-accent/90"
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[10px] font-medium text-accent transition-colors hover:bg-white/90"
                   >
                     <MessageSquare className="size-3" />
                     Is this still available?
@@ -611,9 +608,7 @@ export function DetailPage({
             {/* Home rules */}
             {rules.length > 0 && (
               <div>
-                <h2 className="mb-2 text-sm font-semibold text-foreground">
-                  Home rules
-                </h2>
+                <SectionHeading eyebrow="Shared living">Home rules</SectionHeading>
                 <div className="flex flex-wrap gap-1.5">
                   {rules.map((rule) => (
                     <span
@@ -631,9 +626,9 @@ export function DetailPage({
             {/* Photo gallery — each image clickable to zoom */}
             {galleryPhotos.length > 0 && (
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">
+                <SectionHeading eyebrow="Gallery">
                   Photos ({photoCount})
-                </h2>
+                </SectionHeading>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {galleryPhotos.map((photo, i) => (
                     <div
@@ -673,9 +668,7 @@ export function DetailPage({
             {/* Location / map */}
             {mapAddress && (
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">
-                  Location
-                </h2>
+                <SectionHeading eyebrow="Where it is">Location</SectionHeading>
                 <ViewOnMap address={mapAddress} />
               </div>
             )}
@@ -683,16 +676,16 @@ export function DetailPage({
             {/* More related listings */}
             {relatedListings && relatedListings.length > 0 && (
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-foreground">
+                <SectionHeading eyebrow="Keep exploring">
                   More listings
-                </h2>
+                </SectionHeading>
                 <div className="flex flex-col gap-2">
                   {relatedListings.slice(0, 4).map((related) => (
                     <button
                       key={related.id}
                       type="button"
                       onClick={() => onViewRelated?.(related.id)}
-                      className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border/50 bg-background p-3 text-left transition-colors hover:bg-muted/50"
+                      className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border/50 bg-background p-3 text-left shadow-sm transition-colors hover:border-accent/40 hover:bg-accent/5"
                     >
                       <div className="size-14 shrink-0 overflow-hidden rounded-lg">
                         <img
@@ -723,7 +716,7 @@ export function DetailPage({
             )}
 
             {/* Report listing */}
-            <div className="rounded-2xl border border-dashed border-border/60 p-4 text-center">
+            <div className="rounded-2xl border-2 border-dashed border-amber-300/70 bg-gradient-to-b from-amber-50/50 to-background p-4 text-center dark:border-amber-500/30 dark:from-amber-500/10">
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Something wrong with this listing? Our safety team reviews
                 every report within 24 hours.
@@ -735,7 +728,7 @@ export function DetailPage({
                   setReportDetails("")
                   setShowReportForm(true)
                 }}
-                className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-800 dark:hover:bg-red-950/30"
+                className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-red-200 bg-white px-4 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800/60 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-950/30"
               >
                 <Flag className="size-3.5" />
                 Report this listing
@@ -1045,14 +1038,16 @@ function Fact({
   value: string
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 px-1 py-3 text-center">
-      <Icon className="size-4 shrink-0 text-accent" />
-      <span className="w-full truncate px-1 text-xs font-semibold text-foreground">
-        {value}
+    <div className="col-span-2 flex items-center gap-2.5 rounded-xl border border-accent/15 bg-background/80 px-3 py-2.5 shadow-sm">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+        <Icon className="size-4" />
       </span>
-      <span className="text-[9px] leading-none text-muted-foreground">
-        {label}
-      </span>
+      <div className="min-w-0">
+        <p className="text-[9px] font-semibold tracking-wider text-muted-foreground uppercase">
+          {label}
+        </p>
+        <p className="truncate text-sm font-bold text-foreground">{value}</p>
+      </div>
     </div>
   )
 }
@@ -1061,18 +1056,53 @@ function DetailRow({
   icon: Icon,
   label,
   value,
+  tone = "light",
 }: {
   icon: React.ComponentType<{ className?: string }>
   label: string
   value: string
+  tone?: "light" | "dark"
 }) {
   return (
     <div className="flex items-center gap-3 py-3">
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
-      <span className="w-24 shrink-0 text-xs text-muted-foreground">
+      <Icon
+        className={`size-4 shrink-0 ${
+          tone === "dark" ? "text-white/60" : "text-muted-foreground"
+        }`}
+      />
+      <span
+        className={`w-24 shrink-0 text-xs ${
+          tone === "dark" ? "text-white/50" : "text-muted-foreground"
+        }`}
+      >
         {label}
       </span>
-      <span className="truncate text-sm font-medium">{value}</span>
+      <span
+        className={`truncate text-sm font-medium ${
+          tone === "dark" ? "text-white" : ""
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function SectionHeading({
+  eyebrow,
+  children,
+}: {
+  eyebrow: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="mb-2">
+      <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+        {eyebrow}
+      </span>
+      <h2 className="mt-0.5 text-sm font-semibold text-foreground">
+        {children}
+      </h2>
     </div>
   )
 }

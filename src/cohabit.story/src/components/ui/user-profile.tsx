@@ -11,7 +11,6 @@ import {
   BadgeCheck,
   Shield,
   X,
-  Home,
   Venus,
   Mars,
   Pencil,
@@ -29,6 +28,10 @@ import {
   MessageCircle,
   Users,
   Check,
+  LogOut,
+  Camera,
+  PenLine,
+  AlertTriangle,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -38,6 +41,8 @@ import { Label } from "./label"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 import { EditProfile, type ProfileData } from "./edit-profile"
 import { FileUpload, type FileItem, type FileStatus } from "./file-upload-2"
+import { TaskWidget, type TaskData } from "./task-widget-disclosure"
+import { PrivacyDialog } from "./privacy-dialog"
 
 export interface UserData {
   id: string
@@ -49,6 +54,7 @@ export interface UserData {
   gender: string
   bio: string
   isOtpVerified: boolean
+  address?: string
   avatarUrl?: string
   timestamp?: string
 }
@@ -143,6 +149,13 @@ const ALL_VERIFICATIONS: {
   { key: "credit", label: "Credit", icon: Shield, color: "text-amber-500", bgColor: "bg-amber-500/10" },
 ]
 
+const VERIFIED_CHIP_TONES: Record<VerificationType, string> = {
+  phone: "bg-blue-500/15 text-blue-300",
+  email: "bg-purple-500/15 text-purple-300",
+  id: "bg-green-500/15 text-green-300",
+  credit: "bg-amber-500/15 text-amber-300",
+}
+
 export interface UserProfileProps {
   user: UserData
   userListings: CarouselCard[]
@@ -208,6 +221,73 @@ export function UserProfile({
 
   const fullName = `${user.firstName} ${user.lastName}`
 
+  const completionSteps = [
+    {
+      id: "photo",
+      label: "Add a profile photo",
+      hint: "Help others recognise you",
+      icon: Camera,
+      completed: Boolean(user.avatarUrl),
+    },
+    {
+      id: "bio",
+      label: "Add a bio",
+      hint: "Tell hosts and housemates a little about yourself",
+      icon: PenLine,
+      completed: Boolean(user.bio?.trim()),
+    },
+    {
+      id: "phone",
+      label: "Add your phone number",
+      hint: "So people can reach you",
+      icon: Phone,
+      completed: Boolean(user.cellphone?.trim()),
+    },
+    {
+      id: "dob",
+      label: "Add your date of birth",
+      hint: "Required for identity checks",
+      icon: Calendar,
+      completed:
+        Boolean(user.dateOfBirth) && user.dateOfBirth !== "2000-01-01",
+    },
+    {
+      id: "email",
+      label: "Confirm your email address",
+      hint: "Verify your account ownership",
+      icon: Mail,
+      completed: verified.includes("email"),
+    },
+    {
+      id: "address",
+      label: "Add your address",
+      hint: "Help people find your area",
+      icon: MapPin,
+      completed: Boolean(user.address?.trim()),
+    },
+  ]
+
+  const completionData: TaskData = {
+    subtasks: completionSteps.map(({ id, label, completed }) => ({
+      id,
+      title: label,
+      completed,
+    })),
+    completedCount: completionSteps.filter((s) => s.completed).length,
+    totalCount: completionSteps.length,
+    progress: Math.round(
+      (completionSteps.filter((s) => s.completed).length /
+        completionSteps.length) *
+        100
+    ),
+    priority: "High",
+    status: "In Progress",
+    title: "Complete your profile",
+    assignees: [],
+  }
+
+  const missingSteps = completionSteps.filter((step) => !step.completed)
+
   const ownListingIds = new Set(userListings.map((l) => l.id))
   const listingInquiries = inquiries
     .filter((inq) => ownListingIds.has(inq.listingId))
@@ -236,6 +316,7 @@ export function UserProfile({
     dateOfBirth: user.dateOfBirth,
     gender: user.gender,
     title: user.bio,
+    address: user.address ?? "",
     avatarUrl: user.avatarUrl || "",
   }
 
@@ -293,6 +374,7 @@ export function UserProfile({
       dateOfBirth: data.dateOfBirth ?? user.dateOfBirth,
       gender: data.gender ?? user.gender,
       bio: data.title,
+      address: data.address,
       avatarUrl: data.avatarUrl || user.avatarUrl,
     }
     onUpdateUser?.(updated)
@@ -310,6 +392,7 @@ export function UserProfile({
 
   return (
     <div className="mx-auto w-full max-w-md space-y-5 pb-8">
+      {/* Page heading */}
       <div className="mb-2 w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -319,56 +402,140 @@ export function UserProfile({
               <p className="mt-0.5 text-sm text-muted-foreground">Manage your account</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowEditProfile(true)}
-            className="flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white"
-            aria-label="Edit profile"
-          >
-            <Pencil className="size-3.5" />
-            Edit
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Sign out"
+            >
+              <LogOut className="size-3.5" />
+              Sign out
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEditProfile(true)}
+              className="flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white"
+              aria-label="Edit profile"
+            >
+              <Pencil className="size-3.5" />
+              Edit
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
-        <div className="flex items-center gap-4 bg-gradient-to-r from-accent/5 to-transparent p-5">
+      {/* Identity hero */}
+      <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 text-white shadow-lg">
+        <div className="flex items-center gap-4 p-5">
           {user.avatarUrl ? (
             <img
               src={user.avatarUrl}
               alt={fullName}
-              className="size-14 shrink-0 rounded-full object-cover ring-2 ring-accent/20"
+              className="size-14 shrink-0 rounded-full object-cover ring-2 ring-white/40"
             />
           ) : (
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
               <User className="size-7" />
             </div>
           )}
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight">{fullName}</h2>
-            <p className="text-sm text-muted-foreground">{user.bio}</p>
+            <span className="text-[10px] font-bold tracking-[0.22em] text-white/70 uppercase">
+              Your profile
+            </span>
+            <h2 className="text-xl font-semibold tracking-tight text-white">
+              {fullName}
+            </h2>
+            {user.bio ? (
+              <p className="text-sm text-white/80">{user.bio}</p>
+            ) : null}
           </div>
         </div>
 
-        <div className="divide-y divide-border/40 px-5 pb-1">
-          <DetailRow icon={Phone} label="Cellphone" value={user.cellphone} />
-          <DetailRow icon={Mail} label="Email" value={user.email} />
-          <DetailRow icon={Calendar} label="Date of Birth" value={user.dateOfBirth} />
+        <div className="divide-y divide-white/10 bg-white/5 px-5 pb-1">
+          <DetailRow tone="dark" icon={Phone} label="Cellphone" value={user.cellphone} />
+          <DetailRow tone="dark" icon={Mail} label="Email" value={user.email} />
+          <DetailRow tone="dark" icon={Calendar} label="Date of Birth" value={user.dateOfBirth} />
           <DetailRow
+            tone="dark"
             icon={user.gender === "male" ? Mars : Venus}
             label="Gender"
             value={user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}
           />
-          <DetailRow icon={MapPin} label="Location" value="South Africa" />
-          <DetailRow icon={Clock} label="Member since" value={user.timestamp || "July 2025"} />
+          <DetailRow
+            tone="dark"
+            icon={MapPin}
+            label="Location"
+            value={user.address?.trim()
+              ? `${user.address.trim()} · South Africa`
+              : "South Africa"}
+          />
+          <DetailRow tone="dark" icon={Clock} label="Member since" value={user.timestamp || "July 2025"} />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/40 bg-background p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
+      {/* Profile completion widget */}
+      <div className="flex justify-center">
+        <TaskWidget data={completionData} variant="accent" />
+      </div>
+
+      {/* Missing details — attention panel */}
+      <div className="rounded-2xl border border-amber-200/70 bg-gradient-to-b from-amber-50/70 to-background p-5 shadow-sm dark:border-amber-500/25 dark:from-amber-500/10 dark:to-background">
+        <div className="mb-3 flex items-center gap-2">
+          {missingSteps.length > 0 ? (
+            <>
+              <AlertTriangle className="size-4 text-amber-500" />
+              <h3 className="text-sm font-semibold">
+                Still missing ({missingSteps.length})
+              </h3>
+            </>
+          ) : (
+            <>
+              <BadgeCheck className="size-4 text-green-500" />
+              <h3 className="text-sm font-semibold">Profile complete</h3>
+            </>
+          )}
+        </div>
+
+        {missingSteps.length > 0 ? (
+          <div className="space-y-2">
+            {missingSteps.map((step) => {
+              const Icon = step.icon
+              return (
+                <div
+                  key={step.id}
+                  className="flex items-center gap-3 rounded-xl border border-dashed border-amber-300/60 bg-background/70 px-3 py-2.5 dark:border-amber-500/40"
+                >
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-100/80 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300">
+                    <Icon className="size-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{step.label}</p>
+                    <p className="text-xs text-muted-foreground">{step.hint}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditProfile(true)}
+                    className="shrink-0 rounded-full bg-accent px-3 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90"
+                  >
+                    Add
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            All your details are set — nothing missing.
+          </p>
+        )}
+      </div>
+
+      {/* Verification Section — trust panel */}
+      <div className="rounded-2xl bg-foreground text-white shadow-xl">
+        <div className="flex items-center justify-between p-5 pb-0">
           <div className="flex items-center gap-2">
-            <Shield className="size-4 text-accent" />
-            <h3 className="text-sm font-semibold">Verifications</h3>
+            <Shield className="size-4 text-amber-300" />
+            <h3 className="text-sm font-semibold text-white">Verifications</h3>
           </div>
           <button
             type="button"
@@ -379,17 +546,18 @@ export function UserProfile({
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 p-5">
           {ALL_VERIFICATIONS.map((v) => {
             const isVerified = verified.includes(v.key)
             const Icon = v.icon
             return (
               <span
                 key={v.key}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium",
-                  isVerified ? `${v.bgColor} ${v.color}` : "bg-muted/50 text-muted-foreground",
-                )}
+                className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-medium ${
+                  isVerified
+                    ? VERIFIED_CHIP_TONES[v.key]
+                    : "bg-white/5 text-white/50"
+                }`}
               >
                 <Icon className="size-3.5" />
                 {v.label}
@@ -400,12 +568,19 @@ export function UserProfile({
         </div>
       </div>
 
+      <PrivacyDialog />
+
+      {/* My Listings — portfolio */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <Home className="size-4 text-accent" />
-            <h3 className="text-sm font-semibold">My Listings</h3>
-            <span className="text-xs text-muted-foreground">({userListings.length})</span>
+        <div className="flex items-end justify-between px-1">
+          <div>
+            <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+              Portfolio
+            </span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-semibold tracking-tight">My Listings</h3>
+              <span className="text-xs text-muted-foreground">({userListings.length})</span>
+            </div>
           </div>
           <button
             type="button"
@@ -430,18 +605,22 @@ export function UserProfile({
         )}
       </div>
 
-      {/* Inquiries — landlord dashboard */}
+      {/* Inquiries — landlord inbox */}
       {userListings.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="size-4 text-accent" />
-              <h3 className="text-sm font-semibold">Inquiries</h3>
-              {newInquiryCount > 0 && (
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">
-                  {newInquiryCount} new
-                </span>
-              )}
+          <div className="flex items-end justify-between px-1">
+            <div>
+              <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                Landlord inbox
+              </span>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold tracking-tight">Inquiries</h3>
+                {newInquiryCount > 0 && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-400">
+                    {newInquiryCount} new
+                  </span>
+                )}
+              </div>
             </div>
             <span className="text-xs text-muted-foreground">
               {listingInquiries.length} total
@@ -949,16 +1128,36 @@ function DetailRow({
   icon: Icon,
   label,
   value,
+  valueNode,
+  tone = "light",
 }: {
   icon: LucideIcon
   label: string
-  value: string
+  value?: string
+  valueNode?: React.ReactNode
+  tone?: "light" | "dark"
 }) {
   return (
     <div className="flex items-center gap-3 py-3">
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
-      <span className="w-24 shrink-0 text-xs text-muted-foreground">{label}</span>
-      <span className="truncate text-sm font-medium">{value}</span>
+      <Icon
+        className={`size-4 shrink-0 ${
+          tone === "dark" ? "text-white/60" : "text-accent"
+        }`}
+      />
+      <span
+        className={`min-w-0 truncate text-sm font-medium ${
+          tone === "dark" ? "text-white" : ""
+        }`}
+      >
+        {valueNode ?? value}
+      </span>
+      <span
+        className={`ml-auto shrink-0 text-xs ${
+          tone === "dark" ? "text-white/50" : "text-muted-foreground"
+        }`}
+      >
+        {label}
+      </span>
     </div>
   )
 }

@@ -1,97 +1,281 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, MapPin } from "lucide-react"
+import {
+  MapPin,
+  ChevronDown,
+  Camera,
+  Smartphone,
+  Mail,
+  BadgeCheck,
+  Shield,
+  Share2,
+  Check,
+  Heart,
+  Star,
+} from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { ViewOnMap } from "@/components/ui/view-on-map"
 
-export interface Profile {
-  name: string
-  role?: string
-  location?: string
-  bio?: string
-  avatarUrl?: string
-  tags?: string[]
-}
+type VerificationType = "phone" | "email" | "id" | "credit"
 
 export interface ExpandableProfileCardProps {
-  profile: Profile
-  defaultExpanded?: boolean
+  id?: string
+  imageSrc?: string
+  name: string
+  location: string
+  bio?: string
+  mapAddress?: string
+  photoCount?: number
+  verified?: VerificationType[]
+  isFavorited?: boolean
+  onToggleFavorite?: (id: string) => void
+  onView?: (id: string) => void
+  price?: number
+  featured?: boolean
+}
+
+const VERIFICATION_CONFIG: Record<
+  VerificationType,
+  { icon: typeof Smartphone; label: string; dotColor: string }
+> = {
+  phone: { icon: Smartphone, label: "Phone", dotColor: "bg-blue-500" },
+  email: { icon: Mail, label: "Email", dotColor: "bg-purple-500" },
+  id: { icon: BadgeCheck, label: "ID", dotColor: "bg-green-500" },
+  credit: { icon: Shield, label: "Credit", dotColor: "bg-amber-500" },
 }
 
 export function ExpandableProfileCard({
-  profile,
-  defaultExpanded = false,
+  id,
+  imageSrc = "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=1000",
+  name,
+  location,
+  bio,
+  mapAddress,
+  photoCount,
+  verified = [],
+  isFavorited = false,
+  onToggleFavorite,
+  onView,
+  price,
+  featured = false,
 }: ExpandableProfileCardProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-  const { name, role, location, bio, avatarUrl, tags } = profile
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const copiedTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+    }
+  }, [])
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const slug = id ?? name.toLowerCase().replace(/\s+/g, "-")
+    const shareUrl = `${window.location.origin}/listing/${slug}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: name, url: shareUrl })
+        return
+      }
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      if (copiedTimer.current !== null) {
+        window.clearTimeout(copiedTimer.current)
+      }
+      copiedTimer.current = window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* share dismissed or clipboard denied */
+    }
+  }
 
   return (
-    <div className="w-full max-w-sm overflow-hidden rounded-xl bg-card text-sm text-card-foreground ring-1 ring-foreground/10">
-      <div className="flex items-start gap-3 p-4">
-        {avatarUrl && (
+    <div className="group w-full overflow-hidden rounded-3xl border border-border/40 bg-background shadow-sm ring-1 ring-black/[0.03] transition-all hover:-translate-y-0.5 hover:shadow-xl">
+      {/* --- Image background + header overlay (always visible) --- */}
+      <div
+        onClick={() => setIsExpanded((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            setIsExpanded((prev) => !prev)
+          }
+        }}
+        className="relative block w-full cursor-pointer text-left focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
+        {/* Full-width background image */}
+        <div className="relative h-48 overflow-hidden sm:h-56">
           <img
-            src={avatarUrl}
+            src={imageSrc}
             alt={name}
-            className="size-12 shrink-0 rounded-full object-cover ring-2 ring-accent/20"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-foreground">{name}</p>
-          {role && (
-            <p className="truncate text-sm text-muted-foreground">{role}</p>
+
+          {/* Featured badge */}
+          {featured && (
+            <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-2.5 py-1 text-[10px] font-bold text-black shadow-md">
+              <Star className="size-3 fill-black" />
+              Featured
+            </span>
           )}
-          {location && (
-            <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+
+          {/* Top-right actions: view + photo count */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onView?.(id ?? name.toLowerCase().replace(/\s+/g, "-"))
+              }}
+              className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-black shadow-md transition-colors hover:bg-primary hover:text-primary-foreground"
+            >
+              View
+            </button>
+
+            {photoCount !== undefined && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+                <Camera className="size-3" />
+                {photoCount}
+              </span>
+            )}
+          </div>
+
+          {/* Bottom-right actions: heart + share */}
+          <div className="absolute right-2 bottom-2 z-10 flex items-center gap-1">
+            {onToggleFavorite && id && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleFavorite(id)
+                }}
+                className="flex size-7 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm transition-transform hover:scale-110"
+                aria-label={
+                  isFavorited ? "Remove from favorites" : "Add to favorites"
+                }
+              >
+                <motion.span
+                  key={isFavorited ? "favorited" : "unfavorited"}
+                  initial={{ scale: 0.4 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                  className="inline-flex"
+                >
+                  <Heart
+                    className={`size-3.5 transition-colors ${
+                      isFavorited ? "fill-red-500 text-red-500" : "text-white/80"
+                    }`}
+                  />
+                </motion.span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex size-7 items-center justify-center rounded-full bg-black/50 text-white/70 backdrop-blur-sm transition-colors hover:text-white"
+              aria-label="Share profile"
+            >
+              <Share2 className="size-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Dark gradient bed + overlaid content at the bottom of the image */}
+        <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-8">
+          <div className="space-y-1.5 px-4 pb-3">
+            {/* Name + price + chevron */}
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-white drop-shadow-sm">
+                  {name}
+                </h3>
+                {price !== undefined && (
+                  <p className="text-sm font-bold text-white drop-shadow-sm">
+                    R {price.toLocaleString("en-ZA")}
+                    <span className="text-[10px] font-medium text-white/70">
+                      {" "}
+                      /month
+                    </span>
+                  </p>
+                )}
+              </div>
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="shrink-0"
+              >
+                <ChevronDown className="size-5 text-white/70" />
+              </motion.div>
+            </div>
+
+            {/* Location */}
+            <p className="flex items-center gap-1 text-xs text-white/80">
               <MapPin className="size-3 shrink-0" />
               <span className="truncate">{location}</span>
             </p>
-          )}
+
+            {/* Verification badges */}
+            {verified.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {verified.map((v) => {
+                  const config = VERIFICATION_CONFIG[v]
+                  const Icon = config.icon
+                  return (
+                    <span
+                      key={v}
+                      className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm"
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${config.dotColor}`}
+                      />
+                      <Icon className="size-2.5" />
+                      {config.label}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setIsExpanded((prev) => !prev)}
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? "Collapse profile" : "Expand profile"}
-          className="shrink-0"
-        >
-          <motion.span
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="inline-flex"
-          >
-            <ChevronDown />
-          </motion.span>
-        </Button>
       </div>
 
-      {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 px-4 pb-2">
-          {tags.map((tag) => (
-            <Badge key={tag} variant="secondary">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      )}
-
+      {/* --- Expanded content (animated vertical reveal) --- */}
       <AnimatePresence initial={false}>
-        {isExpanded && bio && (
+        {isExpanded && (
           <motion.div
-            key="profile-bio"
+            key="expanded"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="border-t border-border/50 p-4">
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {bio}
-              </p>
+            <div className="border-t border-border/30 px-4 pt-3 pb-4">
+              {bio && (
+                <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+                  {bio}
+                </p>
+              )}
+              {mapAddress && <ViewOnMap address={mapAddress} />}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Copied toast */}
+      <AnimatePresence>
+        {copied && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-lg"
+          >
+            <Check className="mr-1.5 inline size-4" />
+            Link copied!
           </motion.div>
         )}
       </AnimatePresence>

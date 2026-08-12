@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
-import { expect, userEvent, within } from "storybook/test"
+import { expect, userEvent, waitFor, within } from "storybook/test"
 
 import { Button } from "./button"
 import { EditProfile, type ProfileData } from "./edit-profile"
@@ -68,6 +68,9 @@ export const Default: Story = {
     await expect(
       await canvas.findByText("Saved changes for Naledi Mokoena"),
     ).toBeVisible()
+    await waitFor(() => {
+      expect(canvas.queryByLabelText("Full name")).toBeNull()
+    })
   },
 }
 

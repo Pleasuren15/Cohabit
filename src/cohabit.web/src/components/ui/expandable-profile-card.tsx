@@ -94,7 +94,7 @@ export function ExpandableProfileCard({
   }
 
   return (
-    <div className="group w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="group w-full overflow-hidden rounded-3xl border border-border/40 bg-background shadow-sm ring-1 ring-black/[0.03] transition-all hover:-translate-y-0.5 hover:shadow-xl">
       {/* --- Image background + header overlay (always visible) --- */}
       <div
         role="button"
@@ -125,7 +125,7 @@ export function ExpandableProfileCard({
             </span>
           )}
 
-          {/* Top-right actions: view + photo count */}
+            {/* Top-right actions: view + photo count */}
           <div className="absolute top-3 right-3 flex items-center gap-1.5">
             {/* View button */}
             <button

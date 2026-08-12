@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
   MoreHorizontal,
   Check,
-  ChevronDown
+  ChevronDown,
+  Flag,
+  Settings,
+  Hourglass,
+  CircleCheck,
 } from 'lucide-react';
-import { Flag01Icon, Settings03Icon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { BiSolidHourglassBottom } from 'react-icons/bi';
-import { IoIosCheckmarkCircleOutline } from 'react-icons/io';
 
 // --- Types ---
 export interface Subtask {
@@ -73,17 +73,15 @@ export const TaskWidget: React.FC<Props> = ({ data, variant = "neutral" }) => {
               transition={springTransition}
               className={`flex items-center justify-center border-[1.7px] my-0.5 rounded-lg transition-colors bg-white ${isAccent ? 'border-accent/40 dark:border-accent/50' : 'border-neutral-200 dark:bg-neutral-900 dark:border-neutral-700'} ${isOpen ? 'w-10 h-10 sm:w-12 sm:h-12' : 'size-7 sm:size-8'}`}
             >
-              <HugeiconsIcon
-                icon={Settings03Icon}
-                size={isOpen ? 20 : 15}
+              <Settings
+                size={isOpen ? 22 : 16}
+                strokeWidth={1.5}
                 className={`${isAccent ? 'text-accent' : 'text-neutral-400 dark:text-neutral-500'} sm:hidden`}
-                strokeWidth={1.5}
               />
-              <HugeiconsIcon
-                icon={Settings03Icon}
-                size={isOpen ? 24 : 17}
-                className={`${isAccent ? 'text-accent' : 'text-neutral-400 dark:text-neutral-500'} hidden sm:block`}
+              <Settings
+                size={isOpen ? 26 : 18}
                 strokeWidth={1.5}
+                className={`${isAccent ? 'text-accent' : 'text-neutral-400 dark:text-neutral-500'} hidden sm:block`}
               />
             </motion.div>
             <motion.h2
@@ -150,12 +148,12 @@ export const TaskWidget: React.FC<Props> = ({ data, variant = "neutral" }) => {
             >
               <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium">
                 <div className="flex items-center gap-1 sm:gap-1.5 text-neutral-500 dark:text-neutral-400">
-                  <HugeiconsIcon icon={Flag01Icon} size={18} className="sm:hidden" color="currentColor" fill='currentColor' strokeWidth={1.5} />
-                  <HugeiconsIcon icon={Flag01Icon} size={22} className="hidden sm:block" color="currentColor" fill='currentColor' strokeWidth={1.5} />
+                  <Flag size={18} className="sm:hidden" strokeWidth={1.5} />
+                  <Flag size={22} className="hidden sm:block" strokeWidth={1.5} />
                   {data.priority}
                 </div>
                 <div className="flex items-center gap-1 sm:gap-1.5 text-neutral-500 dark:text-neutral-400">
-                  <BiSolidHourglassBottom className="text-neutral-400 w-4 h-4 sm:w-[22px] sm:h-[22px]" />
+                  <Hourglass className="text-neutral-400 w-4 h-4 sm:w-[22px] sm:h-[22px]" />
                   {data.status}
                 </div>
               </div>
@@ -187,7 +185,7 @@ export const TaskWidget: React.FC<Props> = ({ data, variant = "neutral" }) => {
               {/* Progress Bar Container */}
               <div className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 sm:py-1.5 border-[1.5px] rounded-full mb-7 w-fit transition-colors ${isAccent ? 'bg-accent/5 border-accent/25 dark:bg-accent/10 dark:border-accent/30' : 'bg-neutral-50/50 border-neutral-200 dark:bg-neutral-800/50 dark:border-neutral-700'}`}>
                 <div className="w-5 h-5 rounded-full flex items-center justify-center">
-                  <IoIosCheckmarkCircleOutline size={24} className={isAccent ? 'text-accent/40' : 'text-neutral-300 dark:text-neutral-600'} />
+                  <CircleCheck size={24} className={isAccent ? 'text-accent/40' : 'text-neutral-300 dark:text-neutral-600'} />
                 </div>
                 <span className={`text-sm font-semibold ${isAccent ? 'text-accent/70' : 'text-neutral-400 dark:text-neutral-500'}`}>
                   <span className={isAccent ? 'text-accent/70' : 'text-neutral-400 dark:text-neutral-500'}>{data.completedCount}</span> of {data.totalCount}
@@ -241,7 +239,7 @@ export const TaskWidget: React.FC<Props> = ({ data, variant = "neutral" }) => {
                   {
                     label: 'Priority',
                     val: data.priority,
-                    icon: <HugeiconsIcon icon={Flag01Icon} size={22} className="text-neutral-400" strokeWidth={1.5} />,
+                    icon: <Flag size={22} className="text-neutral-400" strokeWidth={1.5} />,
                     badge: 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400',
                     chevronWrap: 'bg-red-50 dark:bg-neutral-900',
                     chevron: 'text-red-700 dark:text-red-400'
@@ -249,7 +247,7 @@ export const TaskWidget: React.FC<Props> = ({ data, variant = "neutral" }) => {
                   {
                     label: 'Status',
                     val: data.status,
-                    icon: <BiSolidHourglassBottom className="text-neutral-400" size={22} />,
+                    icon: <Hourglass size={22} className="text-neutral-400" strokeWidth={1.5} />,
                     badge: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
                     chevronWrap: 'bg-amber-50 dark:bg-neutral-900',
                     chevron: 'text-amber-700 dark:text-amber-300'

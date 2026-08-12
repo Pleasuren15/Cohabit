@@ -17,7 +17,6 @@ import {
   Scale,
   Mail,
   Search,
-  BarChart3,
   ShieldCheck,
   Flag,
   Lock,
@@ -97,6 +96,7 @@ import { Routes, Route, useNavigate, useParams } from "react-router-dom"
 import { AppProvider, useApp } from "@/context/app-context"
 import { useUnfavoriteConfirm } from "@/components/ui/unfavorite-confirm"
 import { HowCohabitWorks } from "@/components/ui/how-cohabit-works"
+import { ContractGenerator } from "@/components/ui/contract-generator"
 
 export { FEATURED_PROFILES }
 export type { FeaturedProfile, VerificationType }
@@ -569,6 +569,7 @@ function MainApp({
   const [openListingSignal, setOpenListingSignal] = useState(0)
   const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
   const [showProvincePicker, setShowProvincePicker] = useState(false)
+  const [showContractGenerator, setShowContractGenerator] = useState(false)
   const [messages, setMessages] = useState<SystemMessageDto[]>([])
   const [userListings, setUserListings] = useState<FeaturedProfile[]>([])
 
@@ -911,75 +912,77 @@ function MainApp({
       {activeTab === "Home" && (
         <div className="fixed top-0 right-0 left-0 z-30 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <div className="mx-auto max-w-md space-y-3 px-6 pt-6 pb-3">
-            {/* Filter + province at very top */}
+            {/* Province + type at very top */}
             <div className="flex items-center justify-between gap-2">
-              <ListingFilter
-                value={listingFilter}
-                onChange={setListingFilter}
-              />
+              <button
+                type="button"
+                onClick={() => setShowProvincePicker(true)}
+                className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
+                aria-label="Change province"
+              >
+                <img
+                  src={PROVINCE_SHAPES[province]}
+                  alt=""
+                  className="h-5 w-5 object-contain drop-shadow-sm"
+                />
+                <span className="leading-tight">{PROVINCES[province]}</span>
+              </button>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowFilters(true)}
-                  className="relative inline-flex items-center gap-1.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
-                  aria-label="Filter listings"
-                >
-                  <SlidersHorizontal className="size-3.5" />
-                  Filters
-                  {countActiveFilters(filters) > 0 && (
-                    <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">
-                      {countActiveFilters(filters)}
-                    </span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowProvincePicker(true)}
-                  className="flex flex-col items-center gap-0.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-opacity hover:opacity-80"
-                  aria-label="Change province"
-                >
-                  <img
-                    src={PROVINCE_SHAPES[province]}
-                    alt=""
-                    className="h-5 w-5 object-contain drop-shadow-sm"
-                  />
-                  <span className="leading-tight">{PROVINCES[province]}</span>
-                </button>
+                <ListingFilter
+                  value={listingFilter}
+                  onChange={setListingFilter}
+                />
               </div>
             </div>
 
-            {/* Search bar below filter */}
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
-                  <Search className="size-3.5 text-muted-foreground" />
-                </div>
-                <input
-                  type="search"
-                  id="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
-                  placeholder="Search apartments, areas..."
-                />
-                {searchQuery ? (
+            {/* Search + filters on one line */}
+            <div className="flex items-center gap-2">
+              <form onSubmit={(e) => e.preventDefault()} className="min-w-0 flex-1">
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
+                    <Search className="size-3.5 text-muted-foreground" />
+                  </div>
+                  <input
+                    type="search"
+                    id="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full rounded-lg border border-border bg-background p-2 ps-8 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none"
+                    placeholder="Search apartments, areas..."
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      aria-label="Clear search"
+                      className="absolute top-1/2 end-16 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  ) : null}
                   <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    aria-label="Clear search"
-                    className="absolute top-1/2 end-16 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                    type="submit"
+                    className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] leading-4 font-medium text-white shadow-sm transition-colors hover:bg-accent/90 focus:ring-2 focus:ring-accent/30 focus:outline-none"
                   >
-                    <X className="size-3.5" />
+                    Search
                   </button>
-                ) : null}
-                <button
-                  type="submit"
-                  className="absolute end-1 bottom-1 rounded-md border border-transparent bg-accent px-2.5 py-1 text-[10px] leading-4 font-medium text-white shadow-sm transition-colors hover:bg-accent/90 focus:ring-2 focus:ring-accent/30 focus:outline-none"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
+                </div>
+              </form>
+              <button
+                type="button"
+                onClick={() => setShowFilters(true)}
+                className="relative inline-flex shrink-0 items-center gap-1.5 rounded-full bg-background/40 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                aria-label="Filter listings"
+              >
+                <SlidersHorizontal className="size-3.5" />
+                Filters
+                {countActiveFilters(filters) > 0 && (
+                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">
+                    {countActiveFilters(filters)}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1097,16 +1100,30 @@ function MainApp({
 
             {activeTab === "WatchList" && (
               <div className="flex flex-col gap-2">
-                <PageHeader
-                  icon={Heart}
-                  title="WatchList"
-                  iconClassName={
-                    watchlistCards.length > 0
-                      ? "fill-red-500 text-red-500"
-                      : ""
-                  }
-                />
-                <div className="-mt-3 flex w-full items-center justify-between">
+                <div className="flex items-start gap-3">
+                  <span
+                    className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full ${
+                      watchlistCards.length > 0
+                        ? "bg-red-100 text-red-500 dark:bg-red-500/15 dark:text-red-400"
+                        : "bg-muted/60 text-muted-foreground"
+                    }`}
+                  >
+                    <Heart
+                      className={`size-5 ${
+                        watchlistCards.length > 0 ? "fill-red-500 text-red-500" : ""
+                      }`}
+                    />
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                      Saved homes
+                    </span>
+                    <h2 className="mt-0.5 text-2xl font-semibold tracking-tight">
+                      WatchList
+                    </h2>
+                  </div>
+                </div>
+                <div className="-mt-1 ml-13 flex w-full items-center justify-between">
                   <p className="text-xs text-muted-foreground">
                     {watchlistCards.length} saved
                     {lastSavedAt > 0 && (
@@ -1147,35 +1164,85 @@ function MainApp({
 
             {activeTab === "Info" && (
               <div className="flex flex-col items-center gap-5">
-                {/* Band 0 — How Cohabit works */}
+                {/* Band 0 — What is Cohabit (brand hero card) */}
                 <Reveal className="w-full">
-                <section className="w-full bg-background/70 px-5 py-5 sm:px-6">
-                  <div className="w-full">
-                    <PageHeader
-                      icon={Sparkles}
-                      title="How Cohabit works"
-                      subtitle="Four simple steps to find your next home or housemate."
-                    />
+                <section className="w-full overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 p-5 text-white shadow-lg">
+                  <span className="text-[10px] font-bold tracking-[0.22em] text-white/70 uppercase">
+                    About Cohabit
+                  </span>
+                  <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
+                    Shared living, made simple.
+                  </h2>
+                  <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/85">
+                    Cohabit connects South Africans who need a home with verified
+                    hosts and compatible housemates.
+                  </p>
+
+                  <div className="mt-5 grid w-full grid-cols-2 gap-2.5">
+                    {[
+                      { icon: Home, title: "Find your space" },
+                      { icon: Handshake, title: "Match with housemates" },
+                      { icon: Building2, title: "Reach vetted tenants" },
+                      { icon: Shield, title: "Stay protected" },
+                    ].map((item) => {
+                      const IconComponent = item.icon
+                      return (
+                        <div
+                          key={item.title}
+                          className="flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm"
+                        >
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+                            <IconComponent className="size-4" />
+                          </span>
+                          <span className="text-[13px] leading-tight font-semibold text-white">
+                            {item.title}
+                          </span>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <div className="w-full pt-4">
+                </section>
+                </Reveal>
+
+                {/* Band 1 — How Cohabit works (editorial journey card) */}
+                <Reveal className="w-full">
+                <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                  <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                    How Cohabit works
+                  </span>
+                  <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                    Four steps to your next home
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    From your first search to move-in day.
+                  </p>
+                  <div className="mt-5">
                     <HowCohabitWorks />
                   </div>
                 </section>
                 </Reveal>
 
-                {/* Band 1 — Trust & Safety + Verification */}
+                {/* Band 2 — Trust & Safety (dark security panel) */}
                 <Reveal className="w-full">
-                <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
+                <section className="w-full rounded-3xl bg-foreground p-5 text-white shadow-xl">
                   <div className="flex flex-col items-center">
                     <div className="w-full">
-                      <PageHeader
-                        icon={ShieldCheck}
-                        title="Trust & Safety Hub"
-                        subtitle={<>How we keep <span className="text-accent">Cohabit</span> a safe place to find your home or housemate.</>}
-                      />
+                      <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
+                        Trust &amp; Safety
+                      </span>
+                      <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">
+                        How Cohabit keeps you safe
+                      </h2>
+                      <p className="mt-1 text-sm text-white/70">
+                        How we keep{" "}
+                        <span className="font-semibold text-amber-300">
+                          Cohabit
+                        </span>{" "}
+                        a safe place to find your home or housemate.
+                      </p>
                     </div>
 
-                    <div className="grid w-full gap-3 sm:grid-cols-2">
+                    <div className="mt-5 grid w-full gap-3 sm:grid-cols-2">
                       {[
                         {
                           icon: BadgeCheck,
@@ -1202,17 +1269,17 @@ function MainApp({
                         return (
                           <div
                             key={item.title}
-                            className="bg-background/70 p-5"
+                            className="rounded-2xl border border-white/10 bg-white/5 p-4"
                           >
                             <div className="mb-2 flex items-center gap-3">
                               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
                                 <IconComponent className="size-4" />
                               </span>
-                              <h2 className="font-semibold text-foreground">
+                              <h3 className="text-sm font-semibold text-white">
                                 {item.title}
-                              </h2>
+                              </h3>
                             </div>
-                            <p className="text-sm leading-relaxed text-muted-foreground">
+                            <p className="text-sm leading-relaxed text-white/70">
                               {item.body}
                             </p>
                           </div>
@@ -1223,11 +1290,12 @@ function MainApp({
 
                   <div className="mt-5 flex flex-col items-center">
                     <div className="w-full">
-                      <PageHeader
-                        icon={Shield}
-                        title="Verification Badges"
-                        subtitle="Build trust in the community."
-                      />
+                      <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
+                        Verification
+                      </span>
+                      <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
+                        Badges that build trust
+                      </h3>
                     </div>
 
                     <div className="w-full">
@@ -1235,28 +1303,28 @@ function MainApp({
                         <TabsList className="bg-transparent">
                           <TabsTrigger
                             value="phone"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
                           >
                             <Smartphone className="mr-1 size-3.5" />
                             Phone
                           </TabsTrigger>
                           <TabsTrigger
                             value="email"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
                           >
                             <Mail className="mr-1 size-3.5" />
                             Email
                           </TabsTrigger>
                           <TabsTrigger
                             value="id"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
                           >
                             <BadgeCheck className="mr-1 size-3.5" />
                             ID
                           </TabsTrigger>
                           <TabsTrigger
                             value="credit"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white"
+                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
                           >
                             <Shield className="mr-1 size-3.5" />
                             Credit
@@ -1265,14 +1333,14 @@ function MainApp({
 
                         <TabsContent
                           value="phone"
-                          className="mt-0 border-2 border-dashed border-blue-200 bg-blue-50/50 p-6"
+                          className="mt-0 rounded-2xl border-2 border-dashed border-blue-400/25 bg-blue-500/5 p-6"
                         >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-800">
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-300">
                             Phone
                           </h5>
-                          <p className="border-l-2 border-blue-500 pl-4 text-sm leading-6 text-blue-700/80">
+                          <p className="border-l-2 border-blue-400/60 pl-4 text-sm leading-6 text-white/70">
                             Confirm your phone via OTP to{" "}
-                            <span className="font-semibold text-blue-900">
+                            <span className="font-semibold text-blue-200">
                               verify your identity
                             </span>
                             . Fastest way to build trust.
@@ -1281,14 +1349,14 @@ function MainApp({
 
                         <TabsContent
                           value="email"
-                          className="mt-0 border-2 border-dashed border-purple-200 bg-purple-50/50 p-6"
+                          className="mt-0 rounded-2xl border-2 border-dashed border-purple-400/25 bg-purple-500/5 p-6"
                         >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-800">
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-300">
                             Email
                           </h5>
-                          <p className="border-l-2 border-purple-500 pl-4 text-sm leading-6 text-purple-700/80">
+                          <p className="border-l-2 border-purple-400/60 pl-4 text-sm leading-6 text-white/70">
                             Verify your email address to{" "}
-                            <span className="font-semibold text-purple-900">
+                            <span className="font-semibold text-purple-200">
                               receive important updates
                             </span>{" "}
                             and confirm your account ownership.
@@ -1297,14 +1365,14 @@ function MainApp({
 
                         <TabsContent
                           value="id"
-                          className="mt-0 border-2 border-dashed border-green-200 bg-green-50/50 p-6"
+                          className="mt-0 rounded-2xl border-2 border-dashed border-green-400/25 bg-green-500/5 p-6"
                         >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-green-800">
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-green-300">
                             ID
                           </h5>
-                          <p className="border-l-2 border-green-500 pl-4 text-sm leading-6 text-green-700/80">
+                          <p className="border-l-2 border-green-400/60 pl-4 text-sm leading-6 text-white/70">
                             Upload your SA ID or passport for{" "}
-                            <span className="font-semibold text-green-900">
+                            <span className="font-semibold text-green-200">
                               official verification
                             </span>
                             . Encrypted and never shared publicly.
@@ -1313,14 +1381,14 @@ function MainApp({
 
                         <TabsContent
                           value="credit"
-                          className="mt-0 border-2 border-dashed border-amber-200 bg-amber-50/50 p-6"
+                          className="mt-0 rounded-2xl border-2 border-dashed border-amber-400/25 bg-amber-500/5 p-6"
                         >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-800">
+                          <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-300">
                             Credit
                           </h5>
-                          <p className="border-l-2 border-amber-500 pl-4 text-sm leading-6 text-amber-700/80">
+                          <p className="border-l-2 border-amber-400/60 pl-4 text-sm leading-6 text-white/70">
                             Complete a{" "}
-                            <span className="font-semibold text-amber-900">
+                            <span className="font-semibold text-amber-200">
                               financial responsibility check
                             </span>{" "}
                             to unlock priority listings.
@@ -1328,18 +1396,22 @@ function MainApp({
                         </TabsContent>
                       </Tabs>
 
-                      <p className="mt-4 text-center text-xs text-muted-foreground">
+                      <p className="mt-4 text-center text-xs text-white/60">
                         More badges = more trust.
                       </p>
                     </div>
                   </div>
                   <div className="mt-4 flex flex-col items-center">
                     <div className="w-full">
-                      <PageHeader
-                        icon={AlertTriangle}
-                        title="Staying safe on Cohabit"
-                        subtitle="Practical tips to keep you, your money and your home safe when searching for a place or a housemate."
-                      />
+                      <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
+                        Staying safe
+                      </span>
+                      <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
+                        Practical safety tips
+                      </h3>
+                      <p className="mt-1 text-sm text-white/70">
+                        Keep you, your money and your home safe when searching.
+                      </p>
                     </div>
 
                     <div className="w-full space-y-3">
@@ -1385,23 +1457,23 @@ function MainApp({
                         return (
                           <div
                             key={group.title}
-                            className="bg-background/70 p-5"
+                            className="rounded-2xl border border-white/10 bg-white/5 p-4"
                           >
                             <div className="mb-2 flex items-center gap-3">
                               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
                                 <GroupIcon className="size-4" />
                               </span>
-                              <h2 className="font-semibold text-foreground">
+                              <h3 className="text-sm font-semibold text-white">
                                 {group.title}
-                              </h2>
+                              </h3>
                             </div>
-                            <ul className="space-y-1.5 text-sm leading-relaxed text-muted-foreground">
+                            <ul className="space-y-1.5 text-sm leading-relaxed text-white/70">
                               {group.tips.map((tip) => (
                                 <li
                                   key={tip}
                                   className="flex gap-2"
                                 >
-                                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent/70" />
+                                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-amber-300/80" />
                                   <span>{tip}</span>
                                 </li>
                               ))}
@@ -1411,17 +1483,17 @@ function MainApp({
                       })}
                     </div>
 
-                    <div className="mt-5 w-full rounded-2xl border border-border/60 bg-background/70 p-5">
-                      <p className="text-xs leading-relaxed text-muted-foreground">
-                        <span className="font-semibold text-foreground">
+                    <div className="mt-5 w-full rounded-2xl border border-white/15 bg-white/5 p-4">
+                      <p className="text-xs leading-relaxed text-white/75">
+                        <span className="font-semibold text-white">
                           Need urgent help?
                         </span>{" "}
                         If you're in immediate danger call the SAPS on{" "}
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-amber-300">
                           10111
                         </span>{" "}
                         or Crime Stop on{" "}
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-amber-300">
                           08600 10111
                         </span>
                         . For a non-urgent safety concern, report it via any
@@ -1433,18 +1505,20 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 2 — Stats */}
+                {/* Band 3 — Stats (scoreboard) */}
                 <Reveal className="w-full">
-                <section className="w-full bg-accent/5 px-5 py-5 sm:px-6">
-                  <div className="w-full">
-                    <PageHeader
-                      icon={BarChart3}
-                      title={<><span className="text-accent">Cohabit</span> by the numbers</>}
-                      subtitle="A growing community of trusted hosts and housemates."
-                    />
-                  </div>
+                <section className="w-full rounded-3xl border border-accent/20 bg-gradient-to-b from-amber-50/80 to-background p-5">
+                  <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                    Cohabit stats
+                  </span>
+                  <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                    <span className="text-accent">Cohabit</span> by the numbers
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    A growing community of trusted hosts and housemates.
+                  </p>
 
-                  <div className="grid w-full grid-cols-3 gap-3">
+                  <div className="mt-4 grid w-full grid-cols-3 gap-2.5">
                     {[
                       { value: 1200, suffix: "+", label: "Verified members" },
                       { value: 9, suffix: "", label: "Provinces covered" },
@@ -1452,14 +1526,14 @@ function MainApp({
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="flex flex-col items-center justify-center bg-background/70 p-5 text-center"
+                        className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-accent/25 bg-background p-4 text-center"
                       >
                         <StatsCounter
                           value={stat.value}
                           suffix={stat.suffix}
-                          className="text-3xl font-black tracking-tight text-foreground"
+                          className="text-2xl font-black tracking-tight text-accent"
                         />
-                        <span className="mt-1 text-xs text-muted-foreground">
+                        <span className="mt-1 text-[11px] leading-tight font-medium text-muted-foreground">
                           {stat.label}
                         </span>
                       </div>
@@ -1468,7 +1542,7 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 3 — FAQ */}
+                {/* Band 4 — FAQ */}
                 <Reveal className="w-full">
                 <section className="w-full px-1">
                   <Faq6
@@ -1479,41 +1553,40 @@ function MainApp({
                 </section>
                 </Reveal>
 
-                {/* Band 4 — Terms & Conditions */}
+                {/* Band 5 — Terms & Conditions (legal paper) */}
                 <Reveal className="w-full">
-                <section className="w-full bg-muted/20 px-5 py-5 sm:px-6">
-                  <div className="w-full">
-                    <PageHeader
-                      icon={ScrollText}
-                      title="Terms & Conditions"
-                      subtitle="Last updated 21 July 2026"
-                    />
-                  </div>
+                <section className="w-full rounded-lg border border-border bg-background px-5 py-5 shadow-sm">
+                  <span className="text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
+                    Legal
+                  </span>
+                  <h2 className="mt-1 text-lg font-semibold tracking-tight">
+                    Terms &amp; Conditions
+                  </h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Last updated 21 July 2026
+                  </p>
 
-                  <div className="w-full space-y-3">
+                  <div className="mt-4 space-y-4">
                     {TERMS.map((section, i) => {
                       const icons = [ScrollText, Home, Wallet, Handshake, Scale]
                       const IconComponent = icons[i] ?? ScrollText
                       return (
-                        <div
-                          key={section.heading}
-                          className="bg-background/70 p-5"
-                        >
-                          <div className="mb-2 flex items-center gap-3">
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                              <IconComponent className="size-4" />
+                        <div key={section.heading} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                              <IconComponent className="size-3.5" />
                             </span>
-                            <h2 className="font-semibold text-foreground">
+                            <h3 className="text-xs font-bold tracking-wider text-foreground uppercase">
                               {section.heading.replace(/^\d+\.\s*/, "")}
-                            </h2>
+                            </h3>
                           </div>
-                          <p className="text-sm leading-relaxed text-muted-foreground">
+                          <p className="text-[13px] leading-relaxed text-muted-foreground">
                             {section.body}
                           </p>
                         </div>
                       )
                     })}
-                    <div className="bg-background/70 p-5">
+                    <div className="border-t border-border pt-4">
                       <p className="text-xs text-muted-foreground">
                         Questions? Contact us at{" "}
                         <span className="font-medium text-accent">
@@ -1529,28 +1602,61 @@ function MainApp({
             )}
 
             {activeTab === "Profile" && currentUser && (
-              <UserProfile
-                user={currentUser}
-                userListings={userListings}
-                verified={userVerified}
-                onVerify={(type) => {
-                  if (!userVerified.includes(type)) {
-                    setUserVerified((prev) => [...prev, type])
+              <div className="space-y-5">
+                <UserProfile
+                  user={currentUser}
+                  userListings={userListings}
+                  verified={userVerified}
+                  onVerify={(type) => {
+                    if (!userVerified.includes(type)) {
+                      setUserVerified((prev) => [...prev, type])
+                    }
+                  }}
+                  onUpdateUser={handleUpdateUser}
+                  onToggleFavorite={handleFavoriteToggle}
+                  onViewListing={handleViewListing}
+                  onAddListing={handleAddListing}
+                  onUpdateListing={handleUpdateListing}
+                  getListingDetail={(id) =>
+                    listingService.getListingById(id, allListings)
                   }
-                }}
-                onUpdateUser={handleUpdateUser}
-                onToggleFavorite={handleFavoriteToggle}
-                onViewListing={handleViewListing}
-                onAddListing={handleAddListing}
-                onUpdateListing={handleUpdateListing}
-                getListingDetail={(id) =>
-                  listingService.getListingById(id, allListings)
-                }
-                onSignOut={onSignOut}
-                inquiries={inquiries}
-                onUpdateInquiryStatus={updateInquiryStatus}
-                openNewListingSignal={openListingSignal}
-              />
+                  onSignOut={onSignOut}
+                  inquiries={inquiries}
+                  onUpdateInquiryStatus={updateInquiryStatus}
+                  openNewListingSignal={openListingSignal}
+                />
+
+                {/* Contract Generator */}
+                <div className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent p-5 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                      <ScrollText className="size-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-sm font-semibold tracking-tight">
+                        Create a rental contract
+                      </h2>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                        Generate a roommate agreement or a residential lease
+                        between tenants and landlords. Choose the terms, preview
+                        the document, then download it as a PDF.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowContractGenerator(true)}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
+                  >
+                    <ScrollText className="size-4" aria-hidden="true" />
+                    Generate a contract
+                  </button>
+                  <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                    Templates only — not legal advice. Have your final document
+                    reviewed by a qualified professional.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
@@ -1568,11 +1674,17 @@ function MainApp({
               {/* Similar matches */}
               {similarCards.length > 0 && (
                 <div className="w-full">
-                  <PageHeader
-                    icon={Sparkles}
-                    title="More like this"
-                    subtitle="Based on the listings you've saved"
-                  />
+                  <div className="mb-2 flex items-center gap-2 px-1">
+                    <Sparkles className="size-4 shrink-0 text-accent" />
+                    <div>
+                      <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                        Suggestions
+                      </span>
+                      <h3 className="text-sm leading-tight font-semibold">
+                        More like this
+                      </h3>
+                    </div>
+                  </div>
                   <MinimalCarousel
                     cards={similarCards}
                     onFavoriteToggle={(card) => {
@@ -1698,6 +1810,10 @@ function MainApp({
         onClose={() => setShowFilters(false)}
         filters={filters}
         onChange={setFilters}
+      />
+      <ContractGenerator
+        open={showContractGenerator}
+        onOpenChange={setShowContractGenerator}
       />
       {unfavoriteDialog}
     </>

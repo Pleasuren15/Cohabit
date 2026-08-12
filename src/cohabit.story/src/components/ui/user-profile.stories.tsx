@@ -172,6 +172,11 @@ export const LandlordInquiries: Story = {
       />
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await canvas.findByText("In Progress", { selector: "div" })
+    await new Promise((resolve) => setTimeout(resolve, 300))
+  },
 }
 
 export const NoInquiries: Story = {

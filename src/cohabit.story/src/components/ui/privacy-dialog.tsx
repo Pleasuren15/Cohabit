@@ -40,9 +40,9 @@ const PRIVACY_SECTIONS = [
  */
 export function PrivacyDialog() {
   return (
-    <div className="rounded-2xl border border-border/40 bg-background p-5 shadow-sm">
+    <div className="rounded-2xl border border-emerald-200/70 bg-gradient-to-b from-emerald-50/60 to-background p-5 shadow-sm dark:border-emerald-500/25 dark:from-emerald-500/10 dark:to-background">
       <div className="mb-3 flex items-center gap-2">
-        <ShieldCheck className="size-4 text-accent" />
+        <ShieldCheck className="size-4 text-emerald-500" />
         <h3 className="text-sm font-semibold">Privacy Promise</h3>
       </div>
       <p className="mb-4 text-xs leading-relaxed text-muted-foreground">

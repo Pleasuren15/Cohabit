@@ -25,7 +25,27 @@ const listing: DetailListing = {
     name: "Nomvula Dlamini",
     avatarUrl: "https://picsum.photos/seed/nomvula/200/200",
   },
-  availableFrom: "1 September 2026",
+  availableFrom: "1 Sep 2026",
+  deposit: 6500,
+  beds: 1,
+  baths: 1,
+  responseTime: "Within a day",
+  rules: ["Non-smoking", "No pets", "Quiet after 10pm"],
+  verified: ["phone", "email", "id"],
+  relatedListings: [
+    {
+      id: "lst-rt1",
+      imageSrc: "https://picsum.photos/seed/cottage/200/200",
+      name: "Garden cottage in Rosebank",
+      location: "Rosebank, Johannesburg",
+    },
+    {
+      id: "lst-rt2",
+      imageSrc: "https://picsum.photos/seed/studio/200/200",
+      name: "Sunny studio in Gardens",
+      location: "Gardens, Cape Town",
+    },
+  ],
 }
 
 const meta = {
@@ -54,6 +74,10 @@ export const Empty: Story = {
 export const Populated: Story = {
   args: {
     listing,
+    onBack: () => {},
+    onToggleFavorite: () => {},
+    onRequestView: () => {},
+    onReport: () => {},
   },
 }
 
@@ -81,7 +105,28 @@ export const PopulatedWithImage: Story = {
         name: "Sipho Mbeki",
         avatarUrl: "https://picsum.photos/seed/sipho/200/200",
       },
+      deposit: 8200,
+      beds: 2,
+      baths: 1,
+      responseTime: "Within 2 hours",
+      rules: ["Non-smoking", "Garden maintenance optional"],
+      verified: ["phone", "email", "id", "credit"],
     },
+    onBack: () => {},
+    onToggleFavorite: () => {},
+    onRequestView: () => {},
+    onReport: () => {},
+  },
+}
+
+export const Favorited: Story = {
+  args: {
+    listing: {
+      ...listing,
+      id: "lst-003",
+      imageSrc: "https://picsum.photos/seed/fav/400/300",
+    },
+    isFavorited: true,
     onBack: () => {},
   },
 }
