@@ -31,34 +31,27 @@ const STEPS = [
 ]
 
 /**
- * Vertical timeline showing how Cohabit works, used on the Info page.
+ * Numbered editorial timeline showing how Cohabit works, used on the Info page.
  */
 export function HowCohabitWorks() {
   return (
-    <ol className="relative border-s border-border/40">
-      {STEPS.map((step, index) => {
-        const Icon = step.icon
-        return (
-          <li
-            key={step.title}
-            className={`ms-7 ${index < STEPS.length - 1 ? "mb-10" : ""}`}
-          >
-            <span
-              className={`absolute flex size-8 -start-4 items-center justify-center rounded-full ring-4 ring-background ${
-                step.completed
-                  ? "bg-green-500/15 text-green-600 dark:bg-green-500/20 dark:text-green-400"
-                  : "bg-muted text-foreground"
-              }`}
-            >
-              <Icon className="size-5" />
-            </span>
-            <h3 className="font-medium leading-tight text-foreground">
-              {step.title}
-            </h3>
-            <p className="text-sm text-muted-foreground">{step.description}</p>
-          </li>
-        )
-      })}
+    <ol className="relative border-s border-dashed border-accent/30">
+      {STEPS.map((step, index) => (
+        <li
+          key={step.title}
+          className={`ms-9 ${index < STEPS.length - 1 ? "mb-8" : ""}`}
+        >
+          <span className="absolute flex size-7 -start-[15px] items-center justify-center rounded-full border border-accent/30 bg-background text-[11px] font-bold text-accent">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <h3 className="font-semibold leading-tight text-foreground">
+            {step.title}
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            {step.description}
+          </p>
+        </li>
+      ))}
     </ol>
   )
 }

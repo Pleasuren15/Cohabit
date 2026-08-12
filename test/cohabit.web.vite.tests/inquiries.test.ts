@@ -1,7 +1,17 @@
-import { describe, expect, it, beforeEach } from "vitest"
-import { createInquiriesService } from "@/services/inquiries-service"
+import { describe, expect, it, beforeEach, beforeAll, vi } from "vitest"
+import type { InquiriesService } from "@/services/inquiries-service"
 
-const service = createInquiriesService()
+let createInquiriesService: () => InquiriesService
+let service: InquiriesService
+
+// The service reads USE_MOCK_DATA from import.meta.env at module load, so pin
+// real-data mode before importing it to keep this suite deterministic (the
+// mock store seeds demo inquiries instead of starting empty).
+beforeAll(async () => {
+  vi.stubEnv("VITE_USE_MOCK_DATA", "false")
+  ;({ createInquiriesService } = await import("@/services/inquiries-service"))
+  service = createInquiriesService()
+})
 
 const base = {
   listingId: "l1",

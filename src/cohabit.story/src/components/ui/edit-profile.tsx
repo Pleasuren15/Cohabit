@@ -19,6 +19,7 @@ export interface ProfileData {
   dateOfBirth: string
   gender: string
   title: string
+  address?: string
   avatarUrl: string
 }
 
@@ -168,6 +169,18 @@ export function EditProfile({
                   onChange={handleChange}
                   rows={3}
                   className="flex min-h-20 w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-all placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="ep-address">Address</Label>
+                <Input
+                  id="ep-address"
+                  name="address"
+                  value={formData.address ?? ""}
+                  onChange={handleChange}
+                  placeholder="e.g. 12 Main Road, Cape Town"
+                  className="font-semibold"
                 />
               </div>
 
