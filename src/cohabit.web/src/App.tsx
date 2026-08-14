@@ -251,17 +251,6 @@ const WATCHLIST_GRADIENTS = [
 
 const NEW_BADGE_WINDOW_MS = 3 * 86_400_000
 
-function formatSavedAt(ts: number): string {
-  if (ts <= 0) return ""
-  const diff = Date.now() - ts
-  if (diff < 86_400_000) return "today"
-  if (diff < 2 * 86_400_000) return "yesterday"
-  return new Date(ts).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  })
-}
-
 function watchlistBadge(
   p: FeaturedProfile,
   savedAt: Record<string, number>,
@@ -861,15 +850,6 @@ function MainApp({
       }))
   }, [allListings, favorites, favoriteProfiles, watchlistCards.length])
 
-  const lastSavedAt = useMemo(() => {
-    let max = 0
-    for (const id of favorites) {
-      const ts = savedAt[id]
-      if (ts !== undefined && ts > max) max = ts
-    }
-    return max
-  }, [favorites, savedAt])
-
   const dockItems: DockItem[] = [
     {
       title: "Home",
@@ -1126,12 +1106,6 @@ function MainApp({
                 <div className="-mt-1 ml-13 flex w-full items-center justify-between">
                   <p className="text-xs text-muted-foreground">
                     {watchlistCards.length} saved
-                    {lastSavedAt > 0 && (
-                      <>
-                        {" "}
-                        · last saved {formatSavedAt(lastSavedAt)}
-                      </>
-                    )}
                   </p>
                   {watchlistCards.length > 0 && (
                     <button
