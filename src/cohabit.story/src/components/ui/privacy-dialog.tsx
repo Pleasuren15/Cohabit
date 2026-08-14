@@ -14,7 +14,7 @@ import {
 const PRIVACY_SECTIONS = [
   {
     title: "1. Why we collect your data",
-    body: "We collect only what's needed to run Cohabit: your profile, preferences, and listings so we can match you with compatible co-habitants and keep the platform safe.",
+    body: "We collect only what's needed to run Cohabit: your profile, preferences, and listings so we can match you with compatible co-habitants and keep the platform safe. We process your information in line with the Protection of Personal Information Act 4 of 2013 (POPIA).",
   },
   {
     title: "2. We never sell your data",
@@ -22,14 +22,18 @@ const PRIVACY_SECTIONS = [
   },
   {
     title: "3. What we share",
-    body: "Only the minimum needed to connect you. Your profile is shown to members you contact, and service providers (hosting, email) get access on a need-to-know basis under strict confidentiality agreements.",
+    body: "Only the minimum needed to connect you. Your profile is shown to members you contact, and service providers (hosting, email) get access on a need-to-know basis under strict confidentiality agreements that comply with POPIA.",
   },
   {
-    title: "4. Your control",
+    title: "4. Your rights under POPIA",
+    body: "You can request access to your information, ask us to correct or delete it, withdraw your consent, and object to direct marketing. Contact us at legal@cohabit.app to exercise any of these rights.",
+  },
+  {
+    title: "5. Your control",
     body: "You can edit or remove your profile data at any time from this page. Deleting your account removes your data from our systems.",
   },
   {
-    title: "5. Data retention",
+    title: "6. Data retention",
     body: "We keep your data only while your account is active, or as long as the law requires. We don't hold onto it 'just in case'.",
   },
 ]

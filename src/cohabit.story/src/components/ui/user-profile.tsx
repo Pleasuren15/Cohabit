@@ -411,15 +411,6 @@ export function UserProfile({
               <LogOut className="size-3.5" />
               Sign out
             </button>
-            <button
-              type="button"
-              onClick={() => setShowEditProfile(true)}
-              className="flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white"
-              aria-label="Edit profile"
-            >
-              <Pencil className="size-3.5" />
-              Edit
-            </button>
           </div>
         </div>
       </div>
@@ -438,10 +429,21 @@ export function UserProfile({
               <User className="size-7" />
             </div>
           )}
-          <div className="min-w-0">
-            <span className="text-[10px] font-bold tracking-[0.22em] text-white/70 uppercase">
-              Your profile
-            </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold tracking-[0.22em] text-white/70 uppercase">
+                Your profile
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowEditProfile(true)}
+                className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+                aria-label="Edit profile"
+              >
+                <Pencil className="size-3.5" />
+                Edit
+              </button>
+            </div>
             <h2 className="text-xl font-semibold tracking-tight text-white">
               {fullName}
             </h2>

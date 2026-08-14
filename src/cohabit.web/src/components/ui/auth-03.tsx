@@ -28,6 +28,7 @@ import {
   MdLocationPin,
 } from "react-icons/md"
 import { TwinOrbit } from "@/components/loading-ui/twin-orbit"
+import { LegalDialog } from "@/components/ui/legal-dialog"
 import { toast } from "sonner"
 
 export interface SignUpDetails {
@@ -54,8 +55,6 @@ export interface Auth3Props {
   onForgotPassword?: () => void
   onSignIn?: (email: string, password: string) => void
   onSignUp?: (details: SignUpDetails) => void
-  termsHref?: string
-  privacyHref?: string
   provinceOptions?: { id: string; label: string }[]
 }
 
@@ -116,8 +115,6 @@ export function Auth3({
   onForgotPassword,
   onSignIn,
   onSignUp,
-  termsHref = "#",
-  privacyHref = "#",
   provinceOptions = DEFAULT_PROVINCE_OPTIONS,
 }: Auth3Props) {
   const [siEmail, setSiEmail] = useState("")
@@ -528,19 +525,9 @@ export function Auth3({
 
                       <p className="text-center text-xs leading-relaxed text-muted-foreground">
                         By creating an account you agree to our{" "}
-                        <a
-                          href={termsHref}
-                          className="text-accent underline-offset-4 hover:underline"
-                        >
-                          Terms of Service
-                        </a>{" "}
+                        <LegalDialog type="terms">Terms of Use</LegalDialog>{" "}
                         and{" "}
-                        <a
-                          href={privacyHref}
-                          className="text-accent underline-offset-4 hover:underline"
-                        >
-                          Privacy Policy
-                        </a>
+                        <LegalDialog type="privacy">Privacy Policy</LegalDialog>
                         .
                       </p>
                     </form>
