@@ -82,3 +82,20 @@ export const CustomTitle: Story = {
     </div>
   ),
 }
+
+export const Grouped: Story = {
+  args: {
+    badge: "FAQ",
+    title: "Frequently asked questions",
+    groups: [
+      { label: "Getting started", faqs: FAQS.slice(0, 2) },
+      { label: "Listings & fees", faqs: FAQS.slice(2, 4) },
+      { label: "Living together", faqs: FAQS.slice(4) },
+    ],
+  },
+  render: (args) => (
+    <div className="w-full">
+      <Faq6 {...args} />
+    </div>
+  ),
+}
