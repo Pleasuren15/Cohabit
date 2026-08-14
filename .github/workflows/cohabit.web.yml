@@ -87,3 +87,10 @@ jobs:
         with:
           name: cohabit-storybook-static
           path: src/cohabit.story/storybook-static
+
+  security-scan:
+    needs: ci
+    uses: ./.github/workflows/docker-security-scan.yml
+    with:
+      image-name: cohabit-web
+      dockerfile: src/cohabit.web/Dockerfile

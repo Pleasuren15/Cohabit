@@ -87,3 +87,10 @@ jobs:
         with:
           name: cohabit-api-integration-test-results
           path: ./TestResults/integration
+
+  security-scan:
+    needs: [build-and-unit-test, integration-tests]
+    uses: ./.github/workflows/docker-security-scan.yml
+    with:
+      image-name: cohabit-api
+      dockerfile: src/cohabit.api/Dockerfile
