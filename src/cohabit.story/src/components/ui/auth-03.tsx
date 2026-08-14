@@ -15,6 +15,7 @@ import { Label } from "./label"
 import { Separator } from "./separator"
 import { Tabs, TabsList, TabsTrigger } from "./tabs"
 import { TwinOrbit } from "../loading-ui/twin-orbit"
+import { LegalDialog } from "./legal-dialog"
 
 export interface Auth3SocialProvider {
   id: string
@@ -33,8 +34,6 @@ export interface Auth3Props {
   onForgotPassword?: () => void
   onSignIn?: (email: string, password: string) => void
   onSignUp?: (name: string, email: string, password: string) => void
-  termsHref?: string
-  privacyHref?: string
 }
 
 function PasswordInput({
@@ -91,8 +90,6 @@ export function Auth3({
   onForgotPassword,
   onSignIn,
   onSignUp,
-  termsHref = "#",
-  privacyHref = "#",
 }: Auth3Props) {
   const [tab, setTab] = useState(defaultTab)
   const [siEmail, setSiEmail] = useState("")
@@ -385,19 +382,9 @@ export function Auth3({
 
                       <p className="text-center text-xs leading-relaxed text-muted-foreground">
                         By creating an account you agree to our{" "}
-                        <a
-                          href={termsHref}
-                          className="text-accent underline-offset-4 hover:underline"
-                        >
-                          Terms of Service
-                        </a>{" "}
+                        <LegalDialog type="terms">Terms of Use</LegalDialog>{" "}
                         and{" "}
-                        <a
-                          href={privacyHref}
-                          className="text-accent underline-offset-4 hover:underline"
-                        >
-                          Privacy Policy
-                        </a>
+                        <LegalDialog type="privacy">Privacy Policy</LegalDialog>
                         .
                       </p>
                     </form>

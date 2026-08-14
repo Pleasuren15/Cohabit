@@ -1,4 +1,10 @@
-import { useState, useEffect, useMemo, useCallback, type ReactNode } from "react"
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from "react"
 import { AnimatePresence, motion, MotionConfig } from "framer-motion"
 import { GlassDock, type DockItem } from "@/components/ui/glass-dock"
 import {
@@ -47,12 +53,7 @@ import { PROVINCES } from "@/lib/provinces"
 import { cn } from "@/lib/utils"
 import { FamilyReceiveComponent } from "@/components/ui/family-receive-component"
 import { Auth3, type SignUpDetails } from "@/components/ui/auth-03"
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Faq6, type FaqItem } from "@/components/ui/faq-06"
 import { PinItemComponent, type PlaceItem } from "@/components/ui/pin-item"
 import { ExpandableProfileCard } from "@/components/ui/expandable-profile-card"
@@ -251,17 +252,6 @@ const WATCHLIST_GRADIENTS = [
 
 const NEW_BADGE_WINDOW_MS = 3 * 86_400_000
 
-function formatSavedAt(ts: number): string {
-  if (ts <= 0) return ""
-  const diff = Date.now() - ts
-  if (diff < 86_400_000) return "today"
-  if (diff < 2 * 86_400_000) return "yesterday"
-  return new Date(ts).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  })
-}
-
 function watchlistBadge(
   p: FeaturedProfile,
   savedAt: Record<string, number>,
@@ -414,7 +404,8 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
               {COHABIT_PHRASES[phraseIndex]}
             </FlipText>
             <p className="mx-auto max-w-xs text-sm leading-relaxed text-balance text-muted-foreground">
-              Browse rooms, full rentals and compatible housemates across South Africa.
+              Browse rooms, full rentals and compatible housemates across South
+              Africa.
             </p>
           </motion.div>
 
@@ -448,10 +439,7 @@ function LandingPage({ onEnter }: { onEnter: (province: string) => void }) {
             onClick={() => setShowAuth(true)}
             className="group inline-flex items-center gap-2 rounded-full border border-border/40 bg-background/20 px-4 py-2 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
           >
-            <Building2
-              className="size-3.5 text-accent"
-              aria-hidden="true"
-            />
+            <Building2 className="size-3.5 text-accent" aria-hidden="true" />
             Own a space? List your property
             <ArrowLeft className="size-3.5 -rotate-180 transition-transform group-hover:translate-x-0.5" />
           </motion.button>
@@ -567,7 +555,10 @@ function MainApp({
   const [filters, setFilters] = useState<ListingFilters>({})
   const [showFilters, setShowFilters] = useState(false)
   const [openListingSignal, setOpenListingSignal] = useState(0)
-  const [userVerified, setUserVerified] = useState<VerificationType[]>(["phone", "email"])
+  const [userVerified, setUserVerified] = useState<VerificationType[]>([
+    "phone",
+    "email",
+  ])
   const [showProvincePicker, setShowProvincePicker] = useState(false)
   const [showContractGenerator, setShowContractGenerator] = useState(false)
   const [messages, setMessages] = useState<SystemMessageDto[]>([])
@@ -601,8 +592,7 @@ function MainApp({
         })
       } catch (err) {
         toast.error("Couldn't update profile", {
-          description:
-            err instanceof Error ? err.message : "Please try again.",
+          description: err instanceof Error ? err.message : "Please try again.",
         })
         throw err
       }
@@ -631,8 +621,7 @@ function MainApp({
 
   const buildListingInput = useCallback(
     async (data: NewListingData): Promise<ListingMutationInput> => {
-      const provinceId =
-        (await listingService.resolveProvinceId(province)) ?? 1
+      const provinceId = (await listingService.resolveProvinceId(province)) ?? 1
       return {
         title: data.name,
         description: data.bio,
@@ -744,10 +733,7 @@ function MainApp({
   )
 
   const messageTotal = messageGroups.length
-  const messageUnread = messageGroups.reduce(
-    (sum, t) => sum + t.unreadCount,
-    0
-  )
+  const messageUnread = messageGroups.reduce((sum, t) => sum + t.unreadCount, 0)
 
   const openMessageThread = useCallback(
     (id: number) => {
@@ -861,15 +847,6 @@ function MainApp({
       }))
   }, [allListings, favorites, favoriteProfiles, watchlistCards.length])
 
-  const lastSavedAt = useMemo(() => {
-    let max = 0
-    for (const id of favorites) {
-      const ts = savedAt[id]
-      if (ts !== undefined && ts > max) max = ts
-    }
-    return max
-  }, [favorites, savedAt])
-
   const dockItems: DockItem[] = [
     {
       title: "Home",
@@ -937,7 +914,10 @@ function MainApp({
 
             {/* Search + filters on one line */}
             <div className="flex items-center gap-2">
-              <form onSubmit={(e) => e.preventDefault()} className="min-w-0 flex-1">
+              <form
+                onSubmit={(e) => e.preventDefault()}
+                className="min-w-0 flex-1"
+              >
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2.5">
                     <Search className="size-3.5 text-muted-foreground" />
@@ -955,7 +935,7 @@ function MainApp({
                       type="button"
                       onClick={() => setSearchQuery("")}
                       aria-label="Clear search"
-                      className="absolute top-1/2 end-16 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+                      className="absolute end-16 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
                     >
                       <X className="size-3.5" />
                     </button>
@@ -992,734 +972,747 @@ function MainApp({
           className={`flex-1 overflow-y-auto px-6 pb-28 ${activeTab === "Home" ? "pt-40" : "pt-6"}`}
         >
           <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-          >
-          <div className="mx-auto max-w-md">
-            {activeTab === "Home" && (
-              <>
-                {/* Landlord journey CTA */}
-                <button
-                  type="button"
-                  onClick={handleListSpace}
-                  className="group mb-5 flex w-full items-center gap-3 rounded-2xl border border-accent/20 bg-gradient-to-r from-accent/10 to-transparent p-4 text-left transition-colors hover:border-accent/40"
-                >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-                    <Building2 className="size-5" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-foreground">
-                      {currentUser
-                        ? "Manage your listings"
-                        : "Own a space? List it"}
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      {currentUser
-                        ? "Track inquiries and reach more tenants"
-                        : "Post your room or property and reach vetted tenants"}
-                    </span>
-                  </span>
-                  <ArrowLeft className="size-4 shrink-0 -rotate-180 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                </button>
-
-                {/* No results state */}
-                {!profilesLoading && listings.length === 0 && (
-                  <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
-                    <div className="flex size-14 items-center justify-center rounded-full bg-muted/50">
-                      <Search className="size-6 text-muted-foreground/40" />
-                    </div>
-                    <h3 className="text-base font-semibold text-foreground">
-                      No matching listings
-                    </h3>
-                    <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-muted-foreground">
-                      Try a different search term, filter, or province.
-                    </p>
-                  </div>
-                )}
-
-                {/* Featured profiles */}
-                <div className="w-full space-y-3 text-left">
-                  {(profilesLoading
-                    ? Array.from({ length: pageSize })
-                    : listings
-                  ).map((item, i) =>
-                    profilesLoading ? (
-                      <div
-                        key={i}
-                        className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm"
-                      >
-                        <div className="h-32 skeleton-shimmer bg-muted sm:h-40" />
-                        <div className="space-y-2.5 px-4 pt-3 pb-4">
-                          <div className="h-4 w-3/5 skeleton-shimmer rounded bg-muted" />
-                          <div className="h-3 w-2/5 skeleton-shimmer rounded bg-muted" />
-                          <div className="flex gap-2">
-                            <div className="h-5 w-14 skeleton-shimmer rounded-full bg-muted" />
-                            <div className="h-5 w-14 skeleton-shimmer rounded-full bg-muted" />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <ExpandableProfileCard
-                        key={(item as FeaturedProfile).id}
-                        id={(item as FeaturedProfile).id}
-                        imageSrc={(item as FeaturedProfile).imageSrc}
-                        name={(item as FeaturedProfile).name}
-                        location={(item as FeaturedProfile).location}
-                        bio={(item as FeaturedProfile).bio}
-                        mapAddress={(item as FeaturedProfile).mapAddress}
-                        photoCount={(item as FeaturedProfile).photoCount}
-                        verified={(item as FeaturedProfile).verified}
-                        price={(item as FeaturedProfile).price}
-                        featured={isFeatured(item as FeaturedProfile)}
-                        isFavorited={favorites.has(
-                          (item as FeaturedProfile).id
-                        )}
-                        onToggleFavorite={handleFavoriteToggle}
-                        onView={handleViewListing}
-                      />
-                    )
-                  )}
-                </div>
-
-                {/* Load more */}
-                {!profilesLoading && listings.length < totalCount && (
-                  <button
-                    type="button"
-                    onClick={() => setPageSize((p) => p + PAGE_SIZE)}
-                    className="mx-auto mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-muted"
-                  >
-                    Load more ({totalCount - listings.length} remaining)
-                  </button>
-                )}
-              </>
-            )}
-
-            {activeTab === "WatchList" && (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start gap-3">
-                  <span
-                    className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full ${
-                      watchlistCards.length > 0
-                        ? "bg-red-100 text-red-500 dark:bg-red-500/15 dark:text-red-400"
-                        : "bg-muted/60 text-muted-foreground"
-                    }`}
-                  >
-                    <Heart
-                      className={`size-5 ${
-                        watchlistCards.length > 0 ? "fill-red-500 text-red-500" : ""
-                      }`}
-                    />
-                  </span>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
-                      Saved homes
-                    </span>
-                    <h2 className="mt-0.5 text-2xl font-semibold tracking-tight">
-                      WatchList
-                    </h2>
-                  </div>
-                </div>
-                <div className="-mt-1 ml-13 flex w-full items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    {watchlistCards.length} saved
-                    {lastSavedAt > 0 && (
-                      <>
-                        {" "}
-                        · last saved {formatSavedAt(lastSavedAt)}
-                      </>
-                    )}
-                  </p>
-                  {watchlistCards.length > 0 && (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              <div className="mx-auto max-w-md">
+                {activeTab === "Home" && (
+                  <>
+                    {/* Landlord journey CTA */}
                     <button
                       type="button"
-                      onClick={() => void clearFavorites()}
-                      className="rounded-full border border-border bg-background/60 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      onClick={handleListSpace}
+                      className="group mb-5 flex w-full items-center gap-3 rounded-2xl border border-accent/20 bg-gradient-to-r from-accent/10 to-transparent p-4 text-left transition-colors hover:border-accent/40"
                     >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === "Messages" && (
-              <div className="flex flex-col items-center">
-                <PageHeader
-                  icon={MessageSquare}
-                  title="Messages"
-                  subtitle={`${messageTotal} threads · ${messageUnread} unread`}
-                />
-                <PinItemComponent
-                  items={messageThreads}
-                  onOpen={openMessageThread}
-                  pinnedLabel="Pinned"
-                  allLabel="All Messages"
-                />
-              </div>
-            )}
-
-            {activeTab === "Info" && (
-              <div className="flex flex-col items-center gap-5">
-                {/* Band 0 — What is Cohabit (brand hero card) */}
-                <Reveal className="w-full">
-                <section className="w-full overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 p-5 text-white shadow-lg">
-                  <span className="text-[10px] font-bold tracking-[0.22em] text-white/70 uppercase">
-                    About Cohabit
-                  </span>
-                  <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
-                    Shared living, made simple.
-                  </h2>
-                  <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/85">
-                    Cohabit connects South Africans who need a home with verified
-                    hosts and compatible housemates.
-                  </p>
-
-                  <div className="mt-5 grid w-full grid-cols-2 gap-2.5">
-                    {[
-                      { icon: Home, title: "Find your space" },
-                      { icon: Handshake, title: "Match with housemates" },
-                      { icon: Building2, title: "Reach vetted tenants" },
-                      { icon: Shield, title: "Stay protected" },
-                    ].map((item) => {
-                      const IconComponent = item.icon
-                      return (
-                        <div
-                          key={item.title}
-                          className="flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm"
-                        >
-                          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
-                            <IconComponent className="size-4" />
-                          </span>
-                          <span className="text-[13px] leading-tight font-semibold text-white">
-                            {item.title}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </section>
-                </Reveal>
-
-                {/* Band 1 — How Cohabit works (editorial journey card) */}
-                <Reveal className="w-full">
-                <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
-                  <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
-                    How Cohabit works
-                  </span>
-                  <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                    Four steps to your next home
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    From your first search to move-in day.
-                  </p>
-                  <div className="mt-5">
-                    <HowCohabitWorks />
-                  </div>
-                </section>
-                </Reveal>
-
-                {/* Band 2 — Trust & Safety (dark security panel) */}
-                <Reveal className="w-full">
-                <section className="w-full rounded-3xl bg-foreground p-5 text-white shadow-xl">
-                  <div className="flex flex-col items-center">
-                    <div className="w-full">
-                      <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
-                        Trust &amp; Safety
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                        <Building2 className="size-5" aria-hidden="true" />
                       </span>
-                      <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">
-                        How Cohabit keeps you safe
-                      </h2>
-                      <p className="mt-1 text-sm text-white/70">
-                        How we keep{" "}
-                        <span className="font-semibold text-amber-300">
-                          Cohabit
-                        </span>{" "}
-                        a safe place to find your home or housemate.
-                      </p>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-foreground">
+                          {currentUser
+                            ? "Manage your listings"
+                            : "Own a space? List it"}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {currentUser
+                            ? "Track inquiries and reach more tenants"
+                            : "Post your room or property and reach vetted tenants"}
+                        </span>
+                      </span>
+                      <ArrowLeft className="size-4 shrink-0 -rotate-180 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    </button>
+
+                    {/* No results state */}
+                    {!profilesLoading && listings.length === 0 && (
+                      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
+                        <div className="flex size-14 items-center justify-center rounded-full bg-muted/50">
+                          <Search className="size-6 text-muted-foreground/40" />
+                        </div>
+                        <h3 className="text-base font-semibold text-foreground">
+                          No matching listings
+                        </h3>
+                        <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-muted-foreground">
+                          Try a different search term, filter, or province.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Featured profiles */}
+                    <div className="w-full space-y-3 text-left">
+                      {(profilesLoading
+                        ? Array.from({ length: pageSize })
+                        : listings
+                      ).map((item, i) =>
+                        profilesLoading ? (
+                          <div
+                            key={i}
+                            className="w-full overflow-hidden rounded-xl border border-border/40 bg-background shadow-sm"
+                          >
+                            <div className="skeleton-shimmer h-32 bg-muted sm:h-40" />
+                            <div className="space-y-2.5 px-4 pt-3 pb-4">
+                              <div className="skeleton-shimmer h-4 w-3/5 rounded bg-muted" />
+                              <div className="skeleton-shimmer h-3 w-2/5 rounded bg-muted" />
+                              <div className="flex gap-2">
+                                <div className="skeleton-shimmer h-5 w-14 rounded-full bg-muted" />
+                                <div className="skeleton-shimmer h-5 w-14 rounded-full bg-muted" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <ExpandableProfileCard
+                            key={(item as FeaturedProfile).id}
+                            id={(item as FeaturedProfile).id}
+                            imageSrc={(item as FeaturedProfile).imageSrc}
+                            name={(item as FeaturedProfile).name}
+                            location={(item as FeaturedProfile).location}
+                            bio={(item as FeaturedProfile).bio}
+                            mapAddress={(item as FeaturedProfile).mapAddress}
+                            photoCount={(item as FeaturedProfile).photoCount}
+                            verified={(item as FeaturedProfile).verified}
+                            price={(item as FeaturedProfile).price}
+                            featured={isFeatured(item as FeaturedProfile)}
+                            isFavorited={favorites.has(
+                              (item as FeaturedProfile).id
+                            )}
+                            onToggleFavorite={handleFavoriteToggle}
+                            onView={handleViewListing}
+                          />
+                        )
+                      )}
                     </div>
 
-                    <div className="mt-5 grid w-full gap-3 sm:grid-cols-2">
-                      {[
-                        {
-                          icon: BadgeCheck,
-                          title: "Verified identities",
-                          body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
-                        },
-                        {
-                          icon: Flag,
-                          title: "Report & block",
-                          body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
-                        },
-                        {
-                          icon: Lock,
-                          title: "Private by default",
-                          body: "Your personal details stay hidden until you choose to share them. Never share bank details or IDs on this platform.",
-                        },
-                        {
-                          icon: AlertTriangle,
-                          title: "Stay safe",
-                          body: "Meet in public, view the property first, and never pay deposits before signing a lease. Trust your instincts.",
-                        },
-                      ].map((item) => {
-                        const IconComponent = item.icon
-                        return (
-                          <div
-                            key={item.title}
-                            className="rounded-2xl border border-white/10 bg-white/5 p-4"
-                          >
-                            <div className="mb-2 flex items-center gap-3">
-                              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-                                <IconComponent className="size-4" />
-                              </span>
-                              <h3 className="text-sm font-semibold text-white">
-                                {item.title}
-                              </h3>
-                            </div>
-                            <p className="text-sm leading-relaxed text-white/70">
-                              {item.body}
+                    {/* Load more */}
+                    {!profilesLoading && listings.length < totalCount && (
+                      <button
+                        type="button"
+                        onClick={() => setPageSize((p) => p + PAGE_SIZE)}
+                        className="mx-auto mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-muted"
+                      >
+                        Load more ({totalCount - listings.length} remaining)
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {activeTab === "WatchList" && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full ${
+                          watchlistCards.length > 0
+                            ? "bg-red-100 text-red-500 dark:bg-red-500/15 dark:text-red-400"
+                            : "bg-muted/60 text-muted-foreground"
+                        }`}
+                      >
+                        <Heart
+                          className={`size-5 ${
+                            watchlistCards.length > 0
+                              ? "fill-red-500 text-red-500"
+                              : ""
+                          }`}
+                        />
+                      </span>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                          Saved homes
+                        </span>
+                        <h2 className="mt-0.5 text-2xl font-semibold tracking-tight">
+                          WatchList
+                        </h2>
+                      </div>
+                    </div>
+                    <div className="-mt-1 ml-13 flex w-full items-center justify-between">
+                      <p className="text-xs text-muted-foreground">
+                        {watchlistCards.length} saved
+                      </p>
+                      {watchlistCards.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => void clearFavorites()}
+                          className="rounded-full border border-border bg-background/60 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "Messages" && (
+                  <div className="flex flex-col items-center">
+                    <PageHeader
+                      icon={MessageSquare}
+                      title="Messages"
+                      subtitle={`${messageTotal} threads · ${messageUnread} unread`}
+                    />
+                    <PinItemComponent
+                      items={messageThreads}
+                      onOpen={openMessageThread}
+                      pinnedLabel="Pinned"
+                      allLabel="All Messages"
+                    />
+                  </div>
+                )}
+
+                {activeTab === "Info" && (
+                  <div className="flex flex-col items-center gap-5">
+                    {/* Band 0 — What is Cohabit (brand hero card) */}
+                    <Reveal className="w-full">
+                      <section className="w-full overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 p-5 text-white shadow-lg">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-white/70 uppercase">
+                          About Cohabit
+                        </span>
+                        <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
+                          Shared living, made simple.
+                        </h2>
+                        <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/85">
+                          Cohabit connects South Africans who need a home with
+                          verified hosts and compatible housemates.
+                        </p>
+
+                        <div className="mt-5 grid w-full grid-cols-2 gap-2.5">
+                          {[
+                            { icon: Home, title: "Find your space" },
+                            { icon: Handshake, title: "Match with housemates" },
+                            { icon: Building2, title: "Reach vetted tenants" },
+                            { icon: Shield, title: "Stay protected" },
+                          ].map((item) => {
+                            const IconComponent = item.icon
+                            return (
+                              <div
+                                key={item.title}
+                                className="flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm"
+                              >
+                                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+                                  <IconComponent className="size-4" />
+                                </span>
+                                <span className="text-[13px] leading-tight font-semibold text-white">
+                                  {item.title}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </section>
+                    </Reveal>
+
+                    {/* Band 1 — How Cohabit works (editorial journey card) */}
+                    <Reveal className="w-full">
+                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                          How Cohabit works
+                        </span>
+                        <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                          Four steps to your next home
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          From your first search to move-in day.
+                        </p>
+                        <div className="mt-5">
+                          <HowCohabitWorks />
+                        </div>
+                      </section>
+                    </Reveal>
+
+                    {/* Band 2 — Trust & Safety (dark security panel) */}
+                    <Reveal className="w-full">
+                      <section className="w-full rounded-3xl bg-foreground p-5 text-white shadow-xl">
+                        <div className="flex flex-col items-center">
+                          <div className="w-full">
+                            <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
+                              Trust &amp; Safety
+                            </span>
+                            <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">
+                              How Cohabit keeps you safe
+                            </h2>
+                            <p className="mt-1 text-sm text-white/70">
+                              How we keep{" "}
+                              <span className="font-semibold text-amber-300">
+                                Cohabit
+                              </span>{" "}
+                              a safe place to find your home or housemate.
                             </p>
                           </div>
-                        )
-                      })}
-                    </div>
-                  </div>
 
-                  <div className="mt-5 flex flex-col items-center">
-                    <div className="w-full">
-                      <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
-                        Verification
-                      </span>
-                      <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
-                        Badges that build trust
-                      </h3>
-                    </div>
-
-                    <div className="w-full">
-                      <Tabs defaultValue="phone" className="gap-4">
-                        <TabsList className="bg-transparent">
-                          <TabsTrigger
-                            value="phone"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                          >
-                            <Smartphone className="mr-1 size-3.5" />
-                            Phone
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="email"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                          >
-                            <Mail className="mr-1 size-3.5" />
-                            Email
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="id"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                          >
-                            <BadgeCheck className="mr-1 size-3.5" />
-                            ID
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="credit"
-                            className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                          >
-                            <Shield className="mr-1 size-3.5" />
-                            Credit
-                          </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent
-                          value="phone"
-                          className="mt-0 rounded-2xl border-2 border-dashed border-blue-400/25 bg-blue-500/5 p-6"
-                        >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-300">
-                            Phone
-                          </h5>
-                          <p className="border-l-2 border-blue-400/60 pl-4 text-sm leading-6 text-white/70">
-                            Confirm your phone via OTP to{" "}
-                            <span className="font-semibold text-blue-200">
-                              verify your identity
-                            </span>
-                            . Fastest way to build trust.
-                          </p>
-                        </TabsContent>
-
-                        <TabsContent
-                          value="email"
-                          className="mt-0 rounded-2xl border-2 border-dashed border-purple-400/25 bg-purple-500/5 p-6"
-                        >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-300">
-                            Email
-                          </h5>
-                          <p className="border-l-2 border-purple-400/60 pl-4 text-sm leading-6 text-white/70">
-                            Verify your email address to{" "}
-                            <span className="font-semibold text-purple-200">
-                              receive important updates
-                            </span>{" "}
-                            and confirm your account ownership.
-                          </p>
-                        </TabsContent>
-
-                        <TabsContent
-                          value="id"
-                          className="mt-0 rounded-2xl border-2 border-dashed border-green-400/25 bg-green-500/5 p-6"
-                        >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-green-300">
-                            ID
-                          </h5>
-                          <p className="border-l-2 border-green-400/60 pl-4 text-sm leading-6 text-white/70">
-                            Upload your SA ID or passport for{" "}
-                            <span className="font-semibold text-green-200">
-                              official verification
-                            </span>
-                            . Encrypted and never shared publicly.
-                          </p>
-                        </TabsContent>
-
-                        <TabsContent
-                          value="credit"
-                          className="mt-0 rounded-2xl border-2 border-dashed border-amber-400/25 bg-amber-500/5 p-6"
-                        >
-                          <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-300">
-                            Credit
-                          </h5>
-                          <p className="border-l-2 border-amber-400/60 pl-4 text-sm leading-6 text-white/70">
-                            Complete a{" "}
-                            <span className="font-semibold text-amber-200">
-                              financial responsibility check
-                            </span>{" "}
-                            to unlock priority listings.
-                          </p>
-                        </TabsContent>
-                      </Tabs>
-
-                      <p className="mt-4 text-center text-xs text-white/60">
-                        More badges = more trust.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex flex-col items-center">
-                    <div className="w-full">
-                      <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
-                        Staying safe
-                      </span>
-                      <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
-                        Practical safety tips
-                      </h3>
-                      <p className="mt-1 text-sm text-white/70">
-                        Keep you, your money and your home safe when searching.
-                      </p>
-                    </div>
-
-                    <div className="w-full space-y-3">
-                      {[
-                        {
-                          icon: Eye,
-                          title: "Viewings & meetups",
-                          tips: [
-                            "Always view the property in person before paying anything — never rent sight unseen.",
-                            "Meet during daylight hours and bring a friend or family member along.",
-                            "Trust your instincts. If a meet-up feels off, leave and report it to us.",
-                          ],
-                        },
-                        {
-                          icon: Wallet,
-                          title: "Money & deposits",
-                          tips: [
-                            "Never pay a deposit before viewing the property and signing a written lease agreement.",
-                            "Pay through traceable methods (bank transfer with reference). Avoid cash, WhatsApp or e-wallet transfers to strangers.",
-                            "No legitimate landlord will ask for your banking PIN or your ID number up front.",
-                          ],
-                        },
-                        {
-                          icon: AlertTriangle,
-                          title: "Spotting scams",
-                          tips: [
-                            "Be wary of prices that are far below the local market rate.",
-                            "Watch out for pressure to 'act now' or to pay a holding fee to secure a listing you haven't seen.",
-                            "If a host refuses viewings or asks you to communicate off-platform, that's a red flag — report the listing.",
-                          ],
-                        },
-                        {
-                          icon: ShieldCheck,
-                          title: "Your personal data",
-                          tips: [
-                            "Keep private details (ID, banking, address) off your profile until you've met and verified the other person.",
-                            "Share contact details only after you're comfortable and you've checked verification badges.",
-                            "Sensitive messages about money are best kept inside Cohabit so our team can review them if needed.",
-                          ],
-                        },
-                      ].map((group) => {
-                        const GroupIcon = group.icon
-                        return (
-                          <div
-                            key={group.title}
-                            className="rounded-2xl border border-white/10 bg-white/5 p-4"
-                          >
-                            <div className="mb-2 flex items-center gap-3">
-                              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-                                <GroupIcon className="size-4" />
-                              </span>
-                              <h3 className="text-sm font-semibold text-white">
-                                {group.title}
-                              </h3>
-                            </div>
-                            <ul className="space-y-1.5 text-sm leading-relaxed text-white/70">
-                              {group.tips.map((tip) => (
-                                <li
-                                  key={tip}
-                                  className="flex gap-2"
+                          <div className="mt-5 grid w-full gap-3 sm:grid-cols-2">
+                            {[
+                              {
+                                icon: BadgeCheck,
+                                title: "Verified identities",
+                                body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
+                              },
+                              {
+                                icon: Flag,
+                                title: "Report & block",
+                                body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
+                              },
+                              {
+                                icon: Lock,
+                                title: "Private by default",
+                                body: "Your personal details stay hidden until you choose to share them. Never share bank details or IDs on this platform.",
+                              },
+                              {
+                                icon: AlertTriangle,
+                                title: "Stay safe",
+                                body: "Meet in public, view the property first, and never pay deposits before signing a lease. Trust your instincts.",
+                              },
+                            ].map((item) => {
+                              const IconComponent = item.icon
+                              return (
+                                <div
+                                  key={item.title}
+                                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
                                 >
-                                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-amber-300/80" />
-                                  <span>{tip}</span>
-                                </li>
-                              ))}
-                            </ul>
+                                  <div className="mb-2 flex items-center gap-3">
+                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                                      <IconComponent className="size-4" />
+                                    </span>
+                                    <h3 className="text-sm font-semibold text-white">
+                                      {item.title}
+                                    </h3>
+                                  </div>
+                                  <p className="text-sm leading-relaxed text-white/70">
+                                    {item.body}
+                                  </p>
+                                </div>
+                              )
+                            })}
                           </div>
-                        )
-                      })}
-                    </div>
+                        </div>
 
-                    <div className="mt-5 w-full rounded-2xl border border-white/15 bg-white/5 p-4">
-                      <p className="text-xs leading-relaxed text-white/75">
-                        <span className="font-semibold text-white">
-                          Need urgent help?
-                        </span>{" "}
-                        If you're in immediate danger call the SAPS on{" "}
-                        <span className="font-medium text-amber-300">
-                          10111
-                        </span>{" "}
-                        or Crime Stop on{" "}
-                        <span className="font-medium text-amber-300">
-                          08600 10111
-                        </span>
-                        . For a non-urgent safety concern, report it via any
-                        listing's "Report this listing" button and our safety
-                        team will review it within 24 hours.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-                </Reveal>
-
-                {/* Band 3 — Stats (scoreboard) */}
-                <Reveal className="w-full">
-                <section className="w-full rounded-3xl border border-accent/20 bg-gradient-to-b from-amber-50/80 to-background p-5">
-                  <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
-                    Cohabit stats
-                  </span>
-                  <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                    <span className="text-accent">Cohabit</span> by the numbers
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    A growing community of trusted hosts and housemates.
-                  </p>
-
-                  <div className="mt-4 grid w-full grid-cols-3 gap-2.5">
-                    {[
-                      { value: 1200, suffix: "+", label: "Verified members" },
-                      { value: 9, suffix: "", label: "Provinces covered" },
-                      { value: 4, suffix: "", label: "Verification levels" },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-accent/25 bg-background p-4 text-center"
-                      >
-                        <StatsCounter
-                          value={stat.value}
-                          suffix={stat.suffix}
-                          className="text-2xl font-black tracking-tight text-accent"
-                        />
-                        <span className="mt-1 text-[11px] leading-tight font-medium text-muted-foreground">
-                          {stat.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-                </Reveal>
-
-                {/* Band 4 — FAQ */}
-                <Reveal className="w-full">
-                <section className="w-full px-1">
-                  <Faq6
-                    badge="FAQ"
-                    title="Frequently Asked Questions"
-                    faqs={HOUSING_FAQS}
-                  />
-                </section>
-                </Reveal>
-
-                {/* Band 5 — Terms & Conditions (legal paper) */}
-                <Reveal className="w-full">
-                <section className="w-full rounded-lg border border-border bg-background px-5 py-5 shadow-sm">
-                  <span className="text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
-                    Legal
-                  </span>
-                  <h2 className="mt-1 text-lg font-semibold tracking-tight">
-                    Terms &amp; Conditions
-                  </h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Last updated 21 July 2026
-                  </p>
-
-                  <div className="mt-4 space-y-4">
-                    {TERMS.map((section, i) => {
-                      const icons = [ScrollText, Home, Wallet, Handshake, Scale]
-                      const IconComponent = icons[i] ?? ScrollText
-                      return (
-                        <div key={section.heading} className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                              <IconComponent className="size-3.5" />
+                        <div className="mt-5 flex flex-col items-center">
+                          <div className="w-full">
+                            <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
+                              Verification
                             </span>
-                            <h3 className="text-xs font-bold tracking-wider text-foreground uppercase">
-                              {section.heading.replace(/^\d+\.\s*/, "")}
+                            <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
+                              Badges that build trust
                             </h3>
                           </div>
-                          <p className="text-[13px] leading-relaxed text-muted-foreground">
-                            {section.body}
+
+                          <div className="w-full">
+                            <Tabs defaultValue="phone" className="gap-4">
+                              <TabsList className="bg-transparent">
+                                <TabsTrigger
+                                  value="phone"
+                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
+                                >
+                                  <Smartphone className="mr-1 size-3.5" />
+                                  Phone
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="email"
+                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
+                                >
+                                  <Mail className="mr-1 size-3.5" />
+                                  Email
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="id"
+                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
+                                >
+                                  <BadgeCheck className="mr-1 size-3.5" />
+                                  ID
+                                </TabsTrigger>
+                                <TabsTrigger
+                                  value="credit"
+                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
+                                >
+                                  <Shield className="mr-1 size-3.5" />
+                                  Credit
+                                </TabsTrigger>
+                              </TabsList>
+
+                              <TabsContent
+                                value="phone"
+                                className="mt-0 rounded-2xl border-2 border-dashed border-blue-400/25 bg-blue-500/5 p-6"
+                              >
+                                <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-300">
+                                  Phone
+                                </h5>
+                                <p className="border-l-2 border-blue-400/60 pl-4 text-sm leading-6 text-white/70">
+                                  Confirm your phone via OTP to{" "}
+                                  <span className="font-semibold text-blue-200">
+                                    verify your identity
+                                  </span>
+                                  . Fastest way to build trust.
+                                </p>
+                              </TabsContent>
+
+                              <TabsContent
+                                value="email"
+                                className="mt-0 rounded-2xl border-2 border-dashed border-purple-400/25 bg-purple-500/5 p-6"
+                              >
+                                <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-300">
+                                  Email
+                                </h5>
+                                <p className="border-l-2 border-purple-400/60 pl-4 text-sm leading-6 text-white/70">
+                                  Verify your email address to{" "}
+                                  <span className="font-semibold text-purple-200">
+                                    receive important updates
+                                  </span>{" "}
+                                  and confirm your account ownership.
+                                </p>
+                              </TabsContent>
+
+                              <TabsContent
+                                value="id"
+                                className="mt-0 rounded-2xl border-2 border-dashed border-green-400/25 bg-green-500/5 p-6"
+                              >
+                                <h5 className="mb-4 text-2xl font-black tracking-tight text-green-300">
+                                  ID
+                                </h5>
+                                <p className="border-l-2 border-green-400/60 pl-4 text-sm leading-6 text-white/70">
+                                  Upload your SA ID or passport for{" "}
+                                  <span className="font-semibold text-green-200">
+                                    official verification
+                                  </span>
+                                  . Encrypted and never shared publicly.
+                                </p>
+                              </TabsContent>
+
+                              <TabsContent
+                                value="credit"
+                                className="mt-0 rounded-2xl border-2 border-dashed border-amber-400/25 bg-amber-500/5 p-6"
+                              >
+                                <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-300">
+                                  Credit
+                                </h5>
+                                <p className="border-l-2 border-amber-400/60 pl-4 text-sm leading-6 text-white/70">
+                                  Complete a{" "}
+                                  <span className="font-semibold text-amber-200">
+                                    financial responsibility check
+                                  </span>{" "}
+                                  to unlock priority listings.
+                                </p>
+                              </TabsContent>
+                            </Tabs>
+
+                            <p className="mt-4 text-center text-xs text-white/60">
+                              More badges = more trust.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex flex-col items-center">
+                          <div className="w-full">
+                            <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
+                              Staying safe
+                            </span>
+                            <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
+                              Practical safety tips
+                            </h3>
+                            <p className="mt-1 text-sm text-white/70">
+                              Keep you, your money and your home safe when
+                              searching.
+                            </p>
+                          </div>
+
+                          <div className="w-full space-y-3">
+                            {[
+                              {
+                                icon: Eye,
+                                title: "Viewings & meetups",
+                                tips: [
+                                  "Always view the property in person before paying anything — never rent sight unseen.",
+                                  "Meet during daylight hours and bring a friend or family member along.",
+                                  "Trust your instincts. If a meet-up feels off, leave and report it to us.",
+                                ],
+                              },
+                              {
+                                icon: Wallet,
+                                title: "Money & deposits",
+                                tips: [
+                                  "Never pay a deposit before viewing the property and signing a written lease agreement.",
+                                  "Pay through traceable methods (bank transfer with reference). Avoid cash, WhatsApp or e-wallet transfers to strangers.",
+                                  "No legitimate landlord will ask for your banking PIN or your ID number up front.",
+                                ],
+                              },
+                              {
+                                icon: AlertTriangle,
+                                title: "Spotting scams",
+                                tips: [
+                                  "Be wary of prices that are far below the local market rate.",
+                                  "Watch out for pressure to 'act now' or to pay a holding fee to secure a listing you haven't seen.",
+                                  "If a host refuses viewings or asks you to communicate off-platform, that's a red flag — report the listing.",
+                                ],
+                              },
+                              {
+                                icon: ShieldCheck,
+                                title: "Your personal data",
+                                tips: [
+                                  "Keep private details (ID, banking, address) off your profile until you've met and verified the other person.",
+                                  "Share contact details only after you're comfortable and you've checked verification badges.",
+                                  "Sensitive messages about money are best kept inside Cohabit so our team can review them if needed.",
+                                ],
+                              },
+                            ].map((group) => {
+                              const GroupIcon = group.icon
+                              return (
+                                <div
+                                  key={group.title}
+                                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                                >
+                                  <div className="mb-2 flex items-center gap-3">
+                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                                      <GroupIcon className="size-4" />
+                                    </span>
+                                    <h3 className="text-sm font-semibold text-white">
+                                      {group.title}
+                                    </h3>
+                                  </div>
+                                  <ul className="space-y-1.5 text-sm leading-relaxed text-white/70">
+                                    {group.tips.map((tip) => (
+                                      <li key={tip} className="flex gap-2">
+                                        <span className="mt-1.5 size-1 shrink-0 rounded-full bg-amber-300/80" />
+                                        <span>{tip}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          <div className="mt-5 w-full rounded-2xl border border-white/15 bg-white/5 p-4">
+                            <p className="text-xs leading-relaxed text-white/75">
+                              <span className="font-semibold text-white">
+                                Need urgent help?
+                              </span>{" "}
+                              If you're in immediate danger call the SAPS on{" "}
+                              <span className="font-medium text-amber-300">
+                                10111
+                              </span>{" "}
+                              or Crime Stop on{" "}
+                              <span className="font-medium text-amber-300">
+                                08600 10111
+                              </span>
+                              . For a non-urgent safety concern, report it via
+                              any listing's "Report this listing" button and our
+                              safety team will review it within 24 hours.
+                            </p>
+                          </div>
+                        </div>
+                      </section>
+                    </Reveal>
+
+                    {/* Band 3 — Stats (scoreboard) */}
+                    <Reveal className="w-full">
+                      <section className="w-full rounded-3xl border border-accent/20 bg-gradient-to-b from-amber-50/80 to-background p-5">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                          Cohabit stats
+                        </span>
+                        <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                          <span className="text-accent">Cohabit</span> by the
+                          numbers
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          A growing community of trusted hosts and housemates.
+                        </p>
+
+                        <div className="mt-4 grid w-full grid-cols-3 gap-2.5">
+                          {[
+                            {
+                              value: 1200,
+                              suffix: "+",
+                              label: "Verified members",
+                            },
+                            {
+                              value: 9,
+                              suffix: "",
+                              label: "Provinces covered",
+                            },
+                            {
+                              value: 4,
+                              suffix: "",
+                              label: "Verification levels",
+                            },
+                          ].map((stat) => (
+                            <div
+                              key={stat.label}
+                              className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-accent/25 bg-background p-4 text-center"
+                            >
+                              <StatsCounter
+                                value={stat.value}
+                                suffix={stat.suffix}
+                                className="text-2xl font-black tracking-tight text-accent"
+                              />
+                              <span className="mt-1 text-[11px] leading-tight font-medium text-muted-foreground">
+                                {stat.label}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    </Reveal>
+
+                    {/* Band 4 — FAQ */}
+                    <Reveal className="w-full">
+                      <section className="w-full px-1">
+                        <Faq6
+                          badge="FAQ"
+                          title="Frequently Asked Questions"
+                          faqs={HOUSING_FAQS}
+                        />
+                      </section>
+                    </Reveal>
+
+                    {/* Band 5 — Terms & Conditions (legal paper) */}
+                    <Reveal className="w-full">
+                      <section className="w-full rounded-lg border border-border bg-background px-5 py-5 shadow-sm">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
+                          Legal
+                        </span>
+                        <h2 className="mt-1 text-lg font-semibold tracking-tight">
+                          Terms &amp; Conditions
+                        </h2>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Last updated 21 July 2026
+                        </p>
+
+                        <div className="mt-4 space-y-4">
+                          {TERMS.map((section, i) => {
+                            const icons = [
+                              ScrollText,
+                              Home,
+                              Wallet,
+                              Handshake,
+                              Scale,
+                            ]
+                            const IconComponent = icons[i] ?? ScrollText
+                            return (
+                              <div key={section.heading} className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                    <IconComponent className="size-3.5" />
+                                  </span>
+                                  <h3 className="text-xs font-bold tracking-wider text-foreground uppercase">
+                                    {section.heading.replace(/^\d+\.\s*/, "")}
+                                  </h3>
+                                </div>
+                                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                                  {section.body}
+                                </p>
+                              </div>
+                            )
+                          })}
+                          <div className="border-t border-border pt-4">
+                            <p className="text-xs text-muted-foreground">
+                              Questions? Contact us at{" "}
+                              <span className="font-medium text-accent">
+                                hello@cohabit.co.za
+                              </span>
+                              .
+                            </p>
+                          </div>
+                        </div>
+                      </section>
+                    </Reveal>
+                  </div>
+                )}
+
+                {activeTab === "Profile" && currentUser && (
+                  <div className="space-y-5">
+                    <UserProfile
+                      user={currentUser}
+                      userListings={userListings}
+                      verified={userVerified}
+                      onVerify={(type) => {
+                        if (!userVerified.includes(type)) {
+                          setUserVerified((prev) => [...prev, type])
+                        }
+                      }}
+                      onUpdateUser={handleUpdateUser}
+                      onToggleFavorite={handleFavoriteToggle}
+                      onViewListing={handleViewListing}
+                      onAddListing={handleAddListing}
+                      onUpdateListing={handleUpdateListing}
+                      getListingDetail={(id) =>
+                        listingService.getListingById(id, allListings)
+                      }
+                      onSignOut={onSignOut}
+                      inquiries={inquiries}
+                      onUpdateInquiryStatus={updateInquiryStatus}
+                      openNewListingSignal={openListingSignal}
+                    />
+
+                    {/* Contract Generator */}
+                    <div className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent p-5 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                          <ScrollText className="size-5" aria-hidden="true" />
+                        </span>
+                        <div className="min-w-0">
+                          <h2 className="text-sm font-semibold tracking-tight">
+                            Create a rental contract
+                          </h2>
+                          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                            Generate a roommate agreement or a residential lease
+                            between tenants and landlords. Choose the terms,
+                            preview the document, then download it as a PDF.
                           </p>
                         </div>
-                      )
-                    })}
-                    <div className="border-t border-border pt-4">
-                      <p className="text-xs text-muted-foreground">
-                        Questions? Contact us at{" "}
-                        <span className="font-medium text-accent">
-                          hello@cohabit.co.za
-                        </span>
-                        .
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowContractGenerator(true)}
+                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
+                      >
+                        <ScrollText className="size-4" aria-hidden="true" />
+                        Generate a contract
+                      </button>
+                      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                        Templates only — not legal advice. Have your final
+                        document reviewed by a qualified professional.
                       </p>
                     </div>
                   </div>
-                </section>
-                </Reveal>
+                )}
               </div>
-            )}
 
-            {activeTab === "Profile" && currentUser && (
-              <div className="space-y-5">
-                <UserProfile
-                  user={currentUser}
-                  userListings={userListings}
-                  verified={userVerified}
-                  onVerify={(type) => {
-                    if (!userVerified.includes(type)) {
-                      setUserVerified((prev) => [...prev, type])
-                    }
-                  }}
-                  onUpdateUser={handleUpdateUser}
-                  onToggleFavorite={handleFavoriteToggle}
-                  onViewListing={handleViewListing}
-                  onAddListing={handleAddListing}
-                  onUpdateListing={handleUpdateListing}
-                  getListingDetail={(id) =>
-                    listingService.getListingById(id, allListings)
-                  }
-                  onSignOut={onSignOut}
-                  inquiries={inquiries}
-                  onUpdateInquiryStatus={updateInquiryStatus}
-                  openNewListingSignal={openListingSignal}
-                />
-
-                {/* Contract Generator */}
-                <div className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent p-5 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-                      <ScrollText className="size-5" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <h2 className="text-sm font-semibold tracking-tight">
-                        Create a rental contract
-                      </h2>
-                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                        Generate a roommate agreement or a residential lease
-                        between tenants and landlords. Choose the terms, preview
-                        the document, then download it as a PDF.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowContractGenerator(true)}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
-                  >
-                    <ScrollText className="size-4" aria-hidden="true" />
-                    Generate a contract
-                  </button>
-                  <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                    Templates only — not legal advice. Have your final document
-                    reviewed by a qualified professional.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* WatchList carousel — full width, outside max-w-md */}
-          {activeTab === "WatchList" && watchlistCards.length > 0 && (
-            <div className="mt-4 flex w-full flex-col items-center gap-6">
-              <MinimalCarousel
-                cards={watchlistCards}
-                onFavoriteToggle={(card) => {
-                  handleFavoriteToggle(card.id)
-                }}
-                onViewListing={(card) => handleViewListing(card.id)}
-              />
-
-              {/* Similar matches */}
-              {similarCards.length > 0 && (
-                <div className="w-full">
-                  <div className="mb-2 flex items-center gap-2 px-1">
-                    <Sparkles className="size-4 shrink-0 text-accent" />
-                    <div>
-                      <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
-                        Suggestions
-                      </span>
-                      <h3 className="text-sm leading-tight font-semibold">
-                        More like this
-                      </h3>
-                    </div>
-                  </div>
+              {/* WatchList carousel — full width, outside max-w-md */}
+              {activeTab === "WatchList" && watchlistCards.length > 0 && (
+                <div className="mt-4 flex w-full flex-col items-center gap-6">
                   <MinimalCarousel
-                    cards={similarCards}
+                    cards={watchlistCards}
                     onFavoriteToggle={(card) => {
                       handleFavoriteToggle(card.id)
                     }}
                     onViewListing={(card) => handleViewListing(card.id)}
                   />
+
+                  {/* Similar matches */}
+                  {similarCards.length > 0 && (
+                    <div className="w-full">
+                      <div className="mb-2 flex items-center gap-2 px-1">
+                        <Sparkles className="size-4 shrink-0 text-accent" />
+                        <div>
+                          <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                            Suggestions
+                          </span>
+                          <h3 className="text-sm leading-tight font-semibold">
+                            More like this
+                          </h3>
+                        </div>
+                      </div>
+                      <MinimalCarousel
+                        cards={similarCards}
+                        onFavoriteToggle={(card) => {
+                          handleFavoriteToggle(card.id)
+                        }}
+                        onViewListing={(card) => handleViewListing(card.id)}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* WatchList empty state */}
-          {activeTab === "WatchList" && watchlistCards.length === 0 && (
-            <div className="mx-auto w-full max-w-md">
-              <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
-                <div className="flex size-16 items-center justify-center rounded-full bg-muted/50">
-                  <Heart className="size-7 text-muted-foreground/40" />
+              {/* WatchList empty state */}
+              {activeTab === "WatchList" && watchlistCards.length === 0 && (
+                <div className="mx-auto w-full max-w-md">
+                  <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-center">
+                    <div className="flex size-16 items-center justify-center rounded-full bg-muted/50">
+                      <Heart className="size-7 text-muted-foreground/40" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-foreground">
+                        Your WatchList is empty
+                      </h3>
+                      <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-muted-foreground">
+                        Browse profiles on the{" "}
+                        <span className="font-medium text-accent">Home</span>{" "}
+                        tab and tap the{" "}
+                        <Heart className="inline size-3.5 align-text-top text-muted-foreground" />{" "}
+                        icon to save your favorites here.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-foreground">
-                    Your WatchList is empty
-                  </h3>
-                  <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-muted-foreground">
-                    Browse profiles on the{" "}
-                    <span className="font-medium text-accent">Home</span> tab
-                    and tap the{" "}
-                    <Heart className="inline size-3.5 align-text-top text-muted-foreground" />{" "}
-                    icon to save your favorites here.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          </motion.div>
+              )}
+            </motion.div>
           </AnimatePresence>
         </main>
       </AppShell>
@@ -1823,9 +1816,7 @@ function MainApp({
 export function App() {
   return (
     <MotionConfig reducedMotion="user">
-      <AppProvider
-        initialListings={USE_MOCK_DATA ? FEATURED_PROFILES : []}
-      >
+      <AppProvider initialListings={USE_MOCK_DATA ? FEATURED_PROFILES : []}>
         <AppFrame />
       </AppProvider>
     </MotionConfig>
@@ -1923,6 +1914,7 @@ function AppFrame() {
     try {
       await authService.signOut()
       setCurrentUser(null)
+      setActiveTab("Home")
       toast.success("Signed out", {
         description: "You've been signed out of your account.",
       })
@@ -1931,7 +1923,7 @@ function AppFrame() {
         description: err instanceof Error ? err.message : "Please try again.",
       })
     }
-  }, [setCurrentUser])
+  }, [setCurrentUser, setActiveTab])
 
   return (
     <>
@@ -2060,10 +2052,7 @@ function ListingDetailPage() {
         <main className="flex-1 overflow-y-auto px-6 pt-6 pb-28">
           <div className="mx-auto max-w-md space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-40 animate-pulse rounded-xl bg-muted"
-              />
+              <div key={i} className="h-40 animate-pulse rounded-xl bg-muted" />
             ))}
           </div>
         </main>
@@ -2122,15 +2111,12 @@ function ListingDetailPage() {
                 ...details,
               })
               toast.success("Report submitted", {
-                description:
-                  "Our safety team will review it within 24 hours.",
+                description: "Our safety team will review it within 24 hours.",
               })
             } catch (err) {
               toast.error("Couldn't submit report", {
                 description:
-                  err instanceof Error
-                    ? err.message
-                    : "Please try again.",
+                  err instanceof Error ? err.message : "Please try again.",
               })
             }
           }}
@@ -2206,10 +2192,7 @@ function MessageDetailPage() {
         <main className="flex-1 overflow-y-auto px-6 pt-6 pb-28">
           <div className="mx-auto max-w-2xl space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-28 animate-pulse rounded-xl bg-muted"
-              />
+              <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
             ))}
           </div>
         </main>
@@ -2235,78 +2218,86 @@ function MessageDetailPage() {
     >
       <AppShell>
         <main className="flex-1 overflow-y-auto px-4 pt-5 pb-28 sm:px-6">
-        <div className="mx-auto max-w-2xl">
-          <header className="mb-6">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              Back
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="h-7 w-1 rounded-full bg-primary/80" />
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {thread.name}
-                </h1>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {thread.messages.length} messages
-                  {thread.listingId
-                    ? " · about one of your saved listings"
-                    : <>{" "}· <span className="text-accent">Cohabit</span> updates</>}
-                </p>
-              </div>
-            </div>
-            {thread.listingId && (
+          <div className="mx-auto max-w-2xl">
+            <header className="mb-6">
               <button
                 type="button"
-                onClick={() => navigate(`/listing/${thread.listingId}`)}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full border bg-background/60 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-muted"
+                onClick={() => navigate(-1)}
+                className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                View listing
-                <ArrowLeft className="size-3.5 rotate-180" aria-hidden="true" />
+                <ArrowLeft className="size-4" aria-hidden="true" />
+                Back
               </button>
-            )}
-          </header>
-
-          <div className="flex flex-col gap-6">
-            {days.map(({ day, messages: dayMessages }) => (
-              <MessageGroup key={day}>
-                <div className="self-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                  {day}
+              <div className="flex items-center gap-3">
+                <div className="h-7 w-1 rounded-full bg-primary/80" />
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight">
+                    {thread.name}
+                  </h1>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {thread.messages.length} messages
+                    {thread.listingId ? (
+                      " · about one of your saved listings"
+                    ) : (
+                      <>
+                        {" "}
+                        · <span className="text-accent">Cohabit</span> updates
+                      </>
+                    )}
+                  </p>
                 </div>
-                {dayMessages.map((m) => (
-                  <Message key={m.id} align="start">
-                    <MessageAvatar className="bg-primary/10 text-primary">
-                      <span className="flex size-8 items-center justify-center text-xs font-semibold">
-                        C
-                      </span>
-                    </MessageAvatar>
-                    <MessageContent>
-                      <MessageHeader>
-                        <span className="font-semibold text-accent">
-                          Cohabit
+              </div>
+              {thread.listingId && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/listing/${thread.listingId}`)}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border bg-background/60 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-muted"
+                >
+                  View listing
+                  <ArrowLeft
+                    className="size-3.5 rotate-180"
+                    aria-hidden="true"
+                  />
+                </button>
+              )}
+            </header>
+
+            <div className="flex flex-col gap-6">
+              {days.map(({ day, messages: dayMessages }) => (
+                <MessageGroup key={day}>
+                  <div className="self-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                    {day}
+                  </div>
+                  {dayMessages.map((m) => (
+                    <Message key={m.id} align="start">
+                      <MessageAvatar className="bg-primary/10 text-primary">
+                        <span className="flex size-8 items-center justify-center text-xs font-semibold">
+                          C
                         </span>
-                        <span aria-hidden="true">·</span>
-                        <span>{formatMessageTime(m.timestamp)}</span>
-                      </MessageHeader>
-                      <div className="w-fit max-w-full rounded-2xl rounded-tl-sm bg-muted px-4 py-3">
-                        <p className="text-sm font-semibold">{m.title}</p>
-                        <p className="mt-1 text-sm text-foreground/90">
-                          {m.content}
-                        </p>
-                      </div>
-                    </MessageContent>
-                  </Message>
-                ))}
-              </MessageGroup>
-            ))}
+                      </MessageAvatar>
+                      <MessageContent>
+                        <MessageHeader>
+                          <span className="font-semibold text-accent">
+                            Cohabit
+                          </span>
+                          <span aria-hidden="true">·</span>
+                          <span>{formatMessageTime(m.timestamp)}</span>
+                        </MessageHeader>
+                        <div className="w-fit max-w-full rounded-2xl rounded-tl-sm bg-muted px-4 py-3">
+                          <p className="text-sm font-semibold">{m.title}</p>
+                          <p className="mt-1 text-sm text-foreground/90">
+                            {m.content}
+                          </p>
+                        </div>
+                      </MessageContent>
+                    </Message>
+                  ))}
+                </MessageGroup>
+              ))}
+            </div>
           </div>
-        </div>
-      </main>
-    </AppShell>
+        </main>
+      </AppShell>
     </motion.div>
   )
 }

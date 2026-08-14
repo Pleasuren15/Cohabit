@@ -36,43 +36,47 @@ function renderSignedInApp() {
   );
 }
 
-describe("Contract generator on the Account page", () => {
-  // This test renders the full signed-in app and opens the wizard, which is
-  // slow under parallel suite load; give it extra time to avoid timeouts.
-  it("shows the generator card on the Profile tab and opens the wizard", async () => {
+describe("Sign out", () => {
+  // The signed-in app is slow to load in mock mode (the Profile tab appears
+  // only after the session restores), so give every async query extra time.
+  it("redirects to the Home feed after signing out", async () => {
     const user = userEvent.setup();
     renderSignedInApp();
 
-    // Wait for the mock signed-in user to load, then open the Profile tab.
-    const profileTab = await screen.findByRole("button", {
-      name: /^profile$/i,
-    });
+    // Open the Profile tab (only available while signed in).
+    const profileTab = await screen.findByRole(
+      "button",
+      { name: /^profile$/i },
+      { timeout: 10000 },
+    );
     await user.click(profileTab);
 
-    expect(
-      await screen.findByRole("heading", {
-        name: /create a rental contract/i,
-      }),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: /generate a contract/i }),
+    // Sign out from the account page.
+    const signOutButton = await screen.findByRole(
+      "button",
+      { name: /sign out/i },
+      { timeout: 10000 },
     );
+    await user.click(signOutButton);
 
-    // The wizard dialog opens with both contract types to choose from.
+    // The dock reverts to "Account", proving the user is signed out.
     expect(
-      await screen.findByRole("button", { name: /roommate agreement/i }),
+      await screen.findByRole(
+        "button",
+        { name: /^account$/i },
+        { timeout: 10000 },
+      ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /residential lease/i }),
-    ).toBeInTheDocument();
-  }, 15000);
 
-  it("does not show the generator on the Home feed", async () => {
-    renderSignedInApp();
-
+    // The Profile content is gone and the Home feed is visible again.
     expect(
-      screen.queryByRole("heading", { name: /create a rental contract/i }),
+      screen.queryByRole("button", { name: /sign out/i }),
     ).not.toBeInTheDocument();
-  });
+    const viewButtons = await screen.findAllByRole(
+      "button",
+      { name: /^view$/i },
+      { timeout: 10000 },
+    );
+    expect(viewButtons.length).toBeGreaterThan(0);
+  }, 20000);
 });
