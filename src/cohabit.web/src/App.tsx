@@ -171,6 +171,40 @@ const HOUSING_FAQS: FaqItem[] = [
   },
 ]
 
+/** HOUSING_FAQS grouped by topic, each with a short label. */
+const HOUSING_FAQ_GROUPS = [
+  {
+    label: "Verifying & viewings",
+    faqs: [
+      HOUSING_FAQS[0],
+      HOUSING_FAQS[3],
+    ],
+  },
+  {
+    label: "Money & paperwork",
+    faqs: [
+      HOUSING_FAQS[1],
+      HOUSING_FAQS[2],
+      HOUSING_FAQS[4],
+    ],
+  },
+  {
+    label: "Moving in & out",
+    faqs: [HOUSING_FAQS[5]],
+  },
+]
+
+/** Anchor chips shown in the sticky nav on the Info page. */
+const INFO_SECTION_NAV_ITEMS = [
+  { id: "info-overview", label: "Overview" },
+  { id: "info-how", label: "How it works" },
+  { id: "info-trust", label: "Trust" },
+  { id: "info-verify", label: "Verification" },
+  { id: "info-safety", label: "Safety" },
+  { id: "info-faq", label: "FAQs" },
+  { id: "info-cta", label: "Join" },
+]
+
 /** Relative label used for the message date column ("Today", "Yesterday", "Jul 20"). */
 function formatMessageDate(iso: string): string {
   const date = new Date(iso)
@@ -520,6 +554,90 @@ function Reveal({
     >
       {children}
     </motion.div>
+  )
+}
+
+/** Small animated stat chip for the Info page ("1200+ members"). */
+function StatPill({
+  value,
+  suffix = "",
+  label,
+}: {
+  value: number
+  suffix?: string
+  label: string
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1">
+      <StatsCounter
+        value={value}
+        suffix={suffix}
+        className="text-xs font-bold text-accent"
+      />
+      <span className="text-[11px] font-medium text-muted-foreground">
+        {label}
+      </span>
+    </span>
+  )
+}
+
+/** Sticky chip navigation that jumps to each Info band and highlights on scroll. */
+function InfoSectionNav({
+  items,
+}: {
+  items: { id: string; label: string }[]
+}) {
+  const [activeId, setActiveId] = useState(items[0]?.id ?? "")
+
+  useEffect(() => {
+    const sections = items
+      .map((item) => document.getElementById(item.id))
+      .filter((el): el is HTMLElement => el !== null)
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top
+          )
+        if (visible.length > 0) {
+          setActiveId(visible[0].target.id)
+        }
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+    )
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [items])
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    })
+  }
+
+  return (
+    <div className="w-full py-2">
+      <div className="flex w-full gap-2.5 overflow-x-auto rounded-full border border-border/50 bg-background/85 p-1.5 shadow-sm backdrop-blur-md overscroll-x-contain [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => scrollToSection(item.id)}
+            className={cn(
+              "shrink-0 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors",
+              activeId === item.id
+                ? "bg-accent text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -968,6 +1086,13 @@ function MainApp({
       )}
 
       <AppShell>
+        {activeTab === "Info" && (
+          <div className="fixed inset-x-0 top-0 z-40 bg-background/85 backdrop-blur-md">
+            <div className="w-full max-w-screen-sm px-4 sm:px-6">
+              <InfoSectionNav items={INFO_SECTION_NAV_ITEMS} />
+            </div>
+          </div>
+        )}
         <main
           className={`flex-1 overflow-y-auto px-6 pb-28 ${activeTab === "Home" ? "pt-40" : "pt-6"}`}
         >
@@ -1139,10 +1264,13 @@ function MainApp({
                 )}
 
                 {activeTab === "Info" && (
-                  <div className="flex flex-col items-center gap-5">
+                  <div className="flex flex-col items-center gap-5 pt-14">
                     {/* Band 0 — What is Cohabit (brand hero card) */}
                     <Reveal className="w-full">
-                      <section className="w-full overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 p-5 text-white shadow-lg">
+                      <section
+                        id="info-overview"
+                        className="w-full scroll-mt-16 overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 p-5 text-white shadow-lg"
+                      >
                         <span className="text-[10px] font-bold tracking-[0.22em] text-white/70 uppercase">
                           About Cohabit
                         </span>
@@ -1180,19 +1308,44 @@ function MainApp({
                       </section>
                     </Reveal>
 
-                    {/* Band 1 — How Cohabit works (editorial journey card) */}
+                    {/* Band 1 — How Cohabit works (side-by-side split card) */}
                     <Reveal className="w-full">
-                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
-                        <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
-                          How Cohabit works
-                        </span>
-                        <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                          Four steps to your next home
-                        </h2>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          From your first search to move-in day.
-                        </p>
-                        <div className="mt-5">
+                      <section
+                        id="info-how"
+                        className="w-full scroll-mt-16 rounded-3xl border border-border/70 bg-background p-5 shadow-sm"
+                      >
+                        <div className="grid items-start gap-6 md:grid-cols-2">
+                          <div>
+                            <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                              How Cohabit works
+                            </span>
+                            <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                              Four steps to your next home
+                            </h2>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              From your first search to move-in day — a simple,
+                              verified journey from profile to keys.
+                            </p>
+
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              <StatPill value={1200} suffix="+" label="members" />
+                              <StatPill value={9} label="provinces" />
+                              <StatPill
+                                value={4}
+                                label="verification levels"
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("Home")}
+                              className="mt-5 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent/90"
+                            >
+                              Browse listings
+                              <ArrowLeft className="size-4 -rotate-180" />
+                            </button>
+                          </div>
+
                           <HowCohabitWorks />
                         </div>
                       </section>
@@ -1200,7 +1353,10 @@ function MainApp({
 
                     {/* Band 2 — Trust & Safety */}
                     <Reveal className="w-full">
-                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                      <section
+                        id="info-trust"
+                        className="w-full scroll-mt-16 rounded-3xl border border-border/70 bg-muted/40 p-5 shadow-sm"
+                      >
                         <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
                           Trust &amp; Safety
                         </span>
@@ -1242,7 +1398,7 @@ function MainApp({
                             return (
                               <div
                                 key={item.title}
-                                className="rounded-2xl border border-border/60 bg-muted/40 p-4"
+                                className="rounded-2xl border border-border/60 bg-background p-4"
                               >
                                 <div className="mb-2 flex items-center gap-3">
                                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
@@ -1264,7 +1420,10 @@ function MainApp({
 
                     {/* Band 3 — Verification */}
                     <Reveal className="w-full">
-                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                      <section
+                        id="info-verify"
+                        className="w-full scroll-mt-16 rounded-3xl border border-border/70 bg-background p-5 shadow-sm"
+                      >
                         <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
                           Verification
                         </span>
@@ -1377,7 +1536,10 @@ function MainApp({
 
                     {/* Band 4 — Practical safety tips */}
                     <Reveal className="w-full">
-                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                      <section
+                        id="info-safety"
+                        className="w-full scroll-mt-16 rounded-3xl border border-border/70 bg-muted/40 p-5 shadow-sm"
+                      >
                         <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
                           Staying safe
                         </span>
@@ -1432,7 +1594,7 @@ function MainApp({
                             return (
                               <div
                                 key={group.title}
-                                className="rounded-2xl border border-border/60 bg-muted/40 p-4"
+                                className="rounded-2xl border border-border/60 bg-background p-4"
                               >
                                 <div className="mb-2 flex items-center gap-3">
                                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
@@ -1528,16 +1690,50 @@ function MainApp({
 
                     {/* Band 6 — FAQ */}
                     <Reveal className="w-full">
-                      <section className="w-full px-1">
+                      <section id="info-faq" className="w-full scroll-mt-16 px-1">
                         <Faq6
                           badge="FAQ"
                           title="Frequently Asked Questions"
-                          faqs={HOUSING_FAQS}
+                          groups={HOUSING_FAQ_GROUPS}
                         />
                       </section>
                     </Reveal>
 
-                    {/* Band 7 — Terms & Conditions (legal paper) */}
+                    {/* Band 7 — Join Cohabit (CTA) */}
+                    <Reveal className="w-full">
+                      <section
+                        id="info-cta"
+                        className="w-full scroll-mt-16 overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-orange-500 p-6 text-center text-white shadow-lg"
+                      >
+                        <h2 className="text-2xl font-bold tracking-tight">
+                          Ready to find your space?
+                        </h2>
+                        <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-white/85">
+                          Join verified hosts and compatible housemates across
+                          all 9 provinces.
+                        </p>
+                        <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("Home")}
+                            className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-accent shadow-sm transition-colors hover:bg-white/90"
+                          >
+                            Browse listings
+                          </button>
+                          {!currentUser && (
+                            <button
+                              type="button"
+                              onClick={() => setShowAuth(true)}
+                              className="rounded-full border border-white/40 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                            >
+                              Create an account
+                            </button>
+                          )}
+                        </div>
+                      </section>
+                    </Reveal>
+
+                    {/* Band 8 — Terms & Conditions (legal paper) */}
                     <Reveal className="w-full">
                       <section className="w-full rounded-lg border border-border bg-background px-5 py-5 shadow-sm">
                         <span className="text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
