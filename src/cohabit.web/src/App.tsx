@@ -590,25 +590,28 @@ function InfoSectionNav({
   const [activeId, setActiveId] = useState(items[0]?.id ?? "")
 
   useEffect(() => {
-    const sections = items
-      .map((item) => document.getElementById(item.id))
-      .filter((el): el is HTMLElement => el !== null)
+    const ids = items.map((item) => item.id)
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort(
-            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top
-          )
-        if (visible.length > 0) {
-          setActiveId(visible[0].target.id)
-        }
-      },
-      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
-    )
-    sections.forEach((section) => observer.observe(section))
-    return () => observer.disconnect()
+    const update = () => {
+      let currentId = ids[0]
+      for (const id of ids) {
+        const el = document.getElementById(id)
+        if (!el) break
+        if (el.getBoundingClientRect().top <= 80) currentId = id
+        else break
+      }
+      setActiveId(currentId)
+    }
+
+    update()
+    window.addEventListener("scroll", update, { passive: true })
+    window.addEventListener("resize", update)
+    const recheck = window.setTimeout(update, 300)
+    return () => {
+      window.removeEventListener("scroll", update)
+      window.removeEventListener("resize", update)
+      window.clearTimeout(recheck)
+    }
   }, [items])
 
   const scrollToSection = (id: string) => {
