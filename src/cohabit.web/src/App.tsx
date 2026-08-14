@@ -1105,7 +1105,7 @@ function MainApp({
                         </h2>
                       </div>
                     </div>
-                    <div className="-mt-1 ml-13 flex w-full items-center justify-between">
+                    <div className="-mt-1 ml-13 flex items-center justify-between">
                       <p className="text-xs text-muted-foreground">
                         {watchlistCards.length} saved
                       </p>
@@ -1198,288 +1198,285 @@ function MainApp({
                       </section>
                     </Reveal>
 
-                    {/* Band 2 — Trust & Safety (dark security panel) */}
+                    {/* Band 2 — Trust & Safety */}
                     <Reveal className="w-full">
-                      <section className="w-full rounded-3xl bg-foreground p-5 text-white shadow-xl">
-                        <div className="flex flex-col items-center">
-                          <div className="w-full">
-                            <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
-                              Trust &amp; Safety
-                            </span>
-                            <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">
-                              How Cohabit keeps you safe
-                            </h2>
-                            <p className="mt-1 text-sm text-white/70">
-                              How we keep{" "}
-                              <span className="font-semibold text-amber-300">
-                                Cohabit
-                              </span>{" "}
-                              a safe place to find your home or housemate.
-                            </p>
-                          </div>
+                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                          Trust &amp; Safety
+                        </span>
+                        <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                          How Cohabit keeps you safe
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          How we keep{" "}
+                          <span className="font-semibold text-accent">
+                            Cohabit
+                          </span>{" "}
+                          a safe place to find your home or housemate.
+                        </p>
 
-                          <div className="mt-5 grid w-full gap-3 sm:grid-cols-2">
-                            {[
-                              {
-                                icon: BadgeCheck,
-                                title: "Verified identities",
-                                body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
-                              },
-                              {
-                                icon: Flag,
-                                title: "Report & block",
-                                body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
-                              },
-                              {
-                                icon: Lock,
-                                title: "Private by default",
-                                body: "Your personal details stay hidden until you choose to share them. Never share bank details or IDs on this platform.",
-                              },
-                              {
-                                icon: AlertTriangle,
-                                title: "Stay safe",
-                                body: "Meet in public, view the property first, and never pay deposits before signing a lease. Trust your instincts.",
-                              },
-                            ].map((item) => {
-                              const IconComponent = item.icon
-                              return (
-                                <div
-                                  key={item.title}
-                                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
-                                >
-                                  <div className="mb-2 flex items-center gap-3">
-                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-                                      <IconComponent className="size-4" />
-                                    </span>
-                                    <h3 className="text-sm font-semibold text-white">
-                                      {item.title}
-                                    </h3>
-                                  </div>
-                                  <p className="text-sm leading-relaxed text-white/70">
-                                    {item.body}
-                                  </p>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-
-                        <div className="mt-5 flex flex-col items-center">
-                          <div className="w-full">
-                            <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
-                              Verification
-                            </span>
-                            <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
-                              Badges that build trust
-                            </h3>
-                          </div>
-
-                          <div className="w-full">
-                            <Tabs defaultValue="phone" className="gap-4">
-                              <TabsList className="bg-transparent">
-                                <TabsTrigger
-                                  value="phone"
-                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                                >
-                                  <Smartphone className="mr-1 size-3.5" />
-                                  Phone
-                                </TabsTrigger>
-                                <TabsTrigger
-                                  value="email"
-                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                                >
-                                  <Mail className="mr-1 size-3.5" />
-                                  Email
-                                </TabsTrigger>
-                                <TabsTrigger
-                                  value="id"
-                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                                >
-                                  <BadgeCheck className="mr-1 size-3.5" />
-                                  ID
-                                </TabsTrigger>
-                                <TabsTrigger
-                                  value="credit"
-                                  className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white data-[state=inactive]:text-white/60"
-                                >
-                                  <Shield className="mr-1 size-3.5" />
-                                  Credit
-                                </TabsTrigger>
-                              </TabsList>
-
-                              <TabsContent
-                                value="phone"
-                                className="mt-0 rounded-2xl border-2 border-dashed border-blue-400/25 bg-blue-500/5 p-6"
+                        <div className="mt-5 grid w-full gap-3 sm:grid-cols-2">
+                          {[
+                            {
+                              icon: BadgeCheck,
+                              title: "Verified identities",
+                              body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
+                            },
+                            {
+                              icon: Flag,
+                              title: "Report & block",
+                              body: "Spot something off? Report a listing or profile and block any member. Our team reviews every report within 24 hours.",
+                            },
+                            {
+                              icon: Lock,
+                              title: "Private by default",
+                              body: "Your personal details stay hidden until you choose to share them. Never share bank details or IDs on this platform.",
+                            },
+                            {
+                              icon: AlertTriangle,
+                              title: "Stay safe",
+                              body: "Meet in public, view the property first, and never pay deposits before signing a lease. Trust your instincts.",
+                            },
+                          ].map((item) => {
+                            const IconComponent = item.icon
+                            return (
+                              <div
+                                key={item.title}
+                                className="rounded-2xl border border-border/60 bg-muted/40 p-4"
                               >
-                                <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-300">
-                                  Phone
-                                </h5>
-                                <p className="border-l-2 border-blue-400/60 pl-4 text-sm leading-6 text-white/70">
-                                  Confirm your phone via OTP to{" "}
-                                  <span className="font-semibold text-blue-200">
-                                    verify your identity
+                                <div className="mb-2 flex items-center gap-3">
+                                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                                    <IconComponent className="size-4" />
                                   </span>
-                                  . Fastest way to build trust.
-                                </p>
-                              </TabsContent>
-
-                              <TabsContent
-                                value="email"
-                                className="mt-0 rounded-2xl border-2 border-dashed border-purple-400/25 bg-purple-500/5 p-6"
-                              >
-                                <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-300">
-                                  Email
-                                </h5>
-                                <p className="border-l-2 border-purple-400/60 pl-4 text-sm leading-6 text-white/70">
-                                  Verify your email address to{" "}
-                                  <span className="font-semibold text-purple-200">
-                                    receive important updates
-                                  </span>{" "}
-                                  and confirm your account ownership.
-                                </p>
-                              </TabsContent>
-
-                              <TabsContent
-                                value="id"
-                                className="mt-0 rounded-2xl border-2 border-dashed border-green-400/25 bg-green-500/5 p-6"
-                              >
-                                <h5 className="mb-4 text-2xl font-black tracking-tight text-green-300">
-                                  ID
-                                </h5>
-                                <p className="border-l-2 border-green-400/60 pl-4 text-sm leading-6 text-white/70">
-                                  Upload your SA ID or passport for{" "}
-                                  <span className="font-semibold text-green-200">
-                                    official verification
-                                  </span>
-                                  . Encrypted and never shared publicly.
-                                </p>
-                              </TabsContent>
-
-                              <TabsContent
-                                value="credit"
-                                className="mt-0 rounded-2xl border-2 border-dashed border-amber-400/25 bg-amber-500/5 p-6"
-                              >
-                                <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-300">
-                                  Credit
-                                </h5>
-                                <p className="border-l-2 border-amber-400/60 pl-4 text-sm leading-6 text-white/70">
-                                  Complete a{" "}
-                                  <span className="font-semibold text-amber-200">
-                                    financial responsibility check
-                                  </span>{" "}
-                                  to unlock priority listings.
-                                </p>
-                              </TabsContent>
-                            </Tabs>
-
-                            <p className="mt-4 text-center text-xs text-white/60">
-                              More badges = more trust.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex flex-col items-center">
-                          <div className="w-full">
-                            <span className="text-[10px] font-bold tracking-[0.22em] text-amber-300/90 uppercase">
-                              Staying safe
-                            </span>
-                            <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">
-                              Practical safety tips
-                            </h3>
-                            <p className="mt-1 text-sm text-white/70">
-                              Keep you, your money and your home safe when
-                              searching.
-                            </p>
-                          </div>
-
-                          <div className="w-full space-y-3">
-                            {[
-                              {
-                                icon: Eye,
-                                title: "Viewings & meetups",
-                                tips: [
-                                  "Always view the property in person before paying anything — never rent sight unseen.",
-                                  "Meet during daylight hours and bring a friend or family member along.",
-                                  "Trust your instincts. If a meet-up feels off, leave and report it to us.",
-                                ],
-                              },
-                              {
-                                icon: Wallet,
-                                title: "Money & deposits",
-                                tips: [
-                                  "Never pay a deposit before viewing the property and signing a written lease agreement.",
-                                  "Pay through traceable methods (bank transfer with reference). Avoid cash, WhatsApp or e-wallet transfers to strangers.",
-                                  "No legitimate landlord will ask for your banking PIN or your ID number up front.",
-                                ],
-                              },
-                              {
-                                icon: AlertTriangle,
-                                title: "Spotting scams",
-                                tips: [
-                                  "Be wary of prices that are far below the local market rate.",
-                                  "Watch out for pressure to 'act now' or to pay a holding fee to secure a listing you haven't seen.",
-                                  "If a host refuses viewings or asks you to communicate off-platform, that's a red flag — report the listing.",
-                                ],
-                              },
-                              {
-                                icon: ShieldCheck,
-                                title: "Your personal data",
-                                tips: [
-                                  "Keep private details (ID, banking, address) off your profile until you've met and verified the other person.",
-                                  "Share contact details only after you're comfortable and you've checked verification badges.",
-                                  "Sensitive messages about money are best kept inside Cohabit so our team can review them if needed.",
-                                ],
-                              },
-                            ].map((group) => {
-                              const GroupIcon = group.icon
-                              return (
-                                <div
-                                  key={group.title}
-                                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
-                                >
-                                  <div className="mb-2 flex items-center gap-3">
-                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-                                      <GroupIcon className="size-4" />
-                                    </span>
-                                    <h3 className="text-sm font-semibold text-white">
-                                      {group.title}
-                                    </h3>
-                                  </div>
-                                  <ul className="space-y-1.5 text-sm leading-relaxed text-white/70">
-                                    {group.tips.map((tip) => (
-                                      <li key={tip} className="flex gap-2">
-                                        <span className="mt-1.5 size-1 shrink-0 rounded-full bg-amber-300/80" />
-                                        <span>{tip}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
+                                  <h3 className="text-sm font-semibold">
+                                    {item.title}
+                                  </h3>
                                 </div>
-                              )
-                            })}
-                          </div>
-
-                          <div className="mt-5 w-full rounded-2xl border border-white/15 bg-white/5 p-4">
-                            <p className="text-xs leading-relaxed text-white/75">
-                              <span className="font-semibold text-white">
-                                Need urgent help?
-                              </span>{" "}
-                              If you're in immediate danger call the SAPS on{" "}
-                              <span className="font-medium text-amber-300">
-                                10111
-                              </span>{" "}
-                              or Crime Stop on{" "}
-                              <span className="font-medium text-amber-300">
-                                08600 10111
-                              </span>
-                              . For a non-urgent safety concern, report it via
-                              any listing's "Report this listing" button and our
-                              safety team will review it within 24 hours.
-                            </p>
-                          </div>
+                                <p className="text-sm leading-relaxed text-muted-foreground">
+                                  {item.body}
+                                </p>
+                              </div>
+                            )
+                          })}
                         </div>
                       </section>
                     </Reveal>
 
-                    {/* Band 3 — Stats (scoreboard) */}
+                    {/* Band 3 — Verification */}
+                    <Reveal className="w-full">
+                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                          Verification
+                        </span>
+                        <h3 className="mt-1 text-xl font-semibold tracking-tight">
+                          Badges that build trust
+                        </h3>
+
+                        <Tabs defaultValue="phone" className="mt-5 gap-4">
+                          <TabsList className="bg-transparent">
+                            <TabsTrigger
+                              value="phone"
+                              className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-blue-500 data-[state=active]:!text-white"
+                            >
+                              <Smartphone className="mr-1 size-3.5" />
+                              Phone
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="email"
+                              className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-purple-500 data-[state=active]:!text-white"
+                            >
+                              <Mail className="mr-1 size-3.5" />
+                              Email
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="id"
+                              className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-green-500 data-[state=active]:!text-white"
+                            >
+                              <BadgeCheck className="mr-1 size-3.5" />
+                              ID
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="credit"
+                              className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white"
+                            >
+                              <Shield className="mr-1 size-3.5" />
+                              Credit
+                            </TabsTrigger>
+                          </TabsList>
+
+                          <TabsContent
+                            value="phone"
+                            className="mt-0 rounded-2xl border-2 border-dashed border-blue-400/25 bg-blue-500/5 p-6"
+                          >
+                            <h5 className="mb-4 text-2xl font-black tracking-tight text-blue-600 dark:text-blue-300">
+                              Phone
+                            </h5>
+                            <p className="border-l-2 border-blue-400/60 pl-4 text-sm leading-6 text-muted-foreground">
+                              Confirm your phone via OTP to{" "}
+                              <span className="font-semibold text-blue-600 dark:text-blue-300">
+                                verify your identity
+                              </span>
+                              . Fastest way to build trust.
+                            </p>
+                          </TabsContent>
+
+                          <TabsContent
+                            value="email"
+                            className="mt-0 rounded-2xl border-2 border-dashed border-purple-400/25 bg-purple-500/5 p-6"
+                          >
+                            <h5 className="mb-4 text-2xl font-black tracking-tight text-purple-600 dark:text-purple-300">
+                              Email
+                            </h5>
+                            <p className="border-l-2 border-purple-400/60 pl-4 text-sm leading-6 text-muted-foreground">
+                              Verify your email address to{" "}
+                              <span className="font-semibold text-purple-600 dark:text-purple-300">
+                                receive important updates
+                              </span>{" "}
+                              and confirm your account ownership.
+                            </p>
+                          </TabsContent>
+
+                          <TabsContent
+                            value="id"
+                            className="mt-0 rounded-2xl border-2 border-dashed border-green-400/25 bg-green-500/5 p-6"
+                          >
+                            <h5 className="mb-4 text-2xl font-black tracking-tight text-green-600 dark:text-green-300">
+                              ID
+                            </h5>
+                            <p className="border-l-2 border-green-400/60 pl-4 text-sm leading-6 text-muted-foreground">
+                              Upload your SA ID or passport for{" "}
+                              <span className="font-semibold text-green-600 dark:text-green-300">
+                                official verification
+                              </span>
+                              . Encrypted and never shared publicly.
+                            </p>
+                          </TabsContent>
+
+                          <TabsContent
+                            value="credit"
+                            className="mt-0 rounded-2xl border-2 border-dashed border-amber-400/25 bg-amber-500/5 p-6"
+                          >
+                            <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-600 dark:text-amber-300">
+                              Credit
+                            </h5>
+                            <p className="border-l-2 border-amber-400/60 pl-4 text-sm leading-6 text-muted-foreground">
+                              Complete a{" "}
+                              <span className="font-semibold text-amber-600 dark:text-amber-300">
+                                financial responsibility check
+                              </span>{" "}
+                              to unlock priority listings.
+                            </p>
+                          </TabsContent>
+                        </Tabs>
+
+                        <p className="mt-4 text-center text-xs text-muted-foreground">
+                          More badges = more trust.
+                        </p>
+                      </section>
+                    </Reveal>
+
+                    {/* Band 4 — Practical safety tips */}
+                    <Reveal className="w-full">
+                      <section className="w-full rounded-3xl border border-border/70 bg-background p-5 shadow-sm">
+                        <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
+                          Staying safe
+                        </span>
+                        <h3 className="mt-1 text-xl font-semibold tracking-tight">
+                          Practical safety tips
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Keep you, your money and your home safe when
+                          searching.
+                        </p>
+
+                        <div className="mt-5 space-y-3">
+                          {[
+                            {
+                              icon: Eye,
+                              title: "Viewings & meetups",
+                              tips: [
+                                "Always view the property in person before paying anything — never rent sight unseen.",
+                                "Meet during daylight hours and bring a friend or family member along.",
+                                "Trust your instincts. If a meet-up feels off, leave and report it to us.",
+                              ],
+                            },
+                            {
+                              icon: Wallet,
+                              title: "Money & deposits",
+                              tips: [
+                                "Never pay a deposit before viewing the property and signing a written lease agreement.",
+                                "Pay through traceable methods (bank transfer with reference). Avoid cash, WhatsApp or e-wallet transfers to strangers.",
+                                "No legitimate landlord will ask for your banking PIN or your ID number up front.",
+                              ],
+                            },
+                            {
+                              icon: AlertTriangle,
+                              title: "Spotting scams",
+                              tips: [
+                                "Be wary of prices that are far below the local market rate.",
+                                "Watch out for pressure to 'act now' or to pay a holding fee to secure a listing you haven't seen.",
+                                "If a host refuses viewings or asks you to communicate off-platform, that's a red flag — report the listing.",
+                              ],
+                            },
+                            {
+                              icon: ShieldCheck,
+                              title: "Your personal data",
+                              tips: [
+                                "Keep private details (ID, banking, address) off your profile until you've met and verified the other person.",
+                                "Share contact details only after you're comfortable and you've checked verification badges.",
+                                "Sensitive messages about money are best kept inside Cohabit so our team can review them if needed.",
+                              ],
+                            },
+                          ].map((group) => {
+                            const GroupIcon = group.icon
+                            return (
+                              <div
+                                key={group.title}
+                                className="rounded-2xl border border-border/60 bg-muted/40 p-4"
+                              >
+                                <div className="mb-2 flex items-center gap-3">
+                                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                                    <GroupIcon className="size-4" />
+                                  </span>
+                                  <h3 className="text-sm font-semibold">
+                                    {group.title}
+                                  </h3>
+                                </div>
+                                <ul className="space-y-1.5 text-sm leading-relaxed text-muted-foreground">
+                                  {group.tips.map((tip) => (
+                                    <li key={tip} className="flex gap-2">
+                                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent/70" />
+                                      <span>{tip}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        <div className="mt-5 w-full rounded-2xl border border-amber-300/40 bg-amber-50 p-4 dark:bg-amber-500/10">
+                          <p className="text-xs leading-relaxed text-foreground/80">
+                            <span className="font-semibold text-foreground">
+                              Need urgent help?
+                            </span>{" "}
+                            If you're in immediate danger call the SAPS on{" "}
+                            <span className="font-medium text-accent">
+                              10111
+                            </span>{" "}
+                            or Crime Stop on{" "}
+                            <span className="font-medium text-accent">
+                              08600 10111
+                            </span>
+                            . For a non-urgent safety concern, report it via any
+                            listing's "Report this listing" button and our
+                            safety team will review it within 24 hours.
+                          </p>
+                        </div>
+                      </section>
+                    </Reveal>
+
+                    {/* Band 5 — Stats (scoreboard) */}
                     <Reveal className="w-full">
                       <section className="w-full rounded-3xl border border-accent/20 bg-gradient-to-b from-amber-50/80 to-background p-5">
                         <span className="text-[10px] font-bold tracking-[0.22em] text-accent uppercase">
@@ -1529,7 +1526,7 @@ function MainApp({
                       </section>
                     </Reveal>
 
-                    {/* Band 4 — FAQ */}
+                    {/* Band 6 — FAQ */}
                     <Reveal className="w-full">
                       <section className="w-full px-1">
                         <Faq6
@@ -1540,7 +1537,7 @@ function MainApp({
                       </section>
                     </Reveal>
 
-                    {/* Band 5 — Terms & Conditions (legal paper) */}
+                    {/* Band 7 — Terms & Conditions (legal paper) */}
                     <Reveal className="w-full">
                       <section className="w-full rounded-lg border border-border bg-background px-5 py-5 shadow-sm">
                         <span className="text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
@@ -1935,14 +1932,14 @@ function AppFrame() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex overflow-y-auto bg-background/80 backdrop-blur-sm"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-md"
+              className="m-auto w-full max-w-md"
             >
               <button
                 type="button"

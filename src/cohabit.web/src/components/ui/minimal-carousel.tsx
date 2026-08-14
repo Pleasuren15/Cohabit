@@ -204,7 +204,7 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
 
                   {card.badge && (
                     <span
-                      className={`absolute top-2 left-2 z-10 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase ${BADGE_TONES[card.badge.tone]}`}
+                      className={`absolute bottom-2 left-2 z-10 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase ${BADGE_TONES[card.badge.tone]}`}
                     >
                       {card.badge.label}
                     </span>
@@ -227,7 +227,7 @@ export const MinimalCarousel: React.FC<MinimalCarouselProps> = ({
                   {/* Name + location only in flat (no active) mode; secondary
                       cards beside an expanded card stay image-only. */}
                   {!activeId && (
-                    <div className="relative z-10 overflow-hidden">
+                    <div className="relative z-10 overflow-hidden pb-8">
                       <h4 className="truncate text-sm font-medium leading-tight opacity-90 sm:text-base">
                         {card.title}
                       </h4>
