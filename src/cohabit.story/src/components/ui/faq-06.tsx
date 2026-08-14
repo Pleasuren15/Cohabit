@@ -14,14 +14,33 @@ export interface FaqItem {
   answer: string
 }
 
+export interface Faq6Group {
+  label: string
+  faqs: FaqItem[]
+}
+
 export interface Faq6Props {
   badge?: string
   title: React.ReactNode
-  faqs: FaqItem[]
+  faqs?: FaqItem[]
+  groups?: Faq6Group[]
   className?: string
 }
 
-export function Faq6({ badge, title, faqs, className }: Faq6Props) {
+export function Faq6({ badge, title, faqs = [], groups, className }: Faq6Props) {
+  const grouped =
+    groups ?? (faqs.length > 0 ? [{ label: "", faqs }] : [])
+  const numberedGroups = grouped.map((group, groupIndex) => ({
+    ...group,
+    faqs: group.faqs.map((faq, i) => ({
+      ...faq,
+      num:
+        grouped
+          .slice(0, groupIndex)
+          .reduce((acc, g) => acc + g.faqs.length, 0) + i + 1,
+    })),
+  }))
+
   return (
     <section
       className={cn(
@@ -44,32 +63,41 @@ export function Faq6({ badge, title, faqs, className }: Faq6Props) {
         <div className="relative md:col-span-8 lg:col-span-7">
           <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px border-l border-dashed border-border md:block" />
           <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => (
-              <AccordionItem
-                key={faq.id}
-                value={faq.id}
-                className="border-b border-dashed border-border px-6 last:border-b-0 md:px-8"
-              >
-                <AccordionTrigger className="group flex items-center py-6 hover:no-underline md:py-8 [&_[data-slot=accordion-trigger]>svg]:hidden">
-                  <div className="flex flex-1 items-center gap-6">
-                    <span className="text-xs font-semibold tracking-widest text-muted-foreground">
-                      Q{index + 1}
-                    </span>
-                    <span className="text-left text-base font-medium text-foreground md:text-lg">
-                      {faq.question}
-                    </span>
-                  </div>
-                  <div className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground transition-colors group-hover:bg-muted/80">
-                    <Plus className="block h-3 w-3 group-data-[state=open]:hidden" />
-                    <Minus className="hidden h-3 w-3 group-data-[state=open]:block" />
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pr-12 pb-8 pl-[3.25rem]">
-                  <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
-                    {faq.answer}
+            {numberedGroups.map((group, groupIndex) => (
+              <div key={groupIndex}>
+                {groupIndex > 0 && (
+                  <p className="px-6 pt-9 pb-1 text-xs font-semibold tracking-widest text-accent uppercase md:px-8">
+                    {group.label}
                   </p>
-                </AccordionContent>
-              </AccordionItem>
+                )}
+                {group.faqs.map((faq) => (
+                  <AccordionItem
+                    key={faq.id}
+                    value={faq.id}
+                    className="border-b border-dashed border-border px-6 last:border-b-0 md:px-8"
+                  >
+                    <AccordionTrigger className="group flex items-center py-6 hover:no-underline md:py-8 [&_[data-slot=accordion-trigger]>svg]:hidden">
+                      <div className="flex flex-1 items-center gap-6">
+                        <span className="text-xs font-semibold tracking-widest text-muted-foreground">
+                          Q{faq.num}
+                        </span>
+                        <span className="text-left text-base font-medium text-foreground md:text-lg">
+                          {faq.question}
+                        </span>
+                      </div>
+                      <div className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground transition-colors group-hover:bg-muted/80">
+                        <Plus className="block h-3 w-3 group-data-[state=open]:hidden" />
+                        <Minus className="hidden h-3 w-3 group-data-[state=open]:block" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pr-12 pb-8 pl-[3.25rem]">
+                      <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+                        {faq.answer}
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </div>
             ))}
           </Accordion>
         </div>

@@ -3,26 +3,23 @@ import { Check, FileCheck2, FilePenLine, IdCard } from "lucide-react"
 const STEPS = [
   {
     title: "Create your profile",
-    description:
-      "Add your personal info and verify your identity to build trust with the community.",
+    description: "Verify your identity to build trust.",
     icon: Check,
+    completed: true,
   },
   {
     title: "Browse & list",
-    description:
-      "Explore rooms, full rentals and shared homes across all 9 provinces — or post your own property and save your favourites.",
+    description: "Find or post rooms across all 9 provinces.",
     icon: IdCard,
   },
   {
     title: "Connect & chat",
-    description:
-      "Message hosts and potential housemates, arrange viewings, and agree on the details that matter.",
+    description: "Message hosts and arrange viewings.",
     icon: FilePenLine,
   },
   {
     title: "Settle in",
-    description:
-      "Finalise your lease or house agreement, meet your housemates, and move in with confidence.",
+    description: "Sign your agreement and move in.",
     icon: FileCheck2,
   },
 ]

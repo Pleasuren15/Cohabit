@@ -176,13 +176,13 @@ export function MinimalCarousel({
 
                   {card.badge && (
                     <span
-                      className={`absolute top-2 left-2 z-10 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase ${BADGE_TONES[card.badge.tone]}`}
+                      className={`absolute bottom-2 left-2 z-10 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase ${BADGE_TONES[card.badge.tone]}`}
                     >
                       {card.badge.label}
                     </span>
                   )}
 
-                  <div className="relative z-10 overflow-hidden">
+                  <div className="relative z-10 overflow-hidden pb-8">
                     <h4
                       className={`${activeId ? "text-[10px] sm:text-xs" : "text-sm sm:text-base"} truncate leading-tight font-medium opacity-90`}
                     >
