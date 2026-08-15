@@ -8,7 +8,6 @@ const VERIFICATION_LABELS: Record<string, string> = {
   phone: "Phone",
   email: "Email",
   id: "ID",
-  credit: "Credit",
 }
 
 describe("ExpandableProfileCard data rendering", () => {
@@ -51,7 +50,7 @@ describe("ExpandableProfileCard data rendering", () => {
   it.each([
     { verified: ["phone"] as const, expected: ["Phone"] },
     { verified: ["phone", "email"] as const, expected: ["Phone", "Email"] },
-    { verified: ["id", "credit"] as const, expected: ["ID", "Credit"] },
+    { verified: ["id"] as const, expected: ["ID"] },
   ])("renders verification badges for $expected", ({ verified, expected }) => {
     render(
       <ExpandableProfileCard name="A" location="L" verified={[...verified]} />

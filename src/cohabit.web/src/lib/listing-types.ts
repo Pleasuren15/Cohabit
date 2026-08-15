@@ -1,4 +1,4 @@
-export type VerificationType = "phone" | "email" | "id" | "credit"
+export type VerificationType = "phone" | "email" | "id"
 
 export interface FeaturedProfile {
   id: string

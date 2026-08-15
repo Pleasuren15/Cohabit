@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react"
 import { AnimatePresence, motion, MotionConfig } from "framer-motion"
@@ -588,6 +589,14 @@ function InfoSectionNav({
   items: { id: string; label: string }[]
 }) {
   const [activeId, setActiveId] = useState(items[0]?.id ?? "")
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!activeId || !scrollRef.current) return
+    scrollRef.current
+      .querySelector(`[data-section-id="${activeId}"]`)
+      ?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+  }, [activeId])
 
   useEffect(() => {
     const ids = items.map((item) => item.id)
@@ -623,11 +632,12 @@ function InfoSectionNav({
 
   return (
     <div className="w-full py-2">
-      <div className="flex w-full gap-2.5 overflow-x-auto rounded-full border border-border/50 bg-background/85 p-1.5 shadow-sm backdrop-blur-md overscroll-x-contain [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
+      <div ref={scrollRef} className="flex w-full gap-2.5 overflow-x-auto rounded-full border border-border/50 bg-background/85 p-1.5 shadow-sm backdrop-blur-md overscroll-x-contain [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => (
           <button
             key={item.id}
             type="button"
+            data-section-id={item.id}
             onClick={() => scrollToSection(item.id)}
             className={cn(
               "shrink-0 rounded-full px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors",
@@ -1379,7 +1389,7 @@ function MainApp({
                             {
                               icon: BadgeCheck,
                               title: "Verified identities",
-                              body: "Phone, email, ID and credit checks confirm who you are dealing with. Every profile carries visible verification badges.",
+                              body: "Phone, email and ID checks confirm who you are dealing with. Every profile carries visible verification badges.",
                             },
                             {
                               icon: Flag,
@@ -1457,13 +1467,6 @@ function MainApp({
                               <BadgeCheck className="mr-1 size-3.5" />
                               ID
                             </TabsTrigger>
-                            <TabsTrigger
-                              value="credit"
-                              className="flex-1 rounded-full px-4 py-1 text-[11px] uppercase transition-all data-[state=active]:bg-amber-500 data-[state=active]:!text-white"
-                            >
-                              <Shield className="mr-1 size-3.5" />
-                              Credit
-                            </TabsTrigger>
                           </TabsList>
 
                           <TabsContent
@@ -1511,22 +1514,6 @@ function MainApp({
                                 official verification
                               </span>
                               . Encrypted and never shared publicly.
-                            </p>
-                          </TabsContent>
-
-                          <TabsContent
-                            value="credit"
-                            className="mt-0 rounded-2xl border-2 border-dashed border-amber-400/25 bg-amber-500/5 p-6"
-                          >
-                            <h5 className="mb-4 text-2xl font-black tracking-tight text-amber-600 dark:text-amber-300">
-                              Credit
-                            </h5>
-                            <p className="border-l-2 border-amber-400/60 pl-4 text-sm leading-6 text-muted-foreground">
-                              Complete a{" "}
-                              <span className="font-semibold text-amber-600 dark:text-amber-300">
-                                financial responsibility check
-                              </span>{" "}
-                              to unlock priority listings.
                             </p>
                           </TabsContent>
                         </Tabs>

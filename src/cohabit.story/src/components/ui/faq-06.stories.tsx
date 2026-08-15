@@ -23,7 +23,7 @@ const FAQS: FaqItem[] = [
     id: "f2",
     question: "Are user profiles verified?",
     answer:
-      "Yes. Every member can verify their phone number, email, and government ID, and some complete a credit check. Verified profiles are clearly badged so you can decide who you'd like to share a space with.",
+      "Yes. Every member can verify their phone number, email, and government ID. Verified profiles are clearly badged so you can decide who you'd like to share a space with.",
   },
   {
     id: "f3",

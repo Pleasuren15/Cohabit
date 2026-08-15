@@ -94,3 +94,7 @@ jobs:
     with:
       image-name: cohabit-web
       dockerfile: src/cohabit.web/Dockerfile
+
+  secret-scan:
+    needs: security-scan
+    uses: ./.github/workflows/gitleaks-scan.yml

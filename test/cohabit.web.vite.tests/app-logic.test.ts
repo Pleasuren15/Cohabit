@@ -5,7 +5,7 @@ import { PROVINCES } from "@/lib/provinces"
 import { AMENITIES } from "@/lib/amenities"
 
 const VALID_TYPES = ["roommate", "rentals"]
-const VALID_VERIFICATIONS = ["phone", "email", "id", "credit"]
+const VALID_VERIFICATIONS = ["phone", "email", "id"]
 
 describe("FEATURED_PROFILES data integrity", () => {
   it("has unique profile ids", () => {

@@ -17,7 +17,7 @@ import { API_BASE_URL, USE_MOCK_DATA } from "@/services/config"
 import { PROVINCES } from "@/lib/provinces"
 import { matchesListingFilters, type ListingFilters } from "@/lib/listing-utils"
 
-export type VerificationType = "phone" | "email" | "id" | "credit"
+export type VerificationType = "phone" | "email" | "id"
 
 export interface FeaturedProfile {
   id: string
@@ -622,7 +622,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     responseTime: "Within a few hours",
     rules: ["Non-smoking home", "No pets", "Quiet after 10pm"],
     photoCount: 8,
-    verified: ["phone", "email", "id", "credit"],
+    verified: ["phone", "email", "id"],
     province: "kzn",
     type: "roommate",
     userId: "user-2",
@@ -665,7 +665,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     responseTime: "Same day",
     rules: ["Non-smoking home", "Pets welcome", "Visitors welcome"],
     photoCount: 10,
-    verified: ["phone", "email", "id", "credit"],
+    verified: ["phone", "email", "id"],
     province: "gp",
     type: "roommate",
     userId: "user-1",
@@ -708,7 +708,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     responseTime: "Within a few hours",
     rules: ["Non-smoking", "No pets", "Quiet evenings"],
     photoCount: 5,
-    verified: ["phone", "id", "credit"],
+    verified: ["phone", "id"],
     province: "wc",
     type: "rentals",
     userId: "user-2",
@@ -750,7 +750,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     responseTime: "Within the hour",
     rules: ["No smoking", "Pets by arrangement", "Shared kitchen"],
     photoCount: 6,
-    verified: ["phone", "id", "credit"],
+    verified: ["phone", "id"],
     province: "wc",
     type: "rentals",
     userId: "user-1",
@@ -815,7 +815,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     responseTime: "Within the hour",
     rules: ["Non-smoking home", "No pets", "Peaceful home"],
     photoCount: 7,
-    verified: ["phone", "id", "credit"],
+    verified: ["phone", "id"],
     province: "ec",
     type: "rentals",
     userId: "user-2",
@@ -899,7 +899,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     responseTime: "Within the hour",
     rules: ["Non-smoking home", "No pets", "Guests welcome"],
     photoCount: 8,
-    verified: ["phone", "email", "id", "credit"],
+    verified: ["phone", "email", "id"],
     province: "mp",
     type: "roommate",
     userId: "user-2",
@@ -962,7 +962,7 @@ export const FEATURED_PROFILES: FeaturedProfile[] = [
     responseTime: "Within the hour",
     rules: ["Non-smoking home", "No pets", "Respectful flatmate"],
     photoCount: 6,
-    verified: ["phone", "email", "id", "credit"],
+    verified: ["phone", "email", "id"],
     province: "nw",
     type: "rentals",
     userId: "user-2",
