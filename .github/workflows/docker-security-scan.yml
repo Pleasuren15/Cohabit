@@ -39,7 +39,7 @@ jobs:
           load: true
 
       - name: Run Trivy vulnerability scanner on image
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ inputs.image-name }}
           scan-type: image
@@ -50,7 +50,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Run Trivy secret scanner on image
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ inputs.image-name }}
           scan-type: image
