@@ -45,7 +45,7 @@
     "@storybook/addon-docs": "^10.5.6",
     "@storybook/addon-themes": "^10.5.6",
     "@storybook/addon-vitest": "^10.5.6",
-    "@storybook/react": "^10.5.6",
+    "@storybook/react": "^10.5.8",
     "@storybook/react-vite": "^10.5.6",
     "@types/node": "^24",
     "@types/react": "^19",
