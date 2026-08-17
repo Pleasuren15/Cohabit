@@ -97,4 +97,7 @@ jobs:
 
   secret-scan:
     needs: security-scan
+    permissions:
+      contents: read
+      pull-requests: write
     uses: ./.github/workflows/gitleaks-scan.yml
