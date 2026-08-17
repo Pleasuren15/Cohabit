@@ -55,6 +55,6 @@ export const Featured: Story = {
     price: 9500,
     photoCount: 10,
     featured: true,
-    verified: ["phone", "email", "id", "credit"],
+    verified: ["phone", "email", "id"],
   },
 }

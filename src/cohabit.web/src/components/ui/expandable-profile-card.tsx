@@ -9,7 +9,6 @@ import {
   Smartphone,
   Mail,
   BadgeCheck,
-  Shield,
   Share2,
   Check,
   Heart,
@@ -17,7 +16,7 @@ import {
 } from "lucide-react"
 import { ViewOnMap } from "./view-on-map"
 
-type VerificationType = "phone" | "email" | "id" | "credit"
+type VerificationType = "phone" | "email" | "id"
 
 interface ExpandableProfileCardProps {
   id?: string
@@ -42,7 +41,6 @@ const VERIFICATION_CONFIG: Record<
   phone: { icon: Smartphone, label: "Phone", dotColor: "bg-blue-500" },
   email: { icon: Mail, label: "Email", dotColor: "bg-purple-500" },
   id: { icon: BadgeCheck, label: "ID", dotColor: "bg-green-500" },
-  credit: { icon: Shield, label: "Credit", dotColor: "bg-amber-500" },
 }
 
 export function ExpandableProfileCard({

@@ -59,7 +59,7 @@ export interface UserData {
   timestamp?: string
 }
 
-export type VerificationType = "phone" | "email" | "id" | "credit"
+export type VerificationType = "phone" | "email" | "id"
 
 export interface NewListingData {
   name: string
@@ -146,14 +146,12 @@ const ALL_VERIFICATIONS: {
   { key: "phone", label: "Phone", icon: Smartphone, color: "text-blue-500", bgColor: "bg-blue-500/10" },
   { key: "email", label: "Email", icon: Mail, color: "text-purple-500", bgColor: "bg-purple-500/10" },
   { key: "id", label: "ID", icon: BadgeCheck, color: "text-green-500", bgColor: "bg-green-500/10" },
-  { key: "credit", label: "Credit", icon: Shield, color: "text-amber-500", bgColor: "bg-amber-500/10" },
 ]
 
 const VERIFIED_CHIP_TONES: Record<VerificationType, string> = {
   phone: "bg-blue-500/15 text-blue-300",
   email: "bg-purple-500/15 text-purple-300",
   id: "bg-green-500/15 text-green-300",
-  credit: "bg-amber-500/15 text-amber-300",
 }
 
 export interface UserProfileProps {

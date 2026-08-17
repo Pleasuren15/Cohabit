@@ -8,7 +8,6 @@ import {
   Smartphone,
   Mail,
   BadgeCheck,
-  Shield,
   Expand,
   X,
   Phone,
@@ -40,7 +39,7 @@ import {
   type ReportReason,
 } from "@/services/reports-service"
 
-type VerificationType = "phone" | "email" | "id" | "credit"
+type VerificationType = "phone" | "email" | "id"
 
 /** Structured fields collected when a viewer requests a viewing. */
 export interface ViewingRequest {
@@ -98,14 +97,12 @@ const VERIFICATION_CONFIG: Record<
   phone: { icon: Smartphone, label: "Phone" },
   email: { icon: Mail, label: "Email" },
   id: { icon: BadgeCheck, label: "ID" },
-  credit: { icon: Shield, label: "Credit" },
 }
 
 const VERIFICATION_COLORS: Record<VerificationType, string> = {
   phone: "bg-blue-500/20 text-blue-100",
   email: "bg-purple-500/20 text-purple-100",
   id: "bg-green-500/20 text-green-100",
-  credit: "bg-amber-500/20 text-amber-100",
 }
 
 const formatPrice = (value: number) => `R ${value.toLocaleString("en-ZA")}`

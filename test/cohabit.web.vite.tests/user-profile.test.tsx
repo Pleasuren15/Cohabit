@@ -5,7 +5,7 @@ import { UserProfile } from "@/components/ui/user-profile"
 import type { Inquiry } from "@/services/inquiries-service"
 import { makeProfile, makeUser } from "./fixtures"
 
-const VERIFICATION_LABELS = ["Phone", "Email", "ID", "Credit"]
+const VERIFICATION_LABELS = ["Phone", "Email", "ID"]
 
 function renderProfile(
   overrides: Partial<{

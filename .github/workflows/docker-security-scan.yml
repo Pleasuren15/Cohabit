@@ -1,0 +1,68 @@
+name: Docker Image Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        description: Name to tag the built image with
+        required: true
+        type: string
+      dockerfile:
+        description: Path to the Dockerfile relative to the repo root
+        required: true
+        type: string
+      trivy-severity:
+        description: Comma-separated severity levels that fail the scan
+        required: false
+        type: string
+        default: CRITICAL,HIGH
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ inputs.dockerfile }}
+          tags: ${{ inputs.image-name }}
+          load: true
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ inputs.image-name }}
+          scan-type: image
+          version: v0.74.0
+          format: sarif
+          output: trivy-results.sarif
+          severity: ${{ inputs.trivy-severity }}
+          exit-code: '1'
+          ignore-unfixed: true
+
+      - name: Run Trivy secret scanner on image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ inputs.image-name }}
+          scan-type: image
+          version: v0.74.0
+          scanners: secret
+          exit-code: '1'
+          ignore-unfixed: true
+
+      - name: Upload Trivy scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-${{ inputs.image-name }}
+          path: trivy-results.sarif

@@ -110,7 +110,7 @@ export const PopulatedWithImage: Story = {
       baths: 1,
       responseTime: "Within 2 hours",
       rules: ["Non-smoking", "Garden maintenance optional"],
-      verified: ["phone", "email", "id", "credit"],
+      verified: ["phone", "email", "id"],
     },
     onBack: () => {},
     onToggleFavorite: () => {},
