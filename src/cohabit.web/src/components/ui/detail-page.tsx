@@ -27,6 +27,7 @@ import {
   Flag,
 } from "lucide-react"
 import { AMENITIES } from "@/lib/amenities"
+import { ImagesSlider } from "@/components/ui/images-slider"
 import { ViewOnMap } from "./view-on-map"
 import { NativeSelect } from "@/components/base-ui/native-select"
 import {
@@ -356,13 +357,15 @@ export function DetailPage({
         className="fixed inset-0 z-40 overflow-y-auto bg-background"
       >
         <div className="mx-auto min-h-screen max-w-md">
-          {/* Hero image — click to zoom */}
+          {/* Hero image slider — click to zoom */}
           <div className="relative h-64 sm:h-80">
-            <img
-              src={imageSrc}
-              alt={name}
-              className="h-full w-full cursor-pointer object-cover"
-              onClick={() => setFullScreenIndex(0)}
+            <ImagesSlider
+              images={galleryPhotos}
+              autoplay={false}
+              overlay={false}
+              onImageClick={(index) => setFullScreenIndex(index)}
+              indicatorClassName="bottom-14"
+              className="h-full w-full"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
