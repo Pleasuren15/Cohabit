@@ -88,6 +88,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IListingAccessor, ListingAccessor>();
         builder.Services.AddScoped<IProvinceAccessor, ProvinceAccessor>();
         builder.Services.AddScoped<IUserAccessor, UserAccessor>();
+        builder.Services.AddScoped<IUserVerificationAccessor, UserVerificationAccessor>();
         builder.Services.AddScoped<IAddressAccessor, AddressAccessor>();
         builder.Services.AddScoped<IWatchListAccessor, WatchListAccessor>();
         builder.Services.AddScoped<IMessagingAccessor, MessagingAccessor>();
@@ -98,6 +99,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IWatchListService, WatchListService>();
         builder.Services.AddScoped<ISystemMessagingService, SystemMessagingService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IVerificationService, VerificationService>();
         builder.Services.AddScoped<IReportService, ReportService>();
         builder.Services.AddScoped<IReportEmailSender, ResendReportEmailSender>();
         builder.Services.Configure<ReportOptions>(builder.Configuration.GetSection(ReportOptions.SectionName));
