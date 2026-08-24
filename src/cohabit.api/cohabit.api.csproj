@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.*" />
     <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="13.*" />
+    <PackageReference Include="AWSSDK.S3" Version="4.*" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <!-- CVE-2026-49451: force a patched 2.x over the vulnerable 2.0.0 that Microsoft.AspNetCore.OpenApi resolves by default -->

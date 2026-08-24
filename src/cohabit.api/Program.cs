@@ -10,6 +10,7 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddApplicationServices();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -27,6 +28,12 @@ using (var scope = app.Services.CreateScope())
         await container.CreateIfNotExistsAsync(PublicAccessType.Blob);
         await container.SetAccessPolicyAsync(PublicAccessType.Blob);
     }
+
+    // S3 (ID verification documents): ensure the private bucket exists. It is
+    // deliberately created without any public access policy.
+    var s3ImageStorage = scope.ServiceProvider.GetService<S3ImageStorage>();
+    if (s3ImageStorage is not null)
+        await s3ImageStorage.EnsureBucketAsync();
 }
 
 if (app.Environment.IsDevelopment())
@@ -41,6 +48,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
+app.MapHealthChecks("/health").ExcludeFromDescription();
 
 app.Run();
 

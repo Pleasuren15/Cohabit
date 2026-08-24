@@ -4,6 +4,7 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -20,5 +21,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
+app.MapHealthChecks("/health").ExcludeFromDescription();
 
 app.Run();
