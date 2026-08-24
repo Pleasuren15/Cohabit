@@ -73,12 +73,6 @@ const ALL_VERIFICATIONS: {
   { key: "id", label: "ID", icon: BadgeCheck, color: "text-green-500", bgColor: "bg-green-50 dark:bg-green-500/10" },
 ]
 
-const VERIFIED_CHIP_TONES: Record<VerificationType, string> = {
-  phone: "bg-blue-500/15 text-blue-300",
-  email: "bg-purple-500/15 text-purple-300",
-  id: "bg-green-500/15 text-green-300",
-}
-
 const LISTING_GRADIENTS = [
   "bg-gradient-to-br from-rose-500 to-pink-600",
   "bg-gradient-to-br from-violet-500 to-purple-600",
@@ -653,11 +647,20 @@ export function UserProfile({
       </div>
 
       {/* Verification Section — trust panel */}
-      <div className="rounded-2xl bg-foreground text-white shadow-xl">
-        <div className="flex items-center justify-between p-5 pb-0">
-          <div className="flex items-center gap-2">
-            <Shield className="size-4 text-amber-300" />
-            <h3 className="text-sm font-semibold text-white">Verifications</h3>
+      <div className="rounded-2xl border border-border/70 bg-background p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Shield className="size-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Verifications
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {verified.length} of {ALL_VERIFICATIONS.length} complete
+              </p>
+            </div>
           </div>
           <button
             type="button"
@@ -668,23 +671,32 @@ export function UserProfile({
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 p-5">
+        <div className="grid grid-cols-3 gap-2">
           {ALL_VERIFICATIONS.map((v) => {
             const isVerified = verified.includes(v.key)
             const Icon = v.icon
             return (
-              <span
+              <button
                 key={v.key}
-                className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-medium ${
+                type="button"
+                onClick={() => setShowVerifyDialog(true)}
+                aria-pressed={isVerified}
+                className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition-colors ${
                   isVerified
-                    ? VERIFIED_CHIP_TONES[v.key]
-                    : "bg-white/5 text-white/50"
+                    ? `border-transparent ${v.bgColor} ${v.color}`
+                    : "border-dashed border-border/70 bg-background text-muted-foreground hover:border-accent/40 hover:text-accent"
                 }`}
               >
-                <Icon className="size-3.5" />
-                {v.label}
-                {isVerified && <BadgeCheck className="size-3" />}
-              </span>
+                <Icon className="size-4" />
+                <span className="inline-flex items-center gap-1">
+                  {v.label}
+                  {isVerified ? (
+                    <BadgeCheck className="size-3" />
+                  ) : (
+                    <Plus className="size-3 opacity-60" />
+                  )}
+                </span>
+              </button>
             )
           })}
         </div>

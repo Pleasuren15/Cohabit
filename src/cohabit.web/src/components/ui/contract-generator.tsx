@@ -23,8 +23,16 @@ import {
 } from "@/lib/contracts"
 import { downloadNodeAsPdf } from "@/lib/contract-pdf"
 import { ContractDocument } from "@/components/ui/contract-document"
+import { MultiStepLoader } from "@/components/ui/multi-step-loader"
 
 type Step = "type" | "details" | "preview"
+
+const GENERATING_STEPS = [
+  { text: "Validating contract details" },
+  { text: "Rendering agreement sections" },
+  { text: "Applying your clauses" },
+  { text: "Generating PDF" },
+]
 
 const CONTRACT_TYPE_OPTIONS: {
   value: ContractType
@@ -848,6 +856,14 @@ export function ContractGenerator({
             </div>
           </div>
         </Dialog.Content>
+
+        {/* Full-screen checklist shown while the PDF is generated */}
+        <MultiStepLoader
+          loading={downloading}
+          loadingStates={GENERATING_STEPS}
+          loop={false}
+          duration={900}
+        />
       </Dialog.Portal>
     </Dialog.Root>
   )
