@@ -38,7 +38,12 @@ public sealed class UserVerificationAccessor(CohabitDbContext dbContext) : IUser
     {
         dbContext.UserVerifications.Add(verification);
         await dbContext.SaveChangesAsync(ct);
-        return verification;
+
+        // Reload so callers get a fully-populated aggregate (the VerificationType
+        // navigation is required for DTO mapping).
+        return await dbContext.UserVerifications
+            .Include(uv => uv.VerificationType)
+            .SingleAsync(uv => uv.Id == verification.Id, ct);
     }
 
     public async Task<UserVerification?> FindByIdAsync(Guid id, CancellationToken ct = default)

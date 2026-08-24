@@ -10,6 +10,12 @@ public sealed class Message
     public bool IsRead { get; private set; }
     public DateTime Timestamp { get; private set; }
 
+    /// <summary>
+    /// Optional storage paths of images attached to this message, joined with
+    /// newlines. Resolved to short-lived read URLs when served.
+    /// </summary>
+    public string? ImagePaths { get; private set; }
+
     // Navigation
     public Conversation Conversation { get; private set; } = null!;
     public User Sender { get; private set; } = null!;
@@ -20,7 +26,8 @@ public sealed class Message
         Guid conversationId,
         Guid senderUserId,
         string title,
-        string content)
+        string content,
+        IEnumerable<string>? imagePaths = null)
     {
         return new Message
         {
@@ -29,6 +36,7 @@ public sealed class Message
             SenderUserId = senderUserId,
             Title = title,
             Content = content,
+            ImagePaths = imagePaths is null ? null : string.Join("\n", imagePaths),
             IsRead = false,
             Timestamp = DateTime.UtcNow
         };

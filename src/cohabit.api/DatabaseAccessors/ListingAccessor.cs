@@ -181,6 +181,30 @@ public sealed class ListingAccessor(CohabitDbContext dbContext) : IListingAccess
         await dbContext.SaveChangesAsync(ct);
     }
 
+    public async Task AddImagesAsync(
+        Guid listingId,
+        Guid ownerUserId,
+        IReadOnlyList<ResolvedImage> images,
+        CancellationToken ct = default)
+    {
+        if (images.Count == 0) return;
+
+        var listing = await dbContext.Listings
+            .Include(l => l.Images)
+            .FirstOrDefaultAsync(l => l.Id == listingId && l.UserId == ownerUserId, ct);
+        if (listing is null)
+            throw new NotFoundException("listing_not_found", $"Listing '{listingId}' was not found.");
+
+        // Keep the existing primary image; only seed one when the listing
+        // currently has none.
+        var hasImages = listing.Images.Count > 0;
+        foreach (var image in images)
+            dbContext.Images.Add(Image.Create(
+                listingId, image.Url, !hasImages && image.IsPrimary, image.Sha256));
+
+        await dbContext.SaveChangesAsync(ct);
+    }
+
     public async Task<IReadOnlyDictionary<string, string>> FindImageUrlsBySha256Async(
         IReadOnlyCollection<string> sha256Hashes,
         CancellationToken ct = default)

@@ -14,6 +14,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.UseSetting("ConnectionStrings:cohabit-db", Containers.Postgres.GetConnectionString());
         builder.UseSetting("ConnectionStrings:cohabit-images", Containers.AzuriteBlobConnectionString);
+        builder.UseSetting("S3:ServiceUrl", Containers.LocalStackS3ServiceUrl);
 
         builder.ConfigureAppConfiguration((_, config) =>
         {
@@ -24,7 +25,13 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:SigningKey"] = TestJwt.SigningKey,
                 ["Jwt:Issuer"] = TestJwt.Issuer,
                 ["Jwt:Audience"] = TestJwt.Audience,
-                ["Jwt:Authority"] = ""
+                ["Jwt:Authority"] = "",
+                // Mirrors the S3__* env vars injected by the Aspire AppHost.
+                ["S3:ServiceUrl"] = Containers.LocalStackS3ServiceUrl,
+                ["S3:Region"] = "us-east-1",
+                ["S3:AccessKey"] = "test",
+                ["S3:SecretKey"] = "test",
+                ["S3:BucketName"] = "cohabit-id-documents"
             });
         });
 

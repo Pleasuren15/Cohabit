@@ -100,7 +100,8 @@ export interface ListingService {
   updateListing(
     userId: string,
     listingId: string,
-    input: ListingMutationInput
+    input: ListingMutationInput,
+    images?: File[]
   ): Promise<FeaturedProfile>
   resolveProvinceId(code: string): Promise<number | undefined>
 }
@@ -263,9 +264,10 @@ class MockListingService implements ListingService {
   async updateListing(
     userId: string,
     listingId: string,
-    input: ListingMutationInput
+    input: ListingMutationInput,
+    images: File[] = []
   ): Promise<FeaturedProfile> {
-    return this.createListing(userId, input, []).then((p) => ({
+    return this.createListing(userId, input, images).then((p) => ({
       ...p,
       id: listingId,
     }))
@@ -534,32 +536,34 @@ class HttpListingService implements ListingService {
   async updateListing(
     userId: string,
     listingId: string,
-    input: ListingMutationInput
+    input: ListingMutationInput,
+    images: File[] = []
   ): Promise<FeaturedProfile> {
+    // Multipart so newly added photos stream as raw bytes, exactly like
+    // createListing; existing photos are kept server-side.
+    const form = new FormData()
+    form.append("title", input.title)
+    form.append("description", input.description)
+    form.append("typeId", String(input.typeId))
+    form.append("price", String(input.price))
+    form.append("deposit", String(input.deposit))
+    form.append("beds", String(input.beds))
+    form.append("baths", String(input.baths))
+    form.append("availableFrom", input.availableFrom)
+    form.append("responseTime", input.responseTime)
+    form.append("addressLine1", input.addressLine1)
+    form.append("addressLine2", input.addressLine2)
+    form.append("suburb", input.suburb)
+    form.append("postalCode", input.postalCode)
+    form.append("provinceId", String(input.provinceId))
+    if (input.amenityIds.length > 0)
+      form.append("amenityIds", input.amenityIds.join(","))
+    if (input.ruleIds.length > 0) form.append("ruleIds", input.ruleIds.join(","))
+    images.forEach((file) => form.append("images", file))
+
     const res = await fetch(
       `${API_BASE_URL}/api/users/${userId}/listings/${listingId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: input.title,
-          description: input.description,
-          typeId: input.typeId,
-          price: input.price,
-          deposit: input.deposit,
-          beds: input.beds,
-          baths: input.baths,
-          availableFrom: input.availableFrom,
-          responseTime: input.responseTime,
-          addressLine1: input.addressLine1,
-          addressLine2: input.addressLine2,
-          suburb: input.suburb,
-          postalCode: input.postalCode,
-          provinceId: input.provinceId,
-          amenityIds: input.amenityIds,
-          ruleIds: input.ruleIds,
-        }),
-      }
+      { method: "PUT", body: form }
     )
     if (!res.ok) throw new Error(`Failed to update listing (${res.status})`)
     const data: ListingDetailDto = await res.json()

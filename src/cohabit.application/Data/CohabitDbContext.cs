@@ -282,6 +282,7 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.Property(m => m.Content).HasColumnName("content").IsRequired();
             entity.Property(m => m.IsRead).HasColumnName("is_read");
             entity.Property(m => m.Timestamp).HasColumnName("timestamp");
+            entity.Property(m => m.ImagePaths).HasColumnName("image_paths");
 
             entity.HasOne(m => m.Conversation)
                 .WithMany(c => c.Messages)

@@ -12,6 +12,7 @@ public interface IMessagingAccessor
         string title,
         string content,
         Guid? listingId = null,
+        IEnumerable<string>? imagePaths = null,
         CancellationToken ct = default);
 
     Task MarkReadAsync(Guid userId, Guid messageId, CancellationToken ct = default);

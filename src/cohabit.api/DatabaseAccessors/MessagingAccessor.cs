@@ -26,6 +26,7 @@ public sealed class MessagingAccessor(CohabitDbContext dbContext) : IMessagingAc
         string title,
         string content,
         Guid? listingId = null,
+        IEnumerable<string>? imagePaths = null,
         CancellationToken ct = default)
     {
         await EnsureUserExistsAsync(userId, ct);
@@ -48,7 +49,7 @@ public sealed class MessagingAccessor(CohabitDbContext dbContext) : IMessagingAc
             dbContext.Conversations.Add(conversation);
         }
 
-        var message = Message.Create(conversation.Id, senderUserId, title, content);
+        var message = Message.Create(conversation.Id, senderUserId, title, content, imagePaths);
         dbContext.Messages.Add(message);
         await dbContext.SaveChangesAsync(ct);
 

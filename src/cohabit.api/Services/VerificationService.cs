@@ -8,6 +8,7 @@ namespace cohabit.api.Services;
 public sealed class VerificationService(
     IUserVerificationAccessor verificationAccessor,
     IIdDocumentStorage idDocumentStorage,
+    ISystemMessagingService messagingService,
     ILogger<VerificationService> logger) : IVerificationService
 {
     public const long MaxUploadSizeBytes = 8 * 1024 * 1024; // 8 MB
@@ -44,7 +45,44 @@ public sealed class VerificationService(
         logger.LogInformation("User {UserId} submitted {DocumentType} for verification ({VerificationId})",
             userId, documentType, verification.Id);
 
+        await NotifySubmissionAsync(userId, verificationType.Name, verification.Id,
+            [frontPath, .. backPath is null ? [] : new[] { backPath }], ct);
+
         return await ToDtoAsync(verification, ct);
+    }
+
+    /// <summary>
+    /// Sends the user an in-app message confirming their submission, with the
+    /// uploaded document images attached. Best-effort: a messaging failure must
+    /// not fail an already-persisted submission.
+    /// </summary>
+    private async Task NotifySubmissionAsync(
+        Guid userId,
+        string documentTypeName,
+        Guid verificationId,
+        IReadOnlyList<string> imagePaths,
+        CancellationToken ct)
+    {
+        try
+        {
+            var content =
+                $"We received your {documentTypeName.ToLowerInvariant()} photos and they are now awaiting review by our team. "
+                + "You can check the status any time under Profile > Verify Your Identity. "
+                + "We'll message you here as soon as a decision has been made.";
+
+            await messagingService.SendAsync(
+                userId,
+                "ID Verification Submitted",
+                content,
+                imagePaths: imagePaths,
+                ct: ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex,
+                "Failed to send submission confirmation message to user {UserId} for verification {VerificationId}",
+                userId, verificationId);
+        }
     }
 
     public async Task<IReadOnlyList<UserVerificationDto>> GetMineAsync(Guid userId, CancellationToken ct = default)

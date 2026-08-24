@@ -23,6 +23,16 @@ public interface IListingAccessor
 
     Task DeleteAsync(Guid listingId, Guid ownerUserId, CancellationToken ct = default);
 
+    /// <summary>
+    ///     Appends images to an existing listing. The first image becomes the
+    ///     primary one only when the listing has no images yet.
+    /// </summary>
+    Task AddImagesAsync(
+        Guid listingId,
+        Guid ownerUserId,
+        IReadOnlyList<ResolvedImage> images,
+        CancellationToken ct = default);
+
     Task<IReadOnlyDictionary<string, string>> FindImageUrlsBySha256Async(
         IReadOnlyCollection<string> sha256Hashes,
         CancellationToken ct = default);

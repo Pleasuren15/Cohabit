@@ -19,6 +19,8 @@ export interface SystemMessageDto {
   content: string
   isRead: boolean
   timestamp: string
+  /** Short-lived URLs of images attached to the message (e.g. ID documents). */
+  imageUrls?: string[] | null
 }
 
 /** A thread of related messages sharing one conversation (e.g. about a listing). */
@@ -71,13 +73,61 @@ export function groupMessages(messages: SystemMessageDto[]): MessageThread[] {
     )
 }
 
+const MOCK_STORE_KEY = "cohabit:mock-messages"
+
+function readMockStore(): SystemMessageDto[] {
+  try {
+    const raw = localStorage.getItem(MOCK_STORE_KEY)
+    if (raw) return JSON.parse(raw) as SystemMessageDto[]
+  } catch {
+    // Ignore storage failures and fall back to the seed set.
+  }
+  return MOCK_MESSAGES
+}
+
+/**
+ * Mock-mode only: appends a system message to the local store so flows like
+ * ID verification can demo their in-app notifications.
+ */
+export function appendMockSystemMessage(
+  message: Omit<SystemMessageDto, "id" | "conversationId" | "isRead"> & {
+    id?: string
+    conversationId?: string
+  }
+): void {
+  try {
+    const stored = readMockStore()
+    const full: SystemMessageDto = {
+      ...message,
+      id: message.id ?? crypto.randomUUID(),
+      conversationId: message.conversationId ?? crypto.randomUUID(),
+      isRead: false,
+    }
+    localStorage.setItem(
+      MOCK_STORE_KEY,
+      JSON.stringify([full, ...stored])
+    )
+  } catch {
+    // Storage unavailable — mock notification is simply dropped.
+  }
+}
+
 /** Mock implementation: returns the sample thread set. */
 class MockMessagesService implements MessagesService {
   async loadMessages(_userId: string): Promise<SystemMessageDto[]> {
-    return MOCK_MESSAGES
+    return readMockStore()
   }
 
-  async markRead(_userId: string, _messageId: string): Promise<void> {}
+  async markRead(_userId: string, messageId: string): Promise<void> {
+    try {
+      const stored = readMockStore().map((m) =>
+        m.id === messageId ? { ...m, isRead: true } : m
+      )
+      localStorage.setItem(MOCK_STORE_KEY, JSON.stringify(stored))
+    } catch {
+      // Ignore.
+    }
+  }
 }
 
 /** Persists to the Cohabit API. */

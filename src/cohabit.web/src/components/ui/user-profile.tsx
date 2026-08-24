@@ -33,6 +33,12 @@ import {
   ruleNameToId,
 } from "@/services/listing-service"
 import type { Inquiry, InquiryStatus } from "@/services/inquiries-service"
+import {
+  hasPendingSubmission,
+  verificationService,
+  type VerificationSubmission,
+} from "@/services/verification-service"
+import { IdVerificationDialog } from "./id-verification-dialog"
 import { AMENITIES, AMENITY_NAMES } from "@/lib/amenities"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 import { EditProfile, type ProfileData } from "./edit-profile"
@@ -174,6 +180,9 @@ export function UserProfile({
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false)
   const [activeMissingStep, setActiveMissingStep] = useState<string | null>(null)
+  // Real ID-document verification state, backed by the Cohabit API.
+  const [idSubmissions, setIdSubmissions] = useState<VerificationSubmission[]>([])
+  const [showIdVerification, setShowIdVerification] = useState(false)
   // Opens immediately when the parent triggered a "List your space" request
   // (signal increments) and this component mounts on the Profile tab.
   const [showNewListing, setShowNewListing] = useState(
@@ -251,6 +260,35 @@ export function UserProfile({
   }
 
   const fullName = `${user.firstName} ${user.lastName}`
+
+  // Load the caller's verification submissions once on mount.
+  useEffect(() => {
+    let cancelled = false
+    verificationService
+      .getMyVerifications()
+      .then((submissions) => {
+        if (!cancelled) setIdSubmissions(submissions)
+      })
+      .catch(() => {
+        // Verification is optional; a failed load just leaves the chips off.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleIdSubmitted = useCallback((submission: VerificationSubmission) => {
+    setIdSubmissions((prev) => [submission, ...prev])
+  }, [])
+
+  // The ID chip reflects the real review outcome from the API; phone/email
+  // stay driven by the parent (Supabase/local state).
+  const displayVerified = useMemo(() => {
+    const withoutId = verified.filter((v) => v !== "id")
+    const idApproved = idSubmissions.some((s) => s.status === "Approved")
+    return idApproved ? [...withoutId, "id" as const] : withoutId
+  }, [verified, idSubmissions])
+  const idPending = hasPendingSubmission(idSubmissions)
 
   // Profile-completeness: every missing detail is a step towards a fully set-up
   // account. Progress reflects how far the profile is from being complete.
@@ -670,7 +708,8 @@ export function UserProfile({
 
         <div className="flex flex-wrap gap-2 p-5">
           {ALL_VERIFICATIONS.map((v) => {
-            const isVerified = verified.includes(v.key)
+            const isVerified = displayVerified.includes(v.key)
+            const isPending = v.key === "id" && idPending && !isVerified
             const Icon = v.icon
             return (
               <span
@@ -678,12 +717,18 @@ export function UserProfile({
                 className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-medium ${
                   isVerified
                     ? VERIFIED_CHIP_TONES[v.key]
-                    : "bg-white/5 text-white/50"
+                    : isPending
+                      ? "bg-amber-500/15 text-amber-300"
+                      : "bg-white/5 text-white/50"
                 }`}
               >
                 <Icon className="size-3.5" />
                 {v.label}
-                {isVerified && <BadgeCheck className="size-3" />}
+                {isVerified ? (
+                  <BadgeCheck className="size-3" />
+                ) : isPending ? (
+                  <Clock className="size-3" />
+                ) : null}
               </span>
             )
           })}
@@ -1243,13 +1288,19 @@ export function UserProfile({
 
               <div className="space-y-2">
                 {ALL_VERIFICATIONS.map((v) => {
-                  const isVerified = verified.includes(v.key)
+                  const isVerified = displayVerified.includes(v.key)
                   const Icon = v.icon
                   return (
                     <button
                       key={v.key}
                       type="button"
                       onClick={() => {
+                        if (v.key === "id") {
+                          // Real flow: upload ID pictures for admin review.
+                          setShowVerifyDialog(false)
+                          setShowIdVerification(true)
+                          return
+                        }
                         onVerify(v.key)
                         setShowVerifyDialog(false)
                       }}
@@ -1272,7 +1323,11 @@ export function UserProfile({
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">{v.label} Verification</p>
                         <p className="text-xs text-muted-foreground">
-                          {isVerified ? "Verified" : `Verify your ${v.label.toLowerCase()}`}
+                          {isVerified
+                            ? "Verified"
+                            : v.key === "id"
+                              ? "Upload ID photos for review"
+                              : `Verify your ${v.label.toLowerCase()}`}
                         </p>
                       </div>
                       {isVerified && (
@@ -1286,6 +1341,14 @@ export function UserProfile({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ID Document Verification — capture + submit for manual review */}
+      <IdVerificationDialog
+        open={showIdVerification}
+        onClose={() => setShowIdVerification(false)}
+        submissions={idSubmissions}
+        onSubmitted={handleIdSubmitted}
+      />
     </div>
   )
 }
