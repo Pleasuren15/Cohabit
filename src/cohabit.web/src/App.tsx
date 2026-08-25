@@ -98,6 +98,7 @@ import { Routes, Route, useNavigate, useParams } from "react-router-dom"
 import { AppProvider, useApp } from "@/context/app-context"
 import { useUnfavoriteConfirm } from "@/components/ui/unfavorite-confirm"
 import { HowCohabitWorks } from "@/components/ui/how-cohabit-works"
+import { FeaturesBento } from "@/components/ui/features-bento"
 import { ContractGenerator } from "@/components/ui/contract-generator"
 
 export { FEATURED_PROFILES }
@@ -1363,6 +1364,11 @@ function MainApp({
                           <HowCohabitWorks />
                         </div>
                       </section>
+                    </Reveal>
+
+                    {/* Band 1.5 — Why Cohabit (bento grid) */}
+                    <Reveal className="w-full">
+                      <FeaturesBento />
                     </Reveal>
 
                     {/* Band 2 — Trust & Safety */}
