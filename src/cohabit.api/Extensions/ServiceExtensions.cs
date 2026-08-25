@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
+using Amazon.S3;
 using cohabit.api.DatabaseAccessors;
 using cohabit.api.Helpers;
 using cohabit.api.Infrastructure;
@@ -10,6 +11,7 @@ using cohabit.application.Data.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Resend;
 
 namespace cohabit.api.Extensions;
@@ -86,6 +88,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IListingAccessor, ListingAccessor>();
         builder.Services.AddScoped<IProvinceAccessor, ProvinceAccessor>();
         builder.Services.AddScoped<IUserAccessor, UserAccessor>();
+        builder.Services.AddScoped<IUserVerificationAccessor, UserVerificationAccessor>();
         builder.Services.AddScoped<IAddressAccessor, AddressAccessor>();
         builder.Services.AddScoped<IWatchListAccessor, WatchListAccessor>();
         builder.Services.AddScoped<IMessagingAccessor, MessagingAccessor>();
@@ -96,6 +99,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IWatchListService, WatchListService>();
         builder.Services.AddScoped<ISystemMessagingService, SystemMessagingService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IVerificationService, VerificationService>();
         builder.Services.AddScoped<IReportService, ReportService>();
         builder.Services.AddScoped<IReportEmailSender, ResendReportEmailSender>();
         builder.Services.Configure<ReportOptions>(builder.Configuration.GetSection(ReportOptions.SectionName));
@@ -111,9 +115,37 @@ public static class ServiceExtensions
         builder.Services.AddScoped<LookupSeedManager>();
 
         builder.AddNpgsqlDbContext<CohabitDbContext>("cohabit-db");
-        builder.AddAzureBlobServiceClient("cohabit-images");
 
+        // Two object stores run side by side:
+        //   - IImageStorage      -> public listing images on Azure Blob
+        //   - IIdDocumentStorage -> private ID verification images on S3
+        //     (LocalStack container locally via the Aspire AppHost, AWS in prod).
+        builder.AddAzureBlobServiceClient("cohabit-images");
         builder.Services.AddSingleton<IImageStorage, BlobImageStorage>();
+
+        builder.Services.Configure<S3StorageOptions>(
+            builder.Configuration.GetSection(S3StorageOptions.SectionName));
+        builder.Services.AddSingleton<IAmazonS3>(sp =>
+        {
+            var s3Options = sp.GetRequiredService<IOptions<S3StorageOptions>>().Value;
+            var s3Config = new AmazonS3Config
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(
+                    string.IsNullOrWhiteSpace(s3Options.Region) ? "us-east-1" : s3Options.Region)
+            };
+            if (!string.IsNullOrWhiteSpace(s3Options.ServiceUrl))
+            {
+                s3Config.ServiceURL = s3Options.ServiceUrl;
+                // LocalStack & co. are addressed path-style over plain http.
+                s3Config.ForcePathStyle = true;
+                s3Config.UseHttp = s3Options.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+            }
+            return string.IsNullOrWhiteSpace(s3Options.AccessKey)
+                ? new AmazonS3Client(s3Config)
+                : new AmazonS3Client(s3Options.AccessKey, s3Options.SecretKey, s3Config);
+        });
+        builder.Services.AddSingleton<S3ImageStorage>();
+        builder.Services.AddSingleton<IIdDocumentStorage>(sp => sp.GetRequiredService<S3ImageStorage>());
 
         return builder;
     }

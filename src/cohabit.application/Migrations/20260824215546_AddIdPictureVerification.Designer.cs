@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using cohabit.application.Data;
@@ -11,9 +12,11 @@ using cohabit.application.Data;
 namespace cohabit.application.Migrations
 {
     [DbContext(typeof(CohabitDbContext))]
-    partial class CohabitDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824215546_AddIdPictureVerification")]
+    partial class AddIdPictureVerification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -305,10 +308,6 @@ namespace cohabit.application.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("conversation_id");
 
-                    b.Property<string>("ImagePaths")
-                        .HasColumnType("text")
-                        .HasColumnName("image_paths");
-
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean")
                         .HasColumnName("is_read");
@@ -463,10 +462,6 @@ namespace cohabit.application.Migrations
                     b.Property<Guid?>("ReviewedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("reviewed_by_user_id");
-
-                    b.Property<string>("SelfieImagePath")
-                        .HasColumnType("text")
-                        .HasColumnName("selfie_image_path");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer")

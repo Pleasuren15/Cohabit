@@ -33,6 +33,12 @@ import {
   ruleNameToId,
 } from "@/services/listing-service"
 import type { Inquiry, InquiryStatus } from "@/services/inquiries-service"
+import {
+  hasPendingSubmission,
+  verificationService,
+  type VerificationSubmission,
+} from "@/services/verification-service"
+import { IdVerificationDialog } from "./id-verification-dialog"
 import { AMENITIES, AMENITY_NAMES } from "@/lib/amenities"
 import { MinimalCarousel, type CarouselCard } from "./minimal-carousel"
 import { EditProfile, type ProfileData } from "./edit-profile"
@@ -168,6 +174,9 @@ export function UserProfile({
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false)
   const [activeMissingStep, setActiveMissingStep] = useState<string | null>(null)
+  // Real ID-document verification state, backed by the Cohabit API.
+  const [idSubmissions, setIdSubmissions] = useState<VerificationSubmission[]>([])
+  const [showIdVerification, setShowIdVerification] = useState(false)
   // Opens immediately when the parent triggered a "List your space" request
   // (signal increments) and this component mounts on the Profile tab.
   const [showNewListing, setShowNewListing] = useState(
@@ -245,6 +254,35 @@ export function UserProfile({
   }
 
   const fullName = `${user.firstName} ${user.lastName}`
+
+  // Load the caller's verification submissions once on mount.
+  useEffect(() => {
+    let cancelled = false
+    verificationService
+      .getMyVerifications()
+      .then((submissions) => {
+        if (!cancelled) setIdSubmissions(submissions)
+      })
+      .catch(() => {
+        // Verification is optional; a failed load just leaves the chips off.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleIdSubmitted = useCallback((submission: VerificationSubmission) => {
+    setIdSubmissions((prev) => [submission, ...prev])
+  }, [])
+
+  // The ID chip reflects the real review outcome from the API; phone/email
+  // stay driven by the parent (Supabase/local state).
+  const displayVerified = useMemo(() => {
+    const withoutId = verified.filter((v) => v !== "id")
+    const idApproved = idSubmissions.some((s) => s.status === "Approved")
+    return idApproved ? [...withoutId, "id" as const] : withoutId
+  }, [verified, idSubmissions])
+  const idPending = hasPendingSubmission(idSubmissions)
 
   // Profile-completeness: every missing detail is a step towards a fully set-up
   // account. Progress reflects how far the profile is from being complete.
@@ -673,7 +711,8 @@ export function UserProfile({
 
         <div className="grid grid-cols-3 gap-2">
           {ALL_VERIFICATIONS.map((v) => {
-            const isVerified = verified.includes(v.key)
+            const isVerified = displayVerified.includes(v.key)
+            const isPending = v.key === "id" && idPending && !isVerified
             const Icon = v.icon
             return (
               <button
@@ -684,7 +723,9 @@ export function UserProfile({
                 className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition-colors ${
                   isVerified
                     ? `border-transparent ${v.bgColor} ${v.color}`
-                    : "border-dashed border-border/70 bg-background text-muted-foreground hover:border-accent/40 hover:text-accent"
+                    : isPending
+                      ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "border-dashed border-border/70 bg-background text-muted-foreground hover:border-accent/40 hover:text-accent"
                 }`}
               >
                 <Icon className="size-4" />
@@ -692,6 +733,8 @@ export function UserProfile({
                   {v.label}
                   {isVerified ? (
                     <BadgeCheck className="size-3" />
+                  ) : isPending ? (
+                    <Clock className="size-3" />
                   ) : (
                     <Plus className="size-3 opacity-60" />
                   )}
@@ -1255,13 +1298,19 @@ export function UserProfile({
 
               <div className="space-y-2">
                 {ALL_VERIFICATIONS.map((v) => {
-                  const isVerified = verified.includes(v.key)
+                  const isVerified = displayVerified.includes(v.key)
                   const Icon = v.icon
                   return (
                     <button
                       key={v.key}
                       type="button"
                       onClick={() => {
+                        if (v.key === "id") {
+                          // Real flow: upload ID pictures for admin review.
+                          setShowVerifyDialog(false)
+                          setShowIdVerification(true)
+                          return
+                        }
                         onVerify(v.key)
                         setShowVerifyDialog(false)
                       }}
@@ -1284,7 +1333,11 @@ export function UserProfile({
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">{v.label} Verification</p>
                         <p className="text-xs text-muted-foreground">
-                          {isVerified ? "Verified" : `Verify your ${v.label.toLowerCase()}`}
+                          {isVerified
+                            ? "Verified"
+                            : v.key === "id"
+                              ? "Upload ID photos for review"
+                              : `Verify your ${v.label.toLowerCase()}`}
                         </p>
                       </div>
                       {isVerified && (
@@ -1298,6 +1351,14 @@ export function UserProfile({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ID Document Verification — capture + submit for manual review */}
+      <IdVerificationDialog
+        open={showIdVerification}
+        onClose={() => setShowIdVerification(false)}
+        submissions={idSubmissions}
+        onSubmitted={handleIdSubmitted}
+      />
     </div>
   )
 }

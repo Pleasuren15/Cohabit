@@ -231,6 +231,18 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.Property(uv => uv.VerificationTypeId).HasColumnName("verification_type_id").IsRequired();
             entity.Property(uv => uv.IsVerified).HasColumnName("is_verified");
             entity.Property(uv => uv.Timestamp).HasColumnName("timestamp");
+            entity.Property(uv => uv.Status).HasColumnName("status");
+            entity.Property(uv => uv.FrontImagePath).HasColumnName("front_image_path");
+            entity.Property(uv => uv.BackImagePath).HasColumnName("back_image_path");
+            entity.Property(uv => uv.SelfieImagePath).HasColumnName("selfie_image_path");
+            entity.Property(uv => uv.ReviewedByUserId).HasColumnName("reviewed_by_user_id");
+            entity.Property(uv => uv.ReviewedAt).HasColumnName("reviewed_at");
+            entity.Property(uv => uv.RejectionReason).HasColumnName("rejection_reason");
+
+            // At most one open (pending) submission per user and document type.
+            entity.HasIndex(uv => new { uv.UserId, uv.VerificationTypeId })
+                .HasFilter("\"status\" = 0")
+                .HasDatabaseName("ux_user_verifications_open_submission");
 
             entity.HasOne(uv => uv.User)
                 .WithMany(u => u.UserVerifications)
@@ -271,6 +283,7 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.Property(m => m.Content).HasColumnName("content").IsRequired();
             entity.Property(m => m.IsRead).HasColumnName("is_read");
             entity.Property(m => m.Timestamp).HasColumnName("timestamp");
+            entity.Property(m => m.ImagePaths).HasColumnName("image_paths");
 
             entity.HasOne(m => m.Conversation)
                 .WithMany(c => c.Messages)

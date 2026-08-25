@@ -461,7 +461,7 @@ export function DetailPage({
               </button>
             </div>
 
-            <span className="absolute bottom-16 left-5 z-10 rounded-lg bg-accent px-2.5 py-1 text-sm font-bold text-white shadow-lg">
+            <span className="absolute bottom-16 left-5 z-10 rounded-lg bg-stone-900/95 px-2.5 py-1 text-sm font-bold text-white shadow-lg">
               {formatPrice(listing.price)}
               <span className="text-[10px] font-medium text-white/80">
                 {" "}

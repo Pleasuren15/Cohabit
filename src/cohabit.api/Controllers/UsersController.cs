@@ -70,16 +70,19 @@ public class UsersController(
     }
 
     /// <summary>
-    ///     Update a listing owned by the user. Images are left untouched.
+    ///     Update a listing owned by the user. Accepts multipart form data so new
+    ///     photos can be attached; their bytes are uploaded to blob storage and
+    ///     deduplicated by sha256. Existing images are kept.
     /// </summary>
     [HttpPut("{userId:guid}/listings/{listingId:guid}")]
     public async Task<ActionResult<ListingDetailDto>> Update(
         Guid userId,
         Guid listingId,
-        [FromBody] UpdateListingRequest request,
+        [FromForm] UpdateListingRequest request,
+        [FromForm] IReadOnlyList<IFormFile>? images,
         CancellationToken ct = default)
     {
-        var listing = await listingService.UpdateAsync(userId, listingId, request, ct);
+        var listing = await listingService.UpdateAsync(userId, listingId, request, images, ct);
         return Ok(listing);
     }
 

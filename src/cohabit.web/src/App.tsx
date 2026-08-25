@@ -813,7 +813,8 @@ function MainApp({
         const updated = await listingService.updateListing(
           currentUser.id,
           listingId,
-          input
+          input,
+          data.files
         )
         setUserListings((prev) => [
           updated,
@@ -2477,6 +2478,26 @@ function MessageDetailPage() {
                           <p className="mt-1 text-sm text-foreground/90">
                             {m.content}
                           </p>
+                          {m.imageUrls && m.imageUrls.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {m.imageUrls.map((url) => (
+                                <a
+                                  key={url}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="block"
+                                >
+                                  <img
+                                    src={url}
+                                    alt="Document submitted for verification"
+                                    loading="lazy"
+                                    className="h-28 w-28 rounded-lg border border-border object-cover transition-opacity hover:opacity-90"
+                                  />
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </MessageContent>
                     </Message>

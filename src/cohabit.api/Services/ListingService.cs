@@ -67,10 +67,25 @@ public sealed class ListingService(
         Guid userId,
         Guid listingId,
         UpdateListingRequest request,
+        IReadOnlyList<IFormFile>? images = null,
         CancellationToken ct = default)
     {
+        // Field update first — it also proves ownership before any bytes are
+        // written to blob storage.
         var oldPrice = await listingAccessor.GetPriceAsync(listingId, ct);
         var listing = await listingAccessor.UpdateAsync(listingId, userId, request, ct);
+
+        if (images is { Count: > 0 })
+        {
+            // New photos are appended; an existing primary image is kept.
+            var resolved = await ResolveUploadsAsync(images, primaryIndex: 0, ct);
+            await listingAccessor.AddImagesAsync(listingId, userId, resolved, ct);
+            logger.LogInformation("Appended {Count} image(s) to listing {ListingId}", resolved.Count, listingId);
+
+            // Re-read so the returned detail includes the new photos.
+            listing = (await listingAccessor.GetByIdAsync(listingId, ct))!;
+        }
+
         logger.LogInformation("Updated listing {ListingId} for user {UserId}", listing.Id, userId);
 
         if (listing.Price < oldPrice)
@@ -100,29 +115,8 @@ public sealed class ListingService(
         IReadOnlyList<IFormFile> images,
         CancellationToken ct = default)
     {
-        var inputs = await Task.WhenAll(images.Select(file => ReadImageAsync(file, ct)));
-        var hashes = inputs.Select(i => i.Sha256).Distinct().ToList();
-
-        var resolvedUrls = new Dictionary<string, string>(await listingAccessor.FindImageUrlsBySha256Async(hashes, ct));
-
-        var resolved = new List<ResolvedImage>();
         var primaryIndex = request.PrimaryImageIndex ?? 0;
-
-        for (var index = 0; index < inputs.Length; index++)
-        {
-            var input = inputs[index];
-
-            if (resolvedUrls.TryGetValue(input.Sha256, out var url))
-            {
-                logger.LogInformation("Reusing existing image {Sha256} at {Url}", input.Sha256, url);
-                resolved.Add(new ResolvedImage(url, input.Sha256, index == primaryIndex));
-                continue;
-            }
-
-            url = await imageStorage.UploadAsync(input.FileName, input.Content, input.ContentType, ct);
-            resolvedUrls[input.Sha256] = url;
-            resolved.Add(new ResolvedImage(url, input.Sha256, index == primaryIndex));
-        }
+        var resolved = await ResolveUploadsAsync(images, primaryIndex, ct);
 
         var listing = await listingAccessor.CreateAsync(request, resolved, ct);
         logger.LogInformation("Created listing {ListingId} for user {UserId}", listing.Id, listing.UserId);
@@ -144,6 +138,41 @@ public sealed class ListingService(
         cache.RemoveByPrefix(CacheKeys.ListingBrowsePrefix);
         cache.Remove(CacheKeys.UserListings(userId));
         cache.Remove(CacheKeys.ListingDetail(listingId));
+    }
+
+    /// <summary>
+    ///     Reads, hashes and uploads image bytes. Images whose sha256 already
+    ///     exists in the database reuse the stored URL instead of re-uploading.
+    /// </summary>
+    private async Task<List<ResolvedImage>> ResolveUploadsAsync(
+        IReadOnlyList<IFormFile> images,
+        int primaryIndex,
+        CancellationToken ct)
+    {
+        var inputs = await Task.WhenAll(images.Select(file => ReadImageAsync(file, ct)));
+        var hashes = inputs.Select(i => i.Sha256).Distinct().ToList();
+
+        var resolvedUrls = new Dictionary<string, string>(await listingAccessor.FindImageUrlsBySha256Async(hashes, ct));
+
+        var resolved = new List<ResolvedImage>(inputs.Length);
+        for (var index = 0; index < inputs.Length; index++)
+        {
+            var input = inputs[index];
+
+            if (resolvedUrls.TryGetValue(input.Sha256, out var url))
+            {
+                logger.LogInformation("Reusing existing image {Sha256} at {Url}", input.Sha256, url);
+            }
+            else
+            {
+                url = await imageStorage.UploadAsync(input.FileName, input.Content, input.ContentType, ct);
+                resolvedUrls[input.Sha256] = url;
+            }
+
+            resolved.Add(new ResolvedImage(url, input.Sha256, index == primaryIndex));
+        }
+
+        return resolved;
     }
 
     private static async Task<ImageInput> ReadImageAsync(IFormFile file, CancellationToken ct = default)

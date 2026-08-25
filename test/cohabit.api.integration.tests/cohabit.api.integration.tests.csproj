@@ -18,6 +18,7 @@
         <PackageReference Include="NUnit3TestAdapter" Version="5.0.0"/>
         <PackageReference Include="Testcontainers" Version="4.13.0"/>
         <PackageReference Include="Testcontainers.Azurite" Version="4.13.0"/>
+        <PackageReference Include="Testcontainers.LocalStack" Version="4.13.0"/>
         <PackageReference Include="Testcontainers.PostgreSql" Version="4.13.0"/>
     </ItemGroup>
 

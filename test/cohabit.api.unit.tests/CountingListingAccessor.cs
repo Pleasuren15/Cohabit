@@ -55,6 +55,15 @@ internal sealed class CountingListingAccessor(IListingAccessor inner) : IListing
         await inner.DeleteAsync(listingId, ownerUserId, ct);
     }
 
+    public Task AddImagesAsync(
+        Guid listingId,
+        Guid ownerUserId,
+        IReadOnlyList<ResolvedImage> images,
+        CancellationToken ct = default)
+    {
+        return inner.AddImagesAsync(listingId, ownerUserId, images, ct);
+    }
+
     public Task<IReadOnlyDictionary<string, string>> FindImageUrlsBySha256Async(
         IReadOnlyCollection<string> sha256Hashes,
         CancellationToken ct = default)

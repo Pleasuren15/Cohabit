@@ -53,6 +53,7 @@ images [color: yellow, icon: image] {
   id uuid pk
   listing_id uuid fk
   url string
+  sha256 string
   is_primary boolean
   timestamp date
 }
@@ -86,16 +87,23 @@ listing_rules [color: amber, icon: link] {
 }
 
 verification_types [color: cyan, icon: check] {
-  id uuid pk
+  id int pk
   name string
 }
 
 user_verifications [color: cyan, icon: badge] {
   id uuid pk
   user_id uuid fk
-  verification_type_id uuid fk
+  verification_type_id int fk
   is_verified boolean
   timestamp datetime
+  status int
+  front_image_path string
+  back_image_path string
+  selfie_image_path string
+  reviewed_by_user_id uuid fk
+  reviewed_at datetime
+  rejection_reason string
 }
 
 conversations [color: pink, icon: chat] {
@@ -110,9 +118,11 @@ messages [color: pink, icon: message] {
   id uuid pk
   conversation_id uuid fk
   sender_user_id uuid fk
+  title string
   content text
   is_read boolean
   timestamp datetime
+  image_paths string
 }
 
 provinces.id < addresses.province_id

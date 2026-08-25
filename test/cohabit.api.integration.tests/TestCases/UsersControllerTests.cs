@@ -2,7 +2,10 @@ using AwesomeAssertions;
 using cohabit.api.Contracts;
 using cohabit.api.integration.tests.Helpers;
 using cohabit.api.integration.tests.Infrastructure;
+using cohabit.application.Data;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace cohabit.api.integration.tests.TestCases;
@@ -10,6 +13,12 @@ namespace cohabit.api.integration.tests.TestCases;
 [TestFixture]
 public class UsersControllerTests : ApiTestBase
 {
+    private static readonly byte[] PngBytes =
+    [
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52
+    ];
+
     [Test]
     public async Task Given_ValidRequest_When_CreateIsInvoked_Then_ReturnsCreatedUser()
     {
@@ -201,6 +210,65 @@ public class UsersControllerTests : ApiTestBase
         var listings = await response.Content.ReadFromJsonAsync<List<ListingSummaryDto>>();
         listings.Should().ContainSingle().Which.Id.Should().Be(bobListing.Id);
         listings.Single().Title.Should().Be("Bob's apartment");
+    }
+
+    [Test]
+    public async Task Given_NewImage_When_UpdateListingIsInvoked_Then_AppendsUploadedImage()
+    {
+        // Arrange
+        var owner = await Data.CreateUserAsync();
+        var listing = await Data.CreateListingAsync(owner);
+        var province = await Data.ProvinceByNameAsync("Western Cape");
+        var type = await Data.ListingTypeByNameAsync("Room");
+
+        var form = BuildUpdateForm(type.Id, province.Id);
+        var png = new ByteArrayContent(PngBytes);
+        png.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        form.Add(png, "images", "room.png");
+
+        // Act
+        var response = await Client.PutAsync(
+            $"/api/users/{owner.Id}/listings/{listing.Id}", form);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var detail = await response.Content.ReadFromJsonAsync<ListingDetailDto>();
+        detail!.Images.Should().HaveCount(1);
+        detail.Images[0].Should().NotBeNullOrWhiteSpace();
+
+        await using var db = TestDbContext.Create();
+        var imageRows = await db.Images.Where(i => i.ListingId == listing.Id).ToListAsync();
+        imageRows.Should().ContainSingle();
+        imageRows[0].IsPrimary.Should().BeTrue();
+
+        // A second update without images must leave the photos untouched.
+        var second = await Client.PutAsync(
+            $"/api/users/{owner.Id}/listings/{listing.Id}",
+            BuildUpdateForm(type.Id, province.Id));
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+        var secondDetail = await second.Content.ReadFromJsonAsync<ListingDetailDto>();
+        secondDetail!.Images.Should().HaveCount(1);
+    }
+
+    private static MultipartFormDataContent BuildUpdateForm(int typeId, int provinceId)
+    {
+        return new MultipartFormDataContent
+        {
+            { new StringContent("Updated room"), "title" },
+            { new StringContent("Freshly updated description"), "description" },
+            { new StringContent(typeId.ToString()), "typeId" },
+            { new StringContent("7000"), "price" },
+            { new StringContent("7000"), "deposit" },
+            { new StringContent("2"), "beds" },
+            { new StringContent("1"), "baths" },
+            { new StringContent("2026-10-01"), "availableFrom" },
+            { new StringContent("Within the hour"), "responseTime" },
+            { new StringContent(""), "addressLine1" },
+            { new StringContent(""), "addressLine2" },
+            { new StringContent("Sea Point"), "suburb" },
+            { new StringContent("8005"), "postalCode" },
+            { new StringContent(provinceId.ToString()), "provinceId" }
+        };
     }
 
     [Test]

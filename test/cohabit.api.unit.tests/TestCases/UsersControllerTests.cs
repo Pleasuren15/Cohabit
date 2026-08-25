@@ -56,7 +56,7 @@ public class UsersControllerTests
         var request = UpdateRequest(data);
 
         // Act
-        var result = await controller.Update(data.Alice.Id, data.RoomListing.Id, request, CancellationToken.None);
+        var result = await controller.Update(data.Alice.Id, data.RoomListing.Id, request, images: null, ct: CancellationToken.None);
 
         // Assert
         var detail = Unwrap<ListingDetailDto>(result);
@@ -84,7 +84,7 @@ public class UsersControllerTests
         var (controller, _, data, _) = await CreateSystemUnderTestAsync();
 
         // Act & Assert
-        Func<Task> act = () => controller.Update(data.Bob.Id, data.RoomListing.Id, UpdateRequest(data), CancellationToken.None);
+        Func<Task> act = () => controller.Update(data.Bob.Id, data.RoomListing.Id, UpdateRequest(data), images: null, ct: CancellationToken.None);
         await act.Should().ThrowAsync<NotFoundException>()
             .Where(ex => ex.ErrorCode == "listing_not_found");
     }
@@ -96,7 +96,7 @@ public class UsersControllerTests
         var (controller, _, data, _) = await CreateSystemUnderTestAsync();
 
         // Act & Assert
-        Func<Task> act = () => controller.Update(data.Alice.Id, Guid.NewGuid(), UpdateRequest(data), CancellationToken.None);
+        Func<Task> act = () => controller.Update(data.Alice.Id, Guid.NewGuid(), UpdateRequest(data), images: null, ct: CancellationToken.None);
         await act.Should().ThrowAsync<NotFoundException>()
             .Where(ex => ex.ErrorCode == "listing_not_found");
     }

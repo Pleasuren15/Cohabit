@@ -15,6 +15,7 @@ public interface IListingService
         Guid userId,
         Guid listingId,
         UpdateListingRequest request,
+        IReadOnlyList<IFormFile>? images = null,
         CancellationToken ct = default);
 
     Task DeleteAsync(Guid userId, Guid listingId, CancellationToken ct = default);

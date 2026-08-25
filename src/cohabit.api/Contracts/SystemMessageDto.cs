@@ -9,4 +9,5 @@ public sealed record SystemMessageDto(
     string Title,
     string Content,
     bool IsRead,
-    DateTime Timestamp);
+    DateTime Timestamp,
+    IReadOnlyList<string>? ImageUrls = null);
