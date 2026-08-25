@@ -1,15 +1,15 @@
-"use client"
+
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { motion } from "motion/react"
+import { motion } from "framer-motion"
 import {
   X,
   Camera,
   Upload,
   BadgeCheck,
   Clock,
-  XCircle,
-  AlertTriangle,
+  CircleX,
+  TriangleAlert,
   ShieldCheck,
 } from "lucide-react"
 import {
@@ -48,7 +48,7 @@ const STATUS_META: Record<
   Rejected: {
     label: "Rejected",
     className: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
-    icon: XCircle,
+    icon: CircleX,
   },
 }
 
@@ -262,7 +262,7 @@ export function IdVerificationDialog({
 
             {error && (
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200/70 bg-red-50/70 p-3 text-xs text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-300">
-                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
                 {error}
               </div>
             )}
@@ -383,15 +383,11 @@ function CaptureField({
           {/* Touch devices open the rear camera natively via the capture attribute. */}
           <input
             {...sharedInputProps}
-            ref={cameraInputRef}
             aria-label={`Camera capture for ${label}`}
+            ref={cameraInputRef}
             capture={isCoarsePointer ? "environment" : undefined}
           />
-          <input
-            {...sharedInputProps}
-            ref={fileInputRef}
-            aria-label={`File upload for ${label}`}
-          />
+          <input {...sharedInputProps} ref={fileInputRef} aria-label={`File upload for ${label}`} />
 
           <div className="grid grid-cols-2 gap-2">
             <button

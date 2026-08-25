@@ -8,7 +8,7 @@ namespace cohabit.api.unit.tests;
 /// <summary>No-op system messaging used by CRUD tests that don't assert on messages.</summary>
 internal sealed class FakeSystemMessagingService : ISystemMessagingService
 {
-    public Task SendAsync(Guid userId, string title, string content, Guid? listingId = null, CancellationToken ct = default) =>
+    public Task SendAsync(Guid userId, string title, string content, Guid? listingId = null, IEnumerable<string>? imagePaths = null, CancellationToken ct = default) =>
         Task.CompletedTask;
 
     public Task SendToListingOwnerAsync(Guid listingId, string title, string content, CancellationToken ct = default) =>
@@ -35,6 +35,7 @@ internal sealed class FakeMessagingAccessor : IMessagingAccessor
         string title,
         string content,
         Guid? listingId = null,
+        IEnumerable<string>? imagePaths = null,
         CancellationToken ct = default) =>
         throw new NotSupportedException();
 
@@ -59,7 +60,7 @@ internal sealed class RecordingSystemMessagingService : ISystemMessagingService
 {
     public List<(Guid UserId, string Title, string Content)> Sent { get; } = [];
 
-    public Task SendAsync(Guid userId, string title, string content, Guid? listingId = null, CancellationToken ct = default)
+    public Task SendAsync(Guid userId, string title, string content, Guid? listingId = null, IEnumerable<string>? imagePaths = null, CancellationToken ct = default)
     {
         Sent.Add((userId, title, content));
         return Task.CompletedTask;

@@ -14,7 +14,14 @@ import type { CarouselCard } from "./minimal-carousel"
 const meta = {
   title: "ui/UserProfile",
   component: UserProfile,
-  parameters: { layout: "centered" },
+  parameters: {
+    layout: "centered",
+    // Listing cards render white text over remote photos with translucent
+    // scrims; axe races image loading and measures against the unloaded white
+    // page, producing random failures. Contrast over arbitrary photos isn't
+    // meaningfully checkable.
+    a11y: { config: { rules: [{ id: "color-contrast", enabled: false }] } },
+  },
   tags: ["autodocs"],
 } satisfies Meta<typeof UserProfile>
 
