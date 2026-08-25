@@ -85,6 +85,7 @@ export function IdVerificationDialog({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [webcamSlot, setWebcamSlot] = useState<CaptureSlot | null>(null)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
 
   const resetForm = useCallback(() => {
     setFrontImage(null)
@@ -253,14 +254,18 @@ export function IdVerificationDialog({
                 required
                 file={frontImage}
                 onChange={(file) => void acceptFile("front", file)}
+                onRemove={() => setFrontImage(null)}
                 onOpenCamera={() => setWebcamSlot("front")}
+                onPreviewClick={setLightboxUrl}
               />
               <CaptureField
                 slot="back"
                 label="Back of document (optional)"
                 file={backImage}
                 onChange={(file) => void acceptFile("back", file)}
+                onRemove={() => setBackImage(null)}
                 onOpenCamera={() => setWebcamSlot("back")}
+                onPreviewClick={setLightboxUrl}
               />
               <CaptureField
                 slot="selfie"
@@ -269,7 +274,9 @@ export function IdVerificationDialog({
                 facing="user"
                 file={selfieImage}
                 onChange={(file) => void acceptFile("selfie", file)}
+                onRemove={() => setSelfieImage(null)}
                 onOpenCamera={() => setWebcamSlot("selfie")}
+                onPreviewClick={setLightboxUrl}
               />
             </div>
 
@@ -323,6 +330,29 @@ export function IdVerificationDialog({
           />
         )}
       </motion.div>
+
+      {/* Full-size image lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxUrl(null)}
+            className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/30"
+            aria-label="Close preview"
+          >
+            <X className="size-5" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Full-size preview"
+            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </motion.div>
   )
 }
@@ -339,7 +369,9 @@ function CaptureField({
   facing = "environment",
   file,
   onChange,
+  onRemove,
   onOpenCamera,
+  onPreviewClick,
 }: {
   slot: CaptureSlot
   label: string
@@ -347,7 +379,9 @@ function CaptureField({
   facing?: "environment" | "user"
   file: File | null
   onChange: (file: File | null) => void
+  onRemove: () => void
   onOpenCamera: () => void
+  onPreviewClick: (url: string) => void
 }) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -381,14 +415,24 @@ function CaptureField({
 
       {previewUrl ? (
         <div className="relative overflow-hidden rounded-xl border border-border">
-          <img
-            src={previewUrl}
-            alt={`${slot} preview`}
-            className="max-h-44 w-full object-contain"
-          />
           <button
             type="button"
-            onClick={() => onChange(null)}
+            onClick={() => onPreviewClick(previewUrl)}
+            className="block w-full cursor-zoom-in"
+          >
+            <img
+              src={previewUrl}
+              alt={`${slot} preview`}
+              className="w-full object-contain"
+              style={{ maxHeight: "11rem" }}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemove()
+            }}
             className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[11px] font-medium shadow-sm transition-colors hover:bg-muted"
           >
             <X className="size-3" />

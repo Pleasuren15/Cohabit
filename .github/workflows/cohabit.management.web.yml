@@ -1,0 +1,68 @@
+name: Cohabit Management Web Continuous Integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/cohabit.management.web/**'
+      - 'test/cohabit.management.web.vite.tests/**'
+      - '.github/workflows/cohabit.management.web.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/cohabit.management.web/**'
+      - 'test/cohabit.management.web.vite.tests/**'
+      - '.github/workflows/cohabit.management.web.yml'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: src/cohabit.management.web
+        run: npm install
+
+      - name: Typecheck
+        working-directory: src/cohabit.management.web
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: src/cohabit.management.web
+        run: npm run build
+
+      - name: Run unit tests
+        working-directory: src/cohabit.management.web
+        run: npm run test
+
+      - name: Publish coverage
+        working-directory: src/cohabit.management.web
+        run: npm run coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cohabit-management-web-coverage
+          path: src/cohabit.management.web/coverage
+
+  security-scan:
+    needs: ci
+    uses: ./.github/workflows/docker-security-scan.yml
+    with:
+      image-name: cohabit-management-web
+      dockerfile: src/cohabit.management.web/Dockerfile
+
+  secret-scan:
+    needs: security-scan
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/gitleaks-scan.yml

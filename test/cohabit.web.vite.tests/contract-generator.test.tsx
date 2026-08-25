@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ContractGenerator } from "@/components/ui/contract-generator";
 
@@ -45,6 +45,17 @@ describe("ContractGenerator", () => {
       screen.getByPlaceholderText(/12 long street, cape town/i),
       "5 Orchid Road, Johannesburg",
     );
+
+    // Fill required date fields (date inputs need fireEvent)
+    const dateInputs = document.querySelectorAll("input[type='date']");
+    fireEvent.change(dateInputs[0], { target: { value: "2026-08-25" } });
+    fireEvent.change(dateInputs[1], { target: { value: "2026-09-01" } });
+
+    // Fill required rent
+    await user.type(screen.getByPlaceholderText("4500"), "8000");
+
+    // Fill required roommate name
+    await user.type(screen.getByPlaceholderText("Jane Doe"), "Alice");
 
     await user.click(screen.getByRole("button", { name: /preview/i }));
 

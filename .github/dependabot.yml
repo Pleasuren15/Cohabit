@@ -36,3 +36,16 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
+
+  - package-ecosystem: "npm"
+    directory: "/src/cohabit.management.web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router-*"

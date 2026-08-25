@@ -72,20 +72,28 @@ function newRoommate(): Roommate {
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-accent focus:ring-2 focus:ring-accent/20"
 
+const inputErrorClass =
+  "w-full rounded-xl border border-red-400 bg-background px-3 py-2.5 text-sm text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-red-500 focus:ring-2 focus:ring-red-200"
+
 function Field({
   label,
   hint,
+  error,
   children,
 }: {
   label: string
   hint?: string
+  error?: string
   children: React.ReactNode
 }) {
   return (
     <label className="block space-y-1.5">
       <span className="text-xs font-medium text-foreground">{label}</span>
       {children}
-      {hint && (
+      {error && (
+        <span className="block text-[11px] text-red-500">{error}</span>
+      )}
+      {hint && !error && (
         <span className="block text-[11px] text-muted-foreground">{hint}</span>
       )}
     </label>
@@ -162,6 +170,7 @@ export function ContractGenerator({
     roommates: [newRoommate()],
   })
   const [downloading, setDownloading] = React.useState(false)
+  const [errors, setErrors] = React.useState<Record<string, string>>({})
   const documentRef = React.useRef<HTMLDivElement>(null)
   const wasOpenRef = React.useRef(false)
 
@@ -171,6 +180,7 @@ export function ContractGenerator({
     if (open && !wasOpenRef.current) {
       setStep("type")
       setDownloading(false)
+      setErrors({})
     }
     wasOpenRef.current = open
   }, [open])
@@ -200,6 +210,34 @@ export function ContractGenerator({
           ? prev.roommates.filter((r) => r.id !== id)
           : prev.roommates,
     }))
+
+  const validate = (): boolean => {
+    const e: Record<string, string> = {}
+
+    if (!draft.propertyAddress.trim())
+      e.propertyAddress = "Property address is required."
+    if (!draft.agreementDate) e.agreementDate = "Agreement date is required."
+    if (!draft.termStart) e.termStart = "Start date is required."
+    if (!draft.monthlyRent || Number(draft.monthlyRent) <= 0)
+      e.monthlyRent = "Monthly rent is required."
+
+    if (draft.type === "roommate") {
+      const filled = draft.roommates.filter((r) => r.name.trim())
+      if (filled.length === 0)
+        e.roommates = "At least one roommate name is required."
+    } else {
+      if (!draft.landlordName.trim())
+        e.landlordName = "Landlord name is required."
+      if (!draft.tenantName.trim()) e.tenantName = "Tenant name is required."
+    }
+
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  const goToPreview = () => {
+    if (validate()) setStep("preview")
+  }
 
   const handleDownload = async () => {
     if (!documentRef.current) return
@@ -231,7 +269,7 @@ export function ContractGenerator({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <Dialog.Content
           aria-describedby="contract-generator-description"
-          className="fixed top-1/2 left-1/2 z-50 grid max-h-[88vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 grid-rows-[auto_auto_1fr_auto] gap-4 border border-border bg-background p-6 shadow-xl sm:max-w-2xl data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
+          className="fixed inset-0 z-50 grid max-h-[100dvh] w-full grid-rows-[auto_auto_1fr_auto] gap-3 border border-border bg-background p-4 shadow-xl sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[88vh] sm:max-w-2xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-xl sm:p-6 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -352,33 +390,50 @@ export function ContractGenerator({
                 <SectionCard title="Property & dates">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                      <Field label="Property address">
+                      <Field label="Property address" error={errors.propertyAddress}>
                         <input
-                          className={inputClass}
+                          className={errors.propertyAddress ? inputErrorClass : inputClass}
                           value={draft.propertyAddress}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             update({ propertyAddress: e.target.value })
-                          }
+                            setErrors((prev) => {
+                              const next = { ...prev }
+                              delete next.propertyAddress
+                              return next
+                            })
+                          }}
                           placeholder="12 Long Street, Cape Town"
                         />
                       </Field>
                     </div>
-                    <Field label="Agreement date">
+                    <Field label="Agreement date" error={errors.agreementDate}>
                       <input
                         type="date"
-                        className={inputClass}
+                        className={errors.agreementDate ? inputErrorClass : inputClass}
                         value={draft.agreementDate}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           update({ agreementDate: e.target.value })
-                        }
+                          setErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.agreementDate
+                            return next
+                          })
+                        }}
                       />
                     </Field>
-                    <Field label="Start date">
+                    <Field label="Start date" error={errors.termStart}>
                       <input
                         type="date"
-                        className={inputClass}
+                        className={errors.termStart ? inputErrorClass : inputClass}
                         value={draft.termStart}
-                        onChange={(e) => update({ termStart: e.target.value })}
+                        onChange={(e) => {
+                          update({ termStart: e.target.value })
+                          setErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.termStart
+                            return next
+                          })
+                        }}
                       />
                     </Field>
                     <Field
@@ -392,15 +447,20 @@ export function ContractGenerator({
                         onChange={(e) => update({ termEnd: e.target.value })}
                       />
                     </Field>
-                    <Field label="Monthly rent (R)">
+                    <Field label="Monthly rent (R)" error={errors.monthlyRent}>
                       <input
                         type="number"
                         min="0"
-                        className={inputClass}
+                        className={errors.monthlyRent ? inputErrorClass : inputClass}
                         value={draft.monthlyRent}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           update({ monthlyRent: e.target.value })
-                        }
+                          setErrors((prev) => {
+                            const next = { ...prev }
+                            delete next.monthlyRent
+                            return next
+                          })
+                        }}
                         placeholder="4500"
                       />
                     </Field>
@@ -409,6 +469,9 @@ export function ContractGenerator({
 
                 {draft.type === "roommate" ? (
                   <SectionCard title="Roommates">
+                    {errors.roommates && (
+                      <p className="text-xs text-red-500">{errors.roommates}</p>
+                    )}
                     <div className="space-y-3">
                       {draft.roommates.map((roommate, index) => (
                         <div
@@ -496,13 +559,18 @@ export function ContractGenerator({
                 ) : (
                   <SectionCard title="Parties">
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="Landlord name">
+                      <Field label="Landlord name" error={errors.landlordName}>
                         <input
-                          className={inputClass}
+                          className={errors.landlordName ? inputErrorClass : inputClass}
                           value={draft.landlordName}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             update({ landlordName: e.target.value })
-                          }
+                            setErrors((prev) => {
+                              const next = { ...prev }
+                              delete next.landlordName
+                              return next
+                            })
+                          }}
                           placeholder="John Smith"
                         />
                       </Field>
@@ -516,13 +584,18 @@ export function ContractGenerator({
                           placeholder="Email or phone"
                         />
                       </Field>
-                      <Field label="Tenant name">
+                      <Field label="Tenant name" error={errors.tenantName}>
                         <input
-                          className={inputClass}
+                          className={errors.tenantName ? inputErrorClass : inputClass}
                           value={draft.tenantName}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             update({ tenantName: e.target.value })
-                          }
+                            setErrors((prev) => {
+                              const next = { ...prev }
+                              delete next.tenantName
+                              return next
+                            })
+                          }}
                           placeholder="Jane Doe"
                         />
                       </Field>
@@ -556,7 +629,7 @@ export function ContractGenerator({
                         placeholder="9000"
                       />
                     </Field>
-                    <Field label="Deposit returned within (days)">
+                    <Field label="Deposit return (days)">
                       <input
                         type="number"
                         min="0"
@@ -650,7 +723,7 @@ export function ContractGenerator({
 
                 <SectionCard title="House rules">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Utilities included / shared monthly amount (R)">
+                    <Field label="Utilities amount (R/month)">
                       <input
                         type="number"
                         min="0"
@@ -798,10 +871,16 @@ export function ContractGenerator({
 
             {step === "preview" && (
               <div className="space-y-3">
-                <div className="max-h-[52vh] overflow-auto rounded-xl border border-border bg-muted/40 p-4">
+                <div
+                  className="max-h-[52vh] overflow-auto rounded-xl border p-4"
+                  style={{
+                    borderColor: "#e2e8f0",
+                    backgroundColor: "#f8fafc",
+                  }}
+                >
                   <ContractDocument ref={documentRef} draft={draft} />
                 </div>
-                <p className="flex items-start gap-2 rounded-xl bg-muted/50 p-3 text-[11px] leading-relaxed text-muted-foreground">
+                <p className="flex items-start gap-2 rounded-xl p-3 text-[11px] leading-relaxed text-muted-foreground" style={{ backgroundColor: "#f1f5f9" }}>
                   <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-accent" />
                   This document is a general template to help you record your
                   arrangement. It is not legal advice. Have it reviewed by a
@@ -835,7 +914,7 @@ export function ContractGenerator({
               {step === "details" && (
                 <button
                   type="button"
-                  onClick={() => setStep("preview")}
+                  onClick={goToPreview}
                   className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
                 >
                   <Eye className="size-3.5" aria-hidden="true" />
