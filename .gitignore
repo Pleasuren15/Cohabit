@@ -57,3 +57,4 @@ __tablestorage__/
 .claude/settings.local.json
 src/cohabit.web/bun.lock
 src/cohabit.story/package-lock.json
+src/cohabit.management.web/package-lock.json

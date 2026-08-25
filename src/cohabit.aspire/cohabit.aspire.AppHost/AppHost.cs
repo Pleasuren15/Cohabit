@@ -25,6 +25,7 @@ var localStack = builder.AddContainer("localstack", "localstack/localstack", "4.
 //   postgres -> cohabit-db -> (azurite, localstack) -> cohabit-api /health
 //   cohabit-db -> comms-api /health
 //   cohabit-api /health -> cohabit-web
+//   cohabit-api /health -> cohabit-management-web
 // cohabit-api's /health only answers after migrations + store bootstrap finish,
 // so dependents never start against a half-initialised API.
 var cohabitApi = builder.AddProject<Projects.cohabit_api>("cohabit-api")
@@ -53,6 +54,16 @@ var cohabitWeb = builder.AddExecutable(
         workingDirectory: "../../cohabit.web",
         args: ["run", "dev"])
     .WithHttpEndpoint(port: 5173, name: "http", env: "PORT")
+    .WithEnvironment("VITE_API_URL", cohabitApi.GetEndpoint("http"))
+    .WithReference(cohabitApi)
+    .WaitFor(cohabitApi);
+
+var managementWeb = builder.AddExecutable(
+        name: "cohabit-management-web",
+        command: "npm",
+        workingDirectory: "../../cohabit.management.web",
+        args: ["run", "dev"])
+    .WithHttpEndpoint(port: 5174, name: "http", env: "PORT")
     .WithEnvironment("VITE_API_URL", cohabitApi.GetEndpoint("http"))
     .WithReference(cohabitApi)
     .WaitFor(cohabitApi);
