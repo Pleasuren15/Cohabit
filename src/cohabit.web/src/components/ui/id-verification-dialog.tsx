@@ -28,7 +28,7 @@ interface IdVerificationDialogProps {
   onSubmitted: (submission: VerificationSubmission) => void
 }
 
-type CaptureSlot = "front" | "back"
+type CaptureSlot = "front" | "back" | "selfie"
 
 const STATUS_META: Record<
   VerificationSubmission["status"],
@@ -81,6 +81,7 @@ export function IdVerificationDialog({
   const [documentType, setDocumentType] = useState<IdDocumentType>("identity_document")
   const [frontImage, setFrontImage] = useState<File | null>(null)
   const [backImage, setBackImage] = useState<File | null>(null)
+  const [selfieImage, setSelfieImage] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [webcamSlot, setWebcamSlot] = useState<CaptureSlot | null>(null)
@@ -88,6 +89,7 @@ export function IdVerificationDialog({
   const resetForm = useCallback(() => {
     setFrontImage(null)
     setBackImage(null)
+    setSelfieImage(null)
     setError(null)
   }, [])
 
@@ -114,6 +116,7 @@ export function IdVerificationDialog({
     try {
       const processed = await processIdImage(file)
       if (slot === "front") setFrontImage(processed)
+      else if (slot === "selfie") setSelfieImage(processed)
       else setBackImage(processed)
       setError(null)
     } catch {
@@ -122,13 +125,14 @@ export function IdVerificationDialog({
   }
 
   const handleSubmit = async () => {
-    if (!frontImage || submitting) return
+    if (!frontImage || !selfieImage || submitting) return
     setSubmitting(true)
     setError(null)
     try {
       const submission = await verificationService.submit({
         type: documentType,
         frontImage,
+        selfieImage,
         backImage,
       })
       onSubmitted(submission)
@@ -258,6 +262,15 @@ export function IdVerificationDialog({
                 onChange={(file) => void acceptFile("back", file)}
                 onOpenCamera={() => setWebcamSlot("back")}
               />
+              <CaptureField
+                slot="selfie"
+                label="Selfie"
+                required
+                facing="user"
+                file={selfieImage}
+                onChange={(file) => void acceptFile("selfie", file)}
+                onOpenCamera={() => setWebcamSlot("selfie")}
+              />
             </div>
 
             {error && (
@@ -269,8 +282,10 @@ export function IdVerificationDialog({
 
             <p className="mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
               <ShieldCheck className="mt-0.5 size-3 shrink-0" />
-              Photos are stored securely, are never public, and are only seen by
-              our review team. Blurred documents will be rejected.
+              Photos are stored securely, are never public, and are only used
+              for identity verification by our review team. Your selfie is
+              compared against your document photo. Blurred or obscured photos
+              will be rejected.
             </p>
 
             <div className="mt-4 flex gap-3 pt-1">
@@ -287,7 +302,7 @@ export function IdVerificationDialog({
               <button
                 type="button"
                 onClick={() => void handleSubmit()}
-                disabled={!frontImage || submitting}
+                disabled={!frontImage || !selfieImage || submitting}
                 className="flex-1 rounded-xl bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {submitting ? "Submitting…" : "Submit for review"}
@@ -321,6 +336,7 @@ function CaptureField({
   slot,
   label,
   required = false,
+  facing = "environment",
   file,
   onChange,
   onOpenCamera,
@@ -328,6 +344,7 @@ function CaptureField({
   slot: CaptureSlot
   label: string
   required?: boolean
+  facing?: "environment" | "user"
   file: File | null
   onChange: (file: File | null) => void
   onOpenCamera: () => void
@@ -385,7 +402,7 @@ function CaptureField({
             {...sharedInputProps}
             ref={cameraInputRef}
             aria-label={`Camera capture for ${label}`}
-            capture={isCoarsePointer ? "environment" : undefined}
+            capture={isCoarsePointer ? facing : undefined}
           />
           <input
             {...sharedInputProps}
@@ -449,7 +466,10 @@ function WebcamCapture({
 
     navigator.mediaDevices
       ?.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 } },
+        video: {
+          facingMode: slot === "selfie" ? "user" : "environment",
+          width: { ideal: 1920 },
+        },
       })
       .then((mediaStream) => {
         if (cancelled) {

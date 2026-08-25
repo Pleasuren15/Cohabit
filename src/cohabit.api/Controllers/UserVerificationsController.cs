@@ -18,13 +18,14 @@ public class UserVerificationsController(IVerificationService verificationServic
     /// <summary>
     ///     Submit ID pictures for manual review. Accepts multipart form data with a
     ///     <c>type</c> field (identity_document, passport or drivers_license), a
-    ///     required <c>frontImage</c> and an optional <c>backImage</c>.
+    ///     required <c>frontImage</c>, required <c>selfieImage</c>, and an optional <c>backImage</c>.
     /// </summary>
     [HttpPost]
     [RequestSizeLimit(VerificationService.MaxUploadSizeBytes)]
     public async Task<ActionResult<UserVerificationDto>> Submit(
         [FromForm] string type,
         [FromForm] IFormFile frontImage,
+        [FromForm] IFormFile? selfieImage,
         [FromForm] IFormFile? backImage,
         CancellationToken ct = default)
     {
@@ -37,7 +38,7 @@ public class UserVerificationsController(IVerificationService verificationServic
         }
 
         var verification = await verificationService.SubmitAsync(
-            profile.UserId, type, frontImage, backImage, ct);
+            profile.UserId, type, frontImage, backImage, selfieImage, ct);
 
         return CreatedAtAction(nameof(GetMine), new { }, verification);
     }

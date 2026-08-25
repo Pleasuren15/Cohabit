@@ -12,6 +12,7 @@ public interface IVerificationService
         string documentType,
         IFormFile frontImage,
         IFormFile? backImage,
+        IFormFile selfieImage,
         CancellationToken ct = default);
 
     /// <summary>

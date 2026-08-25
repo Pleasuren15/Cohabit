@@ -81,6 +81,7 @@ public sealed class UserVerification
     public VerificationStatus Status { get; private set; }        // Pending | Approved | Rejected
     public string? FrontImagePath { get; private set; }           // private blob path
     public string? BackImagePath { get; private set; }            // optional (e.g. ID card rear)
+    public string? SelfieImagePath { get; private set; }          // required: selfie for face-match verification
     public Guid? ReviewedByUserId { get; private set; }           // admin who decided
     public DateTime? ReviewedAt { get; private set; }
     public string? RejectionReason { get; private set; }
@@ -104,6 +105,7 @@ statuses are fixed by code, not data).
 entity.Property(uv => uv.Status).HasColumnName("status").IsRequired();
 entity.Property(uv => uv.FrontImagePath).HasColumnName("front_image_path");
 entity.Property(uv => uv.BackImagePath).HasColumnName("back_image_path");
+entity.Property(uv => uv.SelfieImagePath).HasColumnName("selfie_image_path");
 entity.Property(uv => uv.ReviewedByUserId).HasColumnName("reviewed_by_user_id");
 entity.Property(uv => uv.ReviewedAt).HasColumnName("reviewed_at");
 entity.Property(uv => uv.RejectionReason).HasColumnName("rejection_reason");
@@ -117,7 +119,8 @@ EF migration `AddIdPictureVerification`:
   backfill `status = case when is_verified then 1 else 2 end`… or leave NULL-as-Pending
   only for rows with documents — simplest: backfill approved rows to `Approved`,
   legacy rows without documents are ignored by the review queue via
-  `WHERE front_image_path IS NOT NULL`).
+  `WHERE front_image_path IS NOT NULL`). Selfie added via `AddVerificationSelfie`
+  migration (`selfie_image_path` nullable column).
 - Partial unique index: **one open submission per user+type**
   `CREATE UNIQUE INDEX ... ON identity.user_verifications (user_id, verification_type_id)
    WHERE status = 0` — enforced defensively in the service too.
@@ -159,13 +162,13 @@ All authenticated via bearer JWT. Errors follow existing typed exceptions +
 
 | Method | Route | Description |
 |---|---|---|
-| POST | `/api/users/me/verifications` | Submit: multipart form `type` (identity_document \| passport \| drivers_license), `frontImage` (required), `backImage` (optional). Returns `201` + `UserVerificationDto`. |
+| POST | `/api/users/me/verifications` | Submit: multipart form `type` (identity_document \| passport \| drivers_license), `frontImage` (required), `selfieImage` (required), `backImage` (optional). Returns `201` + `UserVerificationDto`. |
 | GET | `/api/users/me/verifications` | Caller's own submissions incl. status + rejection reason. Signed image URLs included, short-lived. |
 
 Rules enforced in `IVerificationService.SubmitAsync`:
 
 - Type must be a document type (reject email/phone/proof_of_address types here).
-- Max size 8 MB, image/* only (magic bytes), 1–2 images.
+- Max size 8 MB, image/* only (magic bytes), 2–3 images (front + selfie required, back optional).
 - ConflictException (`verification_pending`) if an open submission exists for that type.
 
 ### Image acquisition — file upload **or** device camera
@@ -174,13 +177,14 @@ The API contract is identical for both sources: whatever the client captured is
 sent as standard multipart image bytes. Capture is a **client-side concern**;
 the backend only sees a validated image blob.
 
-Web UX (`DocumentCapture` component, used per side front/back):
+Web UX (`DocumentCapture` component, used per side front/back/selfie):
 
 | Mode | Mechanism | Notes |
 |---|---|---|
 | **Upload** | `<input type="file" accept="image/png,image/jpeg,image/webp">` + drag-drop zone | Existing listing-upload pattern. |
 | **Camera** | `<input type="file" accept="image/*" capture="environment">` | On phones this opens the rear camera natively — zero extra code, works in all mobile browsers. |
-| **Camera (desktop)** | `navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })` → `<video>` preview → grab frame to `<canvas>` → `canvas.toBlob(...)` | Shown when `getUserMedia` is available and no `capture` attribute path was taken; fallback to upload input on permission denial / unsupported browsers. |
+| **Camera (selfie)** | `<input type="file" accept="image/*" capture="user">` | On phones this opens the front camera natively for selfie capture. |
+| **Camera (desktop)** | `navigator.mediaDevices.getUserMedia({ video: { facingMode } })` → `<video>` preview → grab frame to `<canvas>` → `canvas.toBlob(...)` | Shown when `getUserMedia` is available and no `capture` attribute path was taken; `facingMode` is `"environment"` for documents, `"user"` for selfie. Fallback to upload input on permission denial / unsupported browsers. |
 
 Client-side processing before upload (both modes):
 
@@ -200,7 +204,7 @@ Response DTO:
 ```csharp
 public record UserVerificationDto(
     Guid Id, string Type, string Status,
-    string? FrontImageUrl, string? BackImageUrl,     // temporary signed URLs
+    string? FrontImageUrl, string? BackImageUrl, string? SelfieImageUrl,  // temporary signed URLs
     DateTime SubmittedAt, DateTime? ReviewedAt, string? RejectionReason);
 ```
 
@@ -261,15 +265,15 @@ sequenceDiagram
     participant B as Blob/S3 (private container)
     participant D as PostgreSQL
 
-    U->>W: select document type, then<br/>capture via camera OR choose file
+    U->>W: select document type, then<br/>capture front + selfie + optional back
     W->>W: downscale + JPEG re-encode (canvas)
     W->>A: POST /api/users/me/verifications<br/>multipart + Bearer JWT
     A->>A: validate JWT, size ≤ 8MB,<br/>magic bytes, doc-type allowed
     A->>D: open submission exists for (userId,type)?
     D-->>A: no pending row
-    A->>B: IIdDocumentStorage.UploadAsync(front[,back])   // private S3 bucket
+    A->>B: IIdDocumentStorage.UploadAsync(front[,back], selfie)   // private S3 bucket
     B-->>A: blob paths (e.g. id-docs/{guid}.jpg)
-    A->>D: INSERT user_verifications<br/>(status=Pending, front_image_path, back_image_path)
+    A->>D: INSERT user_verifications<br/>(status=Pending, front_image_path, back_image_path, selfie_image_path)
     D-->>A: row saved
     A-->>W: 201 UserVerificationDto (status=Pending)
     W-->>U: "Under review" badge

@@ -84,6 +84,7 @@ class MockVerificationService {
   async submit(input: {
     type: IdDocumentType
     frontImage: File
+    selfieImage: File
     backImage?: File | null
   }): Promise<VerificationSubmission> {
     const label =

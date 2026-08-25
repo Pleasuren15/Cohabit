@@ -234,6 +234,7 @@ public sealed class CohabitDbContext(DbContextOptions<CohabitDbContext> options)
             entity.Property(uv => uv.Status).HasColumnName("status");
             entity.Property(uv => uv.FrontImagePath).HasColumnName("front_image_path");
             entity.Property(uv => uv.BackImagePath).HasColumnName("back_image_path");
+            entity.Property(uv => uv.SelfieImagePath).HasColumnName("selfie_image_path");
             entity.Property(uv => uv.ReviewedByUserId).HasColumnName("reviewed_by_user_id");
             entity.Property(uv => uv.ReviewedAt).HasColumnName("reviewed_at");
             entity.Property(uv => uv.RejectionReason).HasColumnName("rejection_reason");

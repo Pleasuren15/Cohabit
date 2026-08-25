@@ -10,6 +10,7 @@ public sealed record UserVerificationDto(
     string Status,
     string? FrontImageUrl,
     string? BackImageUrl,
+    string? SelfieImageUrl,
     DateTime SubmittedAt,
     DateTime? ReviewedAt,
     string? RejectionReason);

@@ -19,13 +19,18 @@ public sealed class VerificationService(
         string documentType,
         IFormFile frontImage,
         IFormFile? backImage,
+        IFormFile selfieImage,
         CancellationToken ct = default)
     {
         if (frontImage is null || frontImage.Length == 0)
             throw new ValidationException("front_image_required", "A front image is required.");
 
+        if (selfieImage is null || selfieImage.Length == 0)
+            throw new ValidationException("selfie_required", "A selfie is required for identity verification.");
+
         var front = await ReadAndValidateImageAsync(frontImage, ct);
         var back = backImage is { Length: > 0 } ? await ReadAndValidateImageAsync(backImage, ct) : null;
+        var selfie = await ReadAndValidateImageAsync(selfieImage, ct);
 
         var typeName = ParseTypeName(documentType);
         var verificationType = await verificationAccessor.GetVerificationTypeAsync(typeName, ct);
@@ -38,15 +43,16 @@ public sealed class VerificationService(
         var backPath = back is not null
             ? await idDocumentStorage.UploadAsync(backImage!.FileName, back, backImage.ContentType, ct)
             : null;
+        var selfiePath = await idDocumentStorage.UploadAsync(selfieImage.FileName, selfie, selfieImage.ContentType, ct);
 
         var verification = await verificationAccessor.AddAsync(
-            cohabit.application.Domain.UserVerification.Create(userId, verificationType.Id, frontPath, backPath), ct);
+            cohabit.application.Domain.UserVerification.Create(userId, verificationType.Id, frontPath, backPath, selfiePath), ct);
 
         logger.LogInformation("User {UserId} submitted {DocumentType} for verification ({VerificationId})",
             userId, documentType, verification.Id);
 
         await NotifySubmissionAsync(userId, verificationType.Name, verification.Id,
-            [frontPath, .. backPath is null ? [] : new[] { backPath }], ct);
+            [frontPath, .. backPath is null ? [] : new[] { backPath }, selfiePath], ct);
 
         return await ToDtoAsync(verification, ct);
     }
@@ -104,6 +110,7 @@ public sealed class VerificationService(
             verification.Status.ToString(),
             await ResolveUrlAsync(verification.FrontImagePath, ct),
             await ResolveUrlAsync(verification.BackImagePath, ct),
+            await ResolveUrlAsync(verification.SelfieImagePath, ct),
             verification.Timestamp,
             verification.ReviewedAt,
             verification.RejectionReason);

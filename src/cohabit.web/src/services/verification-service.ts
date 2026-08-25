@@ -43,6 +43,7 @@ export interface SubmitVerificationInput {
   type: IdDocumentType
   frontImage: File
   backImage?: File | null
+  selfieImage: File
 }
 
 /** API error with its machine-readable code so the UI can react specifically. */
@@ -135,14 +136,16 @@ class HttpVerificationService implements VerificationService {
 
   async submit(input: SubmitVerificationInput): Promise<VerificationSubmission> {
     const token = await requireAccessToken()
-    const [frontImage, backImage] = await Promise.all([
+    const [frontImage, backImage, selfieImage] = await Promise.all([
       processIdImage(input.frontImage),
       input.backImage ? processIdImage(input.backImage) : Promise.resolve(null),
+      processIdImage(input.selfieImage),
     ])
 
     const form = new FormData()
     form.append("type", input.type)
     form.append("frontImage", frontImage)
+    form.append("selfieImage", selfieImage)
     if (backImage) form.append("backImage", backImage)
 
     const res = await fetch(this.url(), {
@@ -208,6 +211,7 @@ class MockVerificationService implements VerificationService {
       timestamp: submittedAt,
       imageUrls: [
         URL.createObjectURL(input.frontImage),
+        URL.createObjectURL(input.selfieImage),
         ...(input.backImage ? [URL.createObjectURL(input.backImage)] : []),
       ],
     })

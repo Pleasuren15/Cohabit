@@ -15,6 +15,7 @@ public sealed class UserVerification
     public VerificationStatus Status { get; private set; }
     public string? FrontImagePath { get; private set; }
     public string? BackImagePath { get; private set; }
+    public string? SelfieImagePath { get; private set; }
     public Guid? ReviewedByUserId { get; private set; }
     public DateTime? ReviewedAt { get; private set; }
     public string? RejectionReason { get; private set; }
@@ -32,7 +33,8 @@ public sealed class UserVerification
         Guid userId,
         int verificationTypeId,
         string frontImagePath,
-        string? backImagePath)
+        string? backImagePath,
+        string selfieImagePath)
     {
         return new UserVerification
         {
@@ -42,6 +44,7 @@ public sealed class UserVerification
             Status = VerificationStatus.Pending,
             FrontImagePath = frontImagePath,
             BackImagePath = backImagePath,
+            SelfieImagePath = selfieImagePath,
             IsVerified = false,
             Timestamp = DateTime.UtcNow
         };

@@ -27,7 +27,7 @@ public class UserVerificationsControllerTests : ApiTestBase
         var token = TestJwt.CreateToken(user.Id);
 
         // Act
-        var response = await SubmitAsync(token, "passport", front: PngBytes, back: PngBytes);
+        var response = await SubmitAsync(token, "passport", front: PngBytes, selfie: PngBytes, back: PngBytes);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -37,6 +37,7 @@ public class UserVerificationsControllerTests : ApiTestBase
         dto.Status.Should().Be("Pending");
         dto.FrontImageUrl.Should().NotBeNullOrWhiteSpace();
         dto.BackImageUrl.Should().NotBeNullOrWhiteSpace();
+        dto.SelfieImageUrl.Should().NotBeNullOrWhiteSpace();
         dto.ReviewedAt.Should().BeNull();
         dto.RejectionReason.Should().BeNull();
     }
@@ -49,7 +50,7 @@ public class UserVerificationsControllerTests : ApiTestBase
         var token = TestJwt.CreateToken(user.Id);
 
         // Act
-        var response = await SubmitAsync(token, "identity_document", front: PngBytes, back: null);
+        var response = await SubmitAsync(token, "identity_document", front: PngBytes, selfie: PngBytes, back: null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -61,7 +62,7 @@ public class UserVerificationsControllerTests : ApiTestBase
         message.Title.Should().Be("ID Verification Submitted");
         message.SenderUserId.Should().Be(SystemUser.Id);
         message.ImagePaths.Should().NotBeNullOrWhiteSpace();
-        message.ImagePaths!.Split('\n').Should().HaveCount(1);
+        message.ImagePaths!.Split('\n').Should().HaveCount(2);
     }
 
     [Test]
@@ -70,10 +71,10 @@ public class UserVerificationsControllerTests : ApiTestBase
         // Arrange
         var user = await Data.CreateUserAsync();
         var token = TestJwt.CreateToken(user.Id);
-        await SubmitAsync(token, "passport", front: PngBytes, back: null);
+        await SubmitAsync(token, "passport", front: PngBytes, selfie: PngBytes, back: null);
 
         // Act
-        var response = await SubmitAsync(token, "passport", front: PngBytes, back: null);
+        var response = await SubmitAsync(token, "passport", front: PngBytes, selfie: PngBytes, back: null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -91,12 +92,48 @@ public class UserVerificationsControllerTests : ApiTestBase
         // Act
         var response = await SubmitAsync(
             token, "identity_document",
-            front: "not an image"u8.ToArray(), back: null);
+            front: "not an image"u8.ToArray(), selfie: PngBytes, back: null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var error = await response.Content.ReadFromJsonAsync<ErrorBody>();
         error!.ErrorCode.Should().Be("unsupported_image");
+    }
+
+    [Test]
+    public async Task Given_NonImageSelfie_When_SubmitIsInvoked_Then_ReturnsBadRequest()
+    {
+        // Arrange
+        var user = await Data.CreateUserAsync();
+        var token = TestJwt.CreateToken(user.Id);
+
+        // Act
+        var response = await SubmitAsync(
+            token, "identity_document",
+            front: PngBytes, selfie: "not an image"u8.ToArray(), back: null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await response.Content.ReadFromJsonAsync<ErrorBody>();
+        error!.ErrorCode.Should().Be("unsupported_image");
+    }
+
+    [Test]
+    public async Task Given_MissingSelfie_When_SubmitIsInvoked_Then_ReturnsBadRequest()
+    {
+        // Arrange
+        var user = await Data.CreateUserAsync();
+        var token = TestJwt.CreateToken(user.Id);
+
+        // Act
+        var response = await SubmitAsync(
+            token, "identity_document",
+            front: PngBytes, selfie: null, back: null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await response.Content.ReadFromJsonAsync<ErrorBody>();
+        error!.ErrorCode.Should().Be("selfie_required");
     }
 
     [Test]
@@ -107,7 +144,7 @@ public class UserVerificationsControllerTests : ApiTestBase
         var token = TestJwt.CreateToken(user.Id);
 
         // Act
-        var response = await SubmitAsync(token, "library_card", front: PngBytes, back: null);
+        var response = await SubmitAsync(token, "library_card", front: PngBytes, selfie: PngBytes, back: null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -122,11 +159,11 @@ public class UserVerificationsControllerTests : ApiTestBase
         var user = await Data.CreateUserAsync();
         var token = TestJwt.CreateToken(user.Id);
 
-        var first = await SubmitAsync(token, "passport", front: PngBytes, back: null);
+        var first = await SubmitAsync(token, "passport", front: PngBytes, selfie: PngBytes, back: null);
         first.StatusCode.Should().Be(HttpStatusCode.Created);
         ApproveLastSubmission(user.Id);
 
-        var second = await SubmitAsync(token, "identity_document", front: PngBytes, back: null);
+        var second = await SubmitAsync(token, "identity_document", front: PngBytes, selfie: PngBytes, back: null);
         second.StatusCode.Should().Be(HttpStatusCode.Created);
 
         // Act
@@ -142,6 +179,7 @@ public class UserVerificationsControllerTests : ApiTestBase
         dtos[1].Type.Should().Be("Passport");
         dtos[1].Status.Should().Be("Approved");
         dtos.Select(d => d.FrontImageUrl).Should().OnlyContain(url => !string.IsNullOrWhiteSpace(url));
+        dtos.Select(d => d.SelfieImageUrl).Should().OnlyContain(url => !string.IsNullOrWhiteSpace(url));
     }
 
     private static void ApproveLastSubmission(Guid userId)
@@ -152,7 +190,7 @@ public class UserVerificationsControllerTests : ApiTestBase
         db.SaveChanges();
     }
 
-    private static MultipartFormDataContent BuildForm(string type, byte[]? front, byte[]? back)
+    private static MultipartFormDataContent BuildForm(string type, byte[]? front, byte[]? selfie, byte[]? back)
     {
         var form = new MultipartFormDataContent();
         form.Add(new StringContent(type), "type");
@@ -161,6 +199,12 @@ public class UserVerificationsControllerTests : ApiTestBase
             var content = new ByteArrayContent(front);
             content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
             form.Add(content, "frontImage", "front.png");
+        }
+        if (selfie is not null)
+        {
+            var content = new ByteArrayContent(selfie);
+            content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+            form.Add(content, "selfieImage", "selfie.png");
         }
         if (back is not null)
         {
@@ -171,11 +215,11 @@ public class UserVerificationsControllerTests : ApiTestBase
         return form;
     }
 
-    private Task<HttpResponseMessage> SubmitAsync(string token, string type, byte[]? front, byte[]? back)
+    private Task<HttpResponseMessage> SubmitAsync(string token, string type, byte[]? front, byte[]? selfie, byte[]? back)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/users/me/verifications")
         {
-            Content = BuildForm(type, front, back)
+            Content = BuildForm(type, front, selfie, back)
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return Client.SendAsync(request);
