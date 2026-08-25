@@ -27,6 +27,7 @@ export interface VerificationSubmission {
   status: "Pending" | "Approved" | "Rejected"
   frontImageUrl: string | null
   backImageUrl: string | null
+  selfieImageUrl: string | null
   submittedAt: string
   reviewedAt: string | null
   rejectionReason: string | null
@@ -57,6 +58,7 @@ const SEED_SUBMISSIONS: VerificationSubmission[] = [
     status: "Approved",
     frontImageUrl: null,
     backImageUrl: null,
+    selfieImageUrl: null,
     submittedAt: new Date(Date.now() - 14 * 86_400_000).toISOString(),
     reviewedAt: new Date(Date.now() - 13 * 86_400_000).toISOString(),
     rejectionReason: null,
@@ -67,6 +69,7 @@ const SEED_SUBMISSIONS: VerificationSubmission[] = [
     status: "Rejected",
     frontImageUrl: null,
     backImageUrl: null,
+    selfieImageUrl: null,
     submittedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
     reviewedAt: new Date(Date.now() - 86_400_000).toISOString(),
     rejectionReason: "The photo was too blurry to read the card number.",
@@ -100,6 +103,7 @@ class MockVerificationService {
         status: "Pending",
         frontImageUrl: null,
         backImageUrl: null,
+        selfieImageUrl: null,
         submittedAt: new Date().toISOString(),
         reviewedAt: null,
         rejectionReason: null,
