@@ -27,6 +27,7 @@ export async function downloadNodeAsPdf(
     backgroundColor: "#ffffff",
     width: node.scrollWidth,
     windowWidth: node.scrollWidth,
+    logging: false,
   })
   const imageHeightPx = canvas.height
   const imageWidthPx = canvas.width
