@@ -3,9 +3,9 @@
 
 FROM node:22-alpine AS build
 WORKDIR /app
-COPY ["src/cohabit.management.web/package.json", "src/cohabit.management.web/package-lock.json", "src/cohabit.management.web/.npmrc", "src/cohabit.management.web/"]
+COPY ["src/cohabit.management.web/package.json", "src/cohabit.management.web/.npmrc", "src/cohabit.management.web/"]
 WORKDIR "/app/src/cohabit.management.web"
-RUN npm ci
+RUN npm install
 COPY ["src/cohabit.management.web/", "."]
 
 ARG VITE_API_URL=""
