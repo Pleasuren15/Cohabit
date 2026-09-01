@@ -13,6 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Resend;
+using Serilog;
+using Serilog.Events;
 
 namespace cohabit.api.Extensions;
 
@@ -146,6 +148,30 @@ public static class ServiceExtensions
         });
         builder.Services.AddSingleton<S3ImageStorage>();
         builder.Services.AddSingleton<IIdDocumentStorage>(sp => sp.GetRequiredService<S3ImageStorage>());
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddSerilog(this WebApplicationBuilder builder)
+    {
+        builder.Host.UseSerilog((context, services, configuration) =>
+        {
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.FromLogContext();
+
+            var logsConnectionString = context.Configuration.GetConnectionString("cohabit-logs");
+            if (!string.IsNullOrWhiteSpace(logsConnectionString))
+            {
+                configuration.WriteTo.AzureBlobStorage(
+                    connectionString: logsConnectionString,
+                    storageContainerName: StorageContainerNames.Logs,
+                    storageFileName: "cohabit-api",
+                    restrictedToMinimumLevel: LogEventLevel.Information,
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+            }
+        });
 
         return builder;
     }
