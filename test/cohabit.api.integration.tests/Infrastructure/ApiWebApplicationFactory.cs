@@ -14,6 +14,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.UseSetting("ConnectionStrings:cohabit-db", Containers.Postgres.GetConnectionString());
         builder.UseSetting("ConnectionStrings:cohabit-images", Containers.AzuriteBlobConnectionString);
+        builder.UseSetting("ConnectionStrings:cohabit-logs", Containers.AzuriteBlobConnectionString);
         builder.UseSetting("S3:ServiceUrl", Containers.LocalStackS3ServiceUrl);
 
         builder.ConfigureAppConfiguration((_, config) =>
@@ -22,6 +23,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:cohabit-db"] = Containers.Postgres.GetConnectionString(),
                 ["ConnectionStrings:cohabit-images"] = Containers.AzuriteBlobConnectionString,
+                ["ConnectionStrings:cohabit-logs"] = Containers.AzuriteBlobConnectionString,
                 ["Jwt:SigningKey"] = TestJwt.SigningKey,
                 ["Jwt:Issuer"] = TestJwt.Issuer,
                 ["Jwt:Audience"] = TestJwt.Audience,

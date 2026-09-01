@@ -9,6 +9,7 @@ var storage = builder.AddAzureStorage("cohabit-storage")
     .RunAsEmulator(container => container
         .WithDataVolume("cohabit-storage-data"));
 var imagesBlob = storage.AddBlobs("cohabit-images");
+var logsBlob = storage.AddBlobs("cohabit-logs");
 
 // Two object stores run side by side:
 //   - Azure Blob (Azurite)  -> public listing images
@@ -33,6 +34,7 @@ var cohabitApi = builder.AddProject<Projects.cohabit_api>("cohabit-api")
     .WithHttpHealthCheck("/health")
     .WithReference(cohabitDb)
     .WithReference(imagesBlob)
+    .WithReference(logsBlob)
     .WithEnvironment("S3__ServiceUrl", localStack.GetEndpoint("http"))
     .WithEnvironment("S3__Region", "us-east-1")
     .WithEnvironment("S3__AccessKey", "test")
@@ -40,6 +42,7 @@ var cohabitApi = builder.AddProject<Projects.cohabit_api>("cohabit-api")
     .WithEnvironment("S3__BucketName", "cohabit-id-documents")
     .WaitFor(cohabitDb)
     .WaitFor(imagesBlob)
+    .WaitFor(logsBlob)
     .WaitFor(localStack);
 
 var commsApi = builder.AddProject<Projects.cohabit_comms_api>("comms-api")

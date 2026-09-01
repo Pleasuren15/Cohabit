@@ -9,6 +9,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddSerilog();
 builder.AddApplicationServices();
 builder.Services.AddHealthChecks();
 
@@ -24,9 +25,12 @@ using (var scope = app.Services.CreateScope())
     var blobServiceClient = scope.ServiceProvider.GetService<BlobServiceClient>();
     if (blobServiceClient is not null)
     {
-        var container = blobServiceClient.GetBlobContainerClient(BlobImageStorage.ContainerName);
-        await container.CreateIfNotExistsAsync(PublicAccessType.Blob);
-        await container.SetAccessPolicyAsync(PublicAccessType.Blob);
+        var imagesContainer = blobServiceClient.GetBlobContainerClient(BlobImageStorage.ContainerName);
+        await imagesContainer.CreateIfNotExistsAsync(PublicAccessType.Blob);
+        await imagesContainer.SetAccessPolicyAsync(PublicAccessType.Blob);
+
+        var logsContainer = blobServiceClient.GetBlobContainerClient(StorageContainerNames.Logs);
+        await logsContainer.CreateIfNotExistsAsync();
     }
 
     // S3 (ID verification documents): ensure the private bucket exists. It is
